@@ -494,9 +494,11 @@ export type Database = {
           document_url: string | null
           final_report: Json | null
           id: number
+          is_published: boolean | null
           market_info: string | null
           market_research: Json | null
           product_info: string | null
+          published_at: string | null
           status: string
           target_countries: string[]
         }
@@ -512,9 +514,11 @@ export type Database = {
           document_url?: string | null
           final_report?: Json | null
           id?: number
+          is_published?: boolean | null
           market_info?: string | null
           market_research?: Json | null
           product_info?: string | null
+          published_at?: string | null
           status?: string
           target_countries: string[]
         }
@@ -530,9 +534,11 @@ export type Database = {
           document_url?: string | null
           final_report?: Json | null
           id?: number
+          is_published?: boolean | null
           market_info?: string | null
           market_research?: Json | null
           product_info?: string | null
+          published_at?: string | null
           status?: string
           target_countries?: string[]
         }

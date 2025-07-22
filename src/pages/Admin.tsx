@@ -586,12 +586,14 @@ export default function Admin() {
 
     setActionLoading(true);
     try {
-      // Update matching request with admin comments
+      // Update matching request with admin comments and published status
       const { error: updateError } = await supabase
         .from('matching_requests')
         .update({
           admin_comments: adminComments,
-          status: 'published'
+          status: 'published',
+          is_published: true,
+          published_at: new Date().toISOString()
         })
         .eq('id', selectedRequest.id);
 
