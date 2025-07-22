@@ -12,6 +12,7 @@ export function Navigation({ className }: NavigationProps) {
   const navItems = [
     { href: "/", label: "홈" },
     { href: "/about", label: "회사소개" },
+    { href: "/business-documents", label: "서류관리" },
     { href: "/services", label: "서비스" },
     { href: "/admin", label: "관리자" },
     { href: "/dashboard", label: "대시보드" },
