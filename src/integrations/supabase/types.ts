@@ -14,6 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      business_registration: {
+        Row: {
+          company_id: number
+          document_name: string
+          document_url: string
+          file_size: number | null
+          id: number
+          is_verified: boolean
+          uploaded_at: string
+          verification_notes: string | null
+          verified_at: string | null
+        }
+        Insert: {
+          company_id: number
+          document_name: string
+          document_url: string
+          file_size?: number | null
+          id?: number
+          is_verified?: boolean
+          uploaded_at?: string
+          verification_notes?: string | null
+          verified_at?: string | null
+        }
+        Update: {
+          company_id?: number
+          document_name?: string
+          document_url?: string
+          file_size?: number | null
+          id?: number
+          is_verified?: boolean
+          uploaded_at?: string
+          verification_notes?: string | null
+          verified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_registration_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       carbon_points: {
         Row: {
           carbon_saved: number | null
@@ -205,6 +249,143 @@ export type Database = {
             columns: ["approved_by"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      excel_reference: {
+        Row: {
+          data_content: Json
+          data_type: string
+          file_name: string
+          id: number
+          is_active: boolean
+          last_updated: string
+          sheet_name: string
+          version: number
+        }
+        Insert: {
+          data_content: Json
+          data_type: string
+          file_name: string
+          id?: number
+          is_active?: boolean
+          last_updated?: string
+          sheet_name: string
+          version?: number
+        }
+        Update: {
+          data_content?: Json
+          data_type?: string
+          file_name?: string
+          id?: number
+          is_active?: boolean
+          last_updated?: string
+          sheet_name?: string
+          version?: number
+        }
+        Relationships: []
+      }
+      gpt_analysis: {
+        Row: {
+          analysis_type: string
+          created_at: string
+          id: number
+          matching_request_id: number
+          processing_time: number | null
+          prompt_used: string | null
+          raw_response: string | null
+          structured_data: Json | null
+          tokens_used: number | null
+          updated_at: string
+        }
+        Insert: {
+          analysis_type: string
+          created_at?: string
+          id?: number
+          matching_request_id: number
+          processing_time?: number | null
+          prompt_used?: string | null
+          raw_response?: string | null
+          structured_data?: Json | null
+          tokens_used?: number | null
+          updated_at?: string
+        }
+        Update: {
+          analysis_type?: string
+          created_at?: string
+          id?: number
+          matching_request_id?: number
+          processing_time?: number | null
+          prompt_used?: string | null
+          raw_response?: string | null
+          structured_data?: Json | null
+          tokens_used?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gpt_analysis_matching_request_id_fkey"
+            columns: ["matching_request_id"]
+            isOneToOne: false
+            referencedRelation: "matching_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mail_log: {
+        Row: {
+          company_id: number | null
+          content: string | null
+          delivery_status: string
+          email_type: string
+          error_message: string | null
+          id: number
+          matching_request_id: number | null
+          recipient_email: string
+          sent_at: string
+          subject: string
+          template_used: string | null
+        }
+        Insert: {
+          company_id?: number | null
+          content?: string | null
+          delivery_status?: string
+          email_type: string
+          error_message?: string | null
+          id?: number
+          matching_request_id?: number | null
+          recipient_email: string
+          sent_at?: string
+          subject: string
+          template_used?: string | null
+        }
+        Update: {
+          company_id?: number | null
+          content?: string | null
+          delivery_status?: string
+          email_type?: string
+          error_message?: string | null
+          id?: number
+          matching_request_id?: number | null
+          recipient_email?: string
+          sent_at?: string
+          subject?: string
+          template_used?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mail_log_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mail_log_matching_request_id_fkey"
+            columns: ["matching_request_id"]
+            isOneToOne: false
+            referencedRelation: "matching_requests"
             referencedColumns: ["id"]
           },
         ]
