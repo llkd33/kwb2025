@@ -6,12 +6,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 
 export default function Auth() {
   const [isLoading, setIsLoading] = useState(false);
+  const [showApprovalDialog, setShowApprovalDialog] = useState(false);
+  const [businessDocument, setBusinessDocument] = useState<File | null>(null);
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
   const [signupForm, setSignupForm] = useState({
     email: "",
@@ -97,8 +100,32 @@ export default function Auth() {
     }
   };
 
+  const uploadBusinessDocument = async (companyId: number) => {
+    if (!businessDocument) return null;
+
+    const fileExt = businessDocument.name.split('.').pop();
+    const fileName = `${companyId}_business_registration_${Date.now()}.${fileExt}`;
+    
+    const { data, error } = await supabase.storage
+      .from('business-documents')
+      .upload(fileName, businessDocument);
+
+    if (error) throw error;
+    return data.path;
+  };
+
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!businessDocument) {
+      toast({
+        title: "사업자등록증 필요",
+        description: "사업자등록증을 업로드해주세요.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -134,10 +161,18 @@ export default function Auth() {
         throw error;
       }
 
-      toast({
-        title: "회원가입 완료",
-        description: "관리자 승인 후 이메일로 알려드리겠습니다. 사업자등록증을 업로드해주세요.",
-      });
+      // Upload business document
+      const documentPath = await uploadBusinessDocument(newCompany.id);
+      
+      // Save business document record
+      await supabase
+        .from('business_registration')
+        .insert({
+          company_id: newCompany.id,
+          document_url: documentPath,
+          document_name: businessDocument.name,
+          file_size: businessDocument.size
+        });
 
       // Reset form
       setSignupForm({
@@ -160,6 +195,10 @@ export default function Auth() {
         company_vision: "",
         website: ""
       });
+      setBusinessDocument(null);
+
+      // Show approval dialog
+      setShowApprovalDialog(true);
 
     } catch (error: any) {
       toast({
@@ -306,13 +345,40 @@ export default function Auth() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="headquarters_country">본사 국가 *</Label>
-                    <Input
-                      id="headquarters_country"
-                      value={signupForm.headquarters_country}
-                      onChange={(e) => setSignupForm({ ...signupForm, headquarters_country: e.target.value })}
-                      placeholder="대한민국"
-                      required
-                    />
+                    <Select value={signupForm.headquarters_country} onValueChange={(value) => setSignupForm({ ...signupForm, headquarters_country: value })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="국가 선택" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="한국">한국</SelectItem>
+                        <SelectItem value="일본">일본</SelectItem>
+                        <SelectItem value="싱가포르">싱가포르</SelectItem>
+                        <SelectItem value="대만">대만</SelectItem>
+                        <SelectItem value="홍콩">홍콩</SelectItem>
+                        <SelectItem value="필리핀">필리핀</SelectItem>
+                        <SelectItem value="인도네시아">인도네시아</SelectItem>
+                        <SelectItem value="말레이시아">말레이시아</SelectItem>
+                        <SelectItem value="베트남">베트남</SelectItem>
+                        <SelectItem value="태국">태국</SelectItem>
+                        <SelectItem value="인도">인도</SelectItem>
+                        <SelectItem value="기타 아시아">기타 아시아</SelectItem>
+                        <SelectItem value="UAE">UAE</SelectItem>
+                        <SelectItem value="사우디아라비아">사우디아라비아</SelectItem>
+                        <SelectItem value="기타 중동">기타 중동</SelectItem>
+                        <SelectItem value="미국">미국</SelectItem>
+                        <SelectItem value="캐나다">캐나다</SelectItem>
+                        <SelectItem value="기타 북미">기타 북미</SelectItem>
+                        <SelectItem value="독일">독일</SelectItem>
+                        <SelectItem value="영국">영국</SelectItem>
+                        <SelectItem value="프랑스">프랑스</SelectItem>
+                        <SelectItem value="이탈리아">이탈리아</SelectItem>
+                        <SelectItem value="스페인">스페인</SelectItem>
+                        <SelectItem value="네덜란드">네덜란드</SelectItem>
+                        <SelectItem value="기타 유럽">기타 유럽</SelectItem>
+                        <SelectItem value="호주">호주</SelectItem>
+                        <SelectItem value="뉴질랜드">뉴질랜드</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="headquarters_city">본사 도시</Label>
@@ -380,6 +446,20 @@ export default function Auth() {
                     placeholder="진출하고자 하는 해외 시장을 설명해주세요"
                   />
                 </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="business_document">사업자등록증 *</Label>
+                  <Input
+                    id="business_document"
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    onChange={(e) => setBusinessDocument(e.target.files?.[0] || null)}
+                    required
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    PDF, JPG, PNG 파일만 업로드 가능합니다.
+                  </p>
+                </div>
                 
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? "회원가입 중..." : "회원가입"}
@@ -389,6 +469,23 @@ export default function Auth() {
           </Tabs>
         </CardContent>
       </Card>
+
+      <Dialog open={showApprovalDialog} onOpenChange={setShowApprovalDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>회원가입 완료</DialogTitle>
+            <DialogDescription>
+              회원가입이 완료되었습니다. 관리자 승인 후 이메일로 알려드리겠습니다.
+            </DialogDescription>
+          </DialogHeader>
+          <Button onClick={() => {
+            setShowApprovalDialog(false);
+            navigate('/');
+          }}>
+            확인
+          </Button>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
