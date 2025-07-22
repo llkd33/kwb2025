@@ -1259,27 +1259,31 @@ export default function Admin() {
             </Button>
           </div>
 
-          <div className="space-y-4">
-            {prompts.map((prompt) => (
-              <Card key={prompt.id}>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="flex items-center gap-2">
-                        <Brain className="h-5 w-5" />
-                        {prompt.prompt_title}
-                      </CardTitle>
-                      <CardDescription>
-                        타입: {prompt.prompt_type} | 최종 수정: {new Date(prompt.updated_at).toLocaleDateString()}
-                      </CardDescription>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant={prompt.is_active ? "default" : "secondary"}>
-                        {prompt.is_active ? "활성" : "비활성"}
-                      </Badge>
+          {/* Current Active Prompts Section */}
+          <div className="mb-8">
+            <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <Settings className="h-5 w-5 text-green-600" />
+              🟢 현재 활성화된 프롬프트
+            </h4>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {prompts.filter(prompt => prompt.is_active).map((prompt) => (
+                <Card key={prompt.id} className="border-2 border-green-200 bg-green-50">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle className="flex items-center gap-2 text-green-800">
+                          <Badge className="bg-green-600 text-white">ACTIVE</Badge>
+                          {prompt.prompt_title}
+                        </CardTitle>
+                        <CardDescription className="text-green-700">
+                          타입: <span className="font-semibold">{prompt.prompt_type}</span> | 
+                          수정: {new Date(prompt.updated_at).toLocaleDateString()}
+                        </CardDescription>
+                      </div>
                       <Button
                         variant="outline"
                         size="sm"
+                        className="border-green-300 hover:bg-green-100"
                         onClick={() => {
                           setEditingPrompt(prompt);
                           setShowPromptDialog(true);
@@ -1288,26 +1292,96 @@ export default function Admin() {
                         <Edit className="h-4 w-4" />
                       </Button>
                     </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div>
-                      <p className="text-sm font-medium">시스템 프롬프트:</p>
-                      <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded mt-1">
-                        {prompt.system_prompt.substring(0, 200)}...
-                      </p>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-sm font-medium text-green-800">시스템 프롬프트:</p>
+                        <div className="text-xs text-green-700 bg-white p-3 rounded border border-green-200 mt-1 max-h-20 overflow-y-auto">
+                          {prompt.system_prompt.substring(0, 150)}...
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-green-800">사용자 프롬프트 템플릿:</p>
+                        <div className="text-xs text-green-700 bg-white p-3 rounded border border-green-200 mt-1 max-h-20 overflow-y-auto">
+                          {prompt.user_prompt_template.substring(0, 150)}...
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium">사용자 프롬프트 템플릿:</p>
-                      <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded mt-1">
-                        {prompt.user_prompt_template.substring(0, 200)}...
-                      </p>
-                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+            {prompts.filter(prompt => prompt.is_active).length === 0 && (
+              <Card className="border-orange-200 bg-orange-50">
+                <CardContent className="text-center py-6">
+                  <div className="text-orange-600">
+                    <Settings className="h-8 w-8 mx-auto mb-2" />
+                    <p className="font-semibold">활성화된 프롬프트가 없습니다</p>
+                    <p className="text-sm">최소 하나의 프롬프트를 활성화하여 AI 분석을 진행하세요.</p>
                   </div>
                 </CardContent>
               </Card>
-            ))}
+            )}
+          </div>
+
+          {/* All Prompts Section */}
+          <div>
+            <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <Brain className="h-5 w-5 text-blue-600" />
+              전체 프롬프트 목록
+            </h4>
+            <div className="space-y-4">
+              {prompts.map((prompt) => (
+                <Card key={prompt.id} className={prompt.is_active ? "opacity-75" : ""}>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle className="flex items-center gap-2">
+                          <Brain className="h-5 w-5" />
+                          {prompt.prompt_title}
+                          {prompt.is_active && <Badge className="bg-green-600 text-white text-xs">사용중</Badge>}
+                        </CardTitle>
+                        <CardDescription>
+                          타입: {prompt.prompt_type} | 최종 수정: {new Date(prompt.updated_at).toLocaleDateString()}
+                        </CardDescription>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant={prompt.is_active ? "default" : "secondary"}>
+                          {prompt.is_active ? "활성" : "비활성"}
+                        </Badge>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setEditingPrompt(prompt);
+                            setShowPromptDialog(true);
+                          }}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-sm font-medium">시스템 프롬프트:</p>
+                        <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded mt-1">
+                          {prompt.system_prompt.substring(0, 200)}...
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">사용자 프롬프트 템플릿:</p>
+                        <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded mt-1">
+                          {prompt.user_prompt_template.substring(0, 200)}...
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </div>
         </TabsContent>
 
@@ -1329,27 +1403,31 @@ export default function Admin() {
             </Button>
           </div>
 
-          <div className="space-y-4">
-            {perplexityPrompts.map((prompt) => (
-              <Card key={prompt.id}>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="flex items-center gap-2">
-                        <Brain className="h-5 w-5" />
-                        {prompt.prompt_title}
-                      </CardTitle>
-                      <CardDescription>
-                        타입: {prompt.prompt_type} | 최종 수정: {new Date(prompt.updated_at).toLocaleDateString()}
-                      </CardDescription>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant={prompt.is_active ? "default" : "secondary"}>
-                        {prompt.is_active ? "활성" : "비활성"}
-                      </Badge>
+          {/* Current Active Perplexity Prompts Section */}
+          <div className="mb-8">
+            <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <Settings className="h-5 w-5 text-purple-600" />
+              🟣 현재 활성화된 퍼플렉시티 프롬프트
+            </h4>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {perplexityPrompts.filter(prompt => prompt.is_active).map((prompt) => (
+                <Card key={prompt.id} className="border-2 border-purple-200 bg-purple-50">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle className="flex items-center gap-2 text-purple-800">
+                          <Badge className="bg-purple-600 text-white">ACTIVE</Badge>
+                          {prompt.prompt_title}
+                        </CardTitle>
+                        <CardDescription className="text-purple-700">
+                          타입: <span className="font-semibold">{prompt.prompt_type}</span> | 
+                          수정: {new Date(prompt.updated_at).toLocaleDateString()}
+                        </CardDescription>
+                      </div>
                       <Button
                         variant="outline"
                         size="sm"
+                        className="border-purple-300 hover:bg-purple-100"
                         onClick={() => {
                           setEditingPerplexityPrompt(prompt);
                           setShowPerplexityPromptDialog(true);
@@ -1358,28 +1436,101 @@ export default function Admin() {
                         <Edit className="h-4 w-4" />
                       </Button>
                     </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div>
-                      <p className="text-sm font-medium">시스템 프롬프트:</p>
-                      <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded mt-1">
-                        {prompt.system_prompt.substring(0, 200)}...
-                      </p>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-sm font-medium text-purple-800">시스템 프롬프트:</p>
+                        <div className="text-xs text-purple-700 bg-white p-3 rounded border border-purple-200 mt-1 max-h-20 overflow-y-auto">
+                          {prompt.system_prompt.substring(0, 150)}...
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-purple-800">사용자 프롬프트 템플릿:</p>
+                        <div className="text-xs text-purple-700 bg-white p-3 rounded border border-purple-200 mt-1 max-h-20 overflow-y-auto">
+                          {prompt.user_prompt_template.substring(0, 150)}...
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium">사용자 프롬프트 템플릿:</p>
-                      <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded mt-1">
-                        {prompt.user_prompt_template.substring(0, 200)}...
-                      </p>
-                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+            {perplexityPrompts.filter(prompt => prompt.is_active).length === 0 && (
+              <Card className="border-orange-200 bg-orange-50">
+                <CardContent className="text-center py-6">
+                  <div className="text-orange-600">
+                    <Settings className="h-8 w-8 mx-auto mb-2" />
+                    <p className="font-semibold">활성화된 퍼플렉시티 프롬프트가 없습니다</p>
+                    <p className="text-sm">최소 하나의 프롬프트를 활성화하여 시장 분석을 진행하세요.</p>
                   </div>
                 </CardContent>
               </Card>
-            ))}
+            )}
+          </div>
+
+          {/* All Perplexity Prompts Section */}
+          <div>
+            <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <Brain className="h-5 w-5 text-purple-600" />
+              전체 퍼플렉시티 프롬프트 목록
+            </h4>
+            <div className="space-y-4">
+              {perplexityPrompts.map((prompt) => (
+                <Card key={prompt.id} className={prompt.is_active ? "opacity-75" : ""}>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle className="flex items-center gap-2">
+                          <Brain className="h-5 w-5" />
+                          {prompt.prompt_title}
+                          {prompt.is_active && <Badge className="bg-purple-600 text-white text-xs">사용중</Badge>}
+                        </CardTitle>
+                        <CardDescription>
+                          타입: {prompt.prompt_type} | 최종 수정: {new Date(prompt.updated_at).toLocaleDateString()}
+                        </CardDescription>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant={prompt.is_active ? "default" : "secondary"}>
+                          {prompt.is_active ? "활성" : "비활성"}
+                        </Badge>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setEditingPerplexityPrompt(prompt);
+                            setShowPerplexityPromptDialog(true);
+                          }}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-sm font-medium">시스템 프롬프트:</p>
+                        <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded mt-1">
+                          {prompt.system_prompt.substring(0, 200)}...
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">사용자 프롬프트 템플릿:</p>
+                        <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded mt-1">
+                          {prompt.user_prompt_template.substring(0, 200)}...
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </div>
         </TabsContent>
+
+        {/* Market Data Tab */}
+        <TabsContent value="data" className="mt-6">
 
         {/* Market Data Tab */}
         <TabsContent value="data" className="mt-6">
