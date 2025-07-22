@@ -85,7 +85,7 @@ export default function Auth() {
         description: `${company.company_name}님, 환영합니다!`,
       });
 
-      navigate('/');
+      navigate('/dashboard');
     } catch (error: any) {
       toast({
         title: "로그인 오류",
