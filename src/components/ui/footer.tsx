@@ -14,6 +14,14 @@ export function Footer() {
                 전세계 AI·Fintech·IT 생태계 활성화에 기여하는 맞춤형 비즈니스 매칭 전문기업입니다. 
                 글로벌 시장에서 여러분의 성공적인 비즈니스를 위해 최선을 다하겠습니다.
               </p>
+              <div className="text-sm text-primary-foreground/80 space-y-1 mb-4">
+                <p>상호명 : (주)노웨어브릿지</p>
+                <p>대표 : 홍 동 표</p>
+                <p>TEL : 02-525-7121</p>
+                <p>EMAIL : sales@knowwherebridge.com</p>
+                <p>사업자 등록번호 : 755-88-02896</p>
+                <p>주소 : 서울특별시 서초구 서초대로 77길 39, 11층 106호</p>
+              </div>
               <Button variant="secondary" className="bg-white/10 hover:bg-white/20 border-white/20">
                 회사소개서 다운로드
                 <ExternalLink className="ml-2 w-4 h-4" />
@@ -75,7 +83,7 @@ export function Footer() {
           <div className="border-t border-white/20 pt-8">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
               <p className="text-sm text-primary-foreground/60">
-                © 2024 KnowWhere Bridge Matching 서비스. All rights reserved.
+                Copyright 2024. 노웨어 브릿지 Co. All rights reserved.
               </p>
               <div className="flex gap-6 text-sm">
                 <a href="/privacy" className="text-primary-foreground/60 hover:text-white transition-colors">
