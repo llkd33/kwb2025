@@ -159,7 +159,7 @@ export default function Dashboard() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">대시보드</h1>
+          <h1 className="text-3xl font-bold">마이페이지</h1>
           <p className="text-gray-600 mt-1">
             안녕하세요, {currentCompany.company_name}님! 👋
           </p>
