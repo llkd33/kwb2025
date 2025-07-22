@@ -15,8 +15,8 @@ export function HeroSection() {
 
   const handleStartAnalysis = () => {
     if (isLoggedIn) {
-      // 로그인된 경우 매칭 요청 페이지로 이동 (추후 구현)
-      navigate('/matching-request');
+      // 로그인된 경우 마이페이지로 이동 (매칭 요청 페이지는 추후 구현)
+      navigate('/dashboard');
     } else {
       // 비로그인 시 회원가입 페이지로 이동
       navigate('/auth');
