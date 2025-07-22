@@ -15,7 +15,7 @@ export function CompanyBrief() {
           <h2 className="text-3xl md:text-4xl font-bold mb-6">
             전세계 AI·Fintech·IT 생태계 활성화에 기여하는
             <br />
-            <span className="text-primary">노웨어브릿지</span>
+            <span className="text-primary">KnowWhere Bridge Matching 서비스</span>
           </h2>
           <p className="text-xl text-muted-foreground mb-12 max-w-3xl mx-auto">
             맞춤형 비즈니스 매칭 전문기업으로, 자체 개발한 AI 플랫폼과 글로벌 전문가 그룹을 활용하여 

@@ -19,7 +19,7 @@ export default function Services() {
               <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-sm">NB</span>
               </div>
-              <span className="text-xl font-bold text-primary">노웨어브릿지</span>
+              <span className="text-xl font-bold text-primary">KnowWhere Bridge Matching 서비스</span>
             </div>
             <Navigation />
           </div>
@@ -156,7 +156,7 @@ export default function Services() {
         <section className="py-20 bg-gray-50">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">왜 노웨어브릿지인가?</h2>
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">왜 KnowWhere Bridge Matching 서비스인가?</h2>
               <p className="text-xl text-gray-600 max-w-2xl mx-auto">
                 글로벌 비즈니스 성공을 위한 차별화된 장점들을 확인하세요.
               </p>

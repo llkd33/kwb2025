@@ -76,7 +76,7 @@ export function FeaturesSection() {
               {t('home.features.title')}
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              노웨어브릿지만의 차별화된 AI 분석 시스템으로 글로벌 비즈니스 성공을 앞당기세요.
+              KnowWhere Bridge Matching 서비스만의 차별화된 AI 분석 시스템으로 글로벌 비즈니스 성공을 앞당기세요.
             </p>
           </div>
 

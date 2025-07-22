@@ -13,7 +13,7 @@ const About = () => {
               <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-sm">NB</span>
               </div>
-              <span className="text-xl font-bold text-primary">노웨어브릿지</span>
+              <span className="text-xl font-bold text-primary">KnowWhere Bridge Matching 서비스</span>
             </div>
             <Navigation />
           </div>

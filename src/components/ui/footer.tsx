@@ -9,7 +9,7 @@ export function Footer() {
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
             {/* Company Info */}
             <div className="lg:col-span-2">
-              <h3 className="text-2xl font-bold mb-4">노웨어브릿지</h3>
+              <h3 className="text-2xl font-bold mb-4">KnowWhere Bridge Matching 서비스</h3>
               <p className="text-primary-foreground/80 mb-6 leading-relaxed">
                 전세계 AI·Fintech·IT 생태계 활성화에 기여하는 맞춤형 비즈니스 매칭 전문기업입니다. 
                 글로벌 시장에서 여러분의 성공적인 비즈니스를 위해 최선을 다하겠습니다.
@@ -44,7 +44,7 @@ export function Footer() {
                     <p className="font-medium">주소</p>
                     <p className="text-sm text-primary-foreground/80">
                       서울특별시 강남구 테헤란로<br />
-                      123, 노웨어브릿지빌딩 10층
+                      123, KnowWhere Bridge Matching 서비스빌딩 10층
                     </p>
                   </div>
                 </div>
@@ -75,7 +75,7 @@ export function Footer() {
           <div className="border-t border-white/20 pt-8">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
               <p className="text-sm text-primary-foreground/60">
-                © 2024 노웨어브릿지(NoWhereBridge). All rights reserved.
+                © 2024 KnowWhere Bridge Matching 서비스. All rights reserved.
               </p>
               <div className="flex gap-6 text-sm">
                 <a href="/privacy" className="text-primary-foreground/60 hover:text-white transition-colors">

@@ -28,7 +28,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
   const translations = {
     ko: {
       // Auth
-      'auth.title': 'NowhereMatching',
+      'auth.title': 'KnowWhere Bridge Matching 서비스',
       'auth.subtitle': '해외진출 매칭 플랫폼에 오신 것을 환영합니다',
       'auth.login': '로그인',
       'auth.signup': '회원가입',
@@ -116,7 +116,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
       'home.hero.title': '글로벌 비즈니스 매칭의\n새로운 기준',
       'home.hero.subtitle': '해외진출을 꿈꾸는 기업과 글로벌 파트너를 연결하는\n스마트한 매칭 플랫폼',
       'home.hero.cta': '무료 매칭 신청',
-      'home.features.title': '왜 NowhereMatching을 선택해야 할까요?',
+      'home.features.title': '왜 KnowWhere Bridge Matching 서비스를 선택해야 할까요?',
       'home.features.ai.title': 'AI 기반 매칭',
       'home.features.ai.desc': '인공지능이 분석한 정확한 파트너 매칭',
       'home.features.global.title': '글로벌 네트워크',
@@ -130,7 +130,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
     },
     en: {
       // Auth
-      'auth.title': 'NowhereMatching',
+      'auth.title': 'KnowWhere Bridge Matching Service',
       'auth.subtitle': 'Welcome to the Global Business Matching Platform',
       'auth.login': 'Login',
       'auth.signup': 'Sign Up',
@@ -218,7 +218,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
       'home.hero.title': 'The New Standard for\nGlobal Business Matching',
       'home.hero.subtitle': 'Smart matching platform connecting companies dreaming of\nglobal expansion with worldwide partners',
       'home.hero.cta': 'Apply for Free Matching',
-      'home.features.title': 'Why Choose NowhereMatching?',
+      'home.features.title': 'Why Choose KnowWhere Bridge Matching Service?',
       'home.features.ai.title': 'AI-Based Matching',
       'home.features.ai.desc': 'Accurate partner matching analyzed by AI',
       'home.features.global.title': 'Global Network',
@@ -232,7 +232,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
     },
     ja: {
       // Auth
-      'auth.title': 'NowhereMatching',
+      'auth.title': 'KnowWhere Bridge Matching サービス',
       'auth.subtitle': 'グローバルビジネスマッチングプラットフォームへようこそ',
       'auth.login': 'ログイン',
       'auth.signup': '会員登録',
@@ -320,7 +320,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
       'home.hero.title': 'グローバルビジネスマッチングの\n新基準',
       'home.hero.subtitle': '海外進出を夢見る企業と世界のパートナーを\n繋ぐスマートマッチングプラットフォーム',
       'home.hero.cta': '無料マッチング申請',
-      'home.features.title': 'なぜNowhereMatchingを選ぶべきか？',
+      'home.features.title': 'なぜKnowWhere Bridge Matching サービスを選ぶべきか？',
       'home.features.ai.title': 'AI基盤マッチング',
       'home.features.ai.desc': 'AIが分析した正確なパートナーマッチング',
       'home.features.global.title': 'グローバルネットワーク',
