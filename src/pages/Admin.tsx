@@ -78,15 +78,19 @@ export default function Admin() {
   const [prompts, setPrompts] = useState<GPTPrompt[]>([]);
   const [perplexityPrompts, setPerplexityPrompts] = useState<PerplexityPrompt[]>([]);
   const [marketData, setMarketData] = useState<MarketData[]>([]);
+  const [matchingRequests, setMatchingRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [selectedPrompt, setSelectedPrompt] = useState<GPTPrompt | null>(null);
   const [selectedPerplexityPrompt, setSelectedPerplexityPrompt] = useState<PerplexityPrompt | null>(null);
+  const [selectedRequest, setSelectedRequest] = useState<any>(null);
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [showPromptDialog, setShowPromptDialog] = useState(false);
   const [showPerplexityPromptDialog, setShowPerplexityPromptDialog] = useState(false);
   const [showDataDialog, setShowDataDialog] = useState(false);
+  const [showReportDialog, setShowReportDialog] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
+  const [adminComments, setAdminComments] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -110,7 +114,8 @@ export default function Admin() {
       fetchCompanies(),
       fetchPrompts(),
       fetchPerplexityPrompts(),
-      fetchMarketData()
+      fetchMarketData(),
+      fetchMatchingRequests()
     ]);
   };
 
@@ -184,6 +189,32 @@ export default function Admin() {
     } catch (error: any) {
       toast({
         title: "시장 데이터 로드 오류",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const fetchMatchingRequests = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('matching_requests')
+        .select(`
+          *,
+          companies!matching_requests_company_id_fkey (
+            company_name,
+            email,
+            industry,
+            headquarters_country
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setMatchingRequests(data || []);
+    } catch (error: any) {
+      toast({
+        title: "매칭 요청 로드 오류",
         description: error.message,
         variant: "destructive",
       });
@@ -550,6 +581,60 @@ export default function Admin() {
     }
   };
 
+  const handleFinalizeReport = async () => {
+    if (!selectedRequest) return;
+
+    setActionLoading(true);
+    try {
+      // Update matching request with admin comments
+      const { error: updateError } = await supabase
+        .from('matching_requests')
+        .update({
+          admin_comments: adminComments,
+          status: 'published'
+        })
+        .eq('id', selectedRequest.id);
+
+      if (updateError) throw updateError;
+
+      // Send final report email to company
+      const { error: emailError } = await supabase.functions.invoke('send-analysis-complete-email', {
+        body: {
+          companyId: selectedRequest.company_id,
+          matchingRequestId: selectedRequest.id,
+          reportSummary: selectedRequest.final_report?.summary || '리포트가 준비되었습니다.'
+        }
+      });
+
+      if (emailError) {
+        console.error('Email sending failed:', emailError);
+        toast({
+          title: "배포 완료",
+          description: "리포트 배포는 완료되었으나 이메일 발송에 실패했습니다.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "배포 완료",
+          description: "리포트가 성공적으로 배포되었고 기업에 알림 이메일이 발송되었습니다.",
+        });
+      }
+
+      setShowReportDialog(false);
+      setSelectedRequest(null);
+      setAdminComments('');
+      fetchMatchingRequests();
+    } catch (error: any) {
+      toast({
+        title: "배포 실패",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const pendingCompanies = companies.filter(c => c.is_approved === false && !c.rejection_reason);
   const approvedCompanies = companies.filter(c => c.is_approved === true);
   const rejectedCompanies = companies.filter(c => c.rejection_reason);
@@ -705,10 +790,11 @@ export default function Admin() {
       </div>
 
       <Tabs defaultValue="pending" className="w-full">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="pending">승인 대기 ({pendingCompanies.length})</TabsTrigger>
           <TabsTrigger value="approved">승인 완료 ({approvedCompanies.length})</TabsTrigger>
           <TabsTrigger value="rejected">거부됨 ({rejectedCompanies.length})</TabsTrigger>
+          <TabsTrigger value="reports">리포트 리뷰</TabsTrigger>
           <TabsTrigger value="prompts">AI 프롬프트</TabsTrigger>
           <TabsTrigger value="perplexity">퍼플렉시티</TabsTrigger>
           <TabsTrigger value="data">시장 데이터</TabsTrigger>
@@ -754,6 +840,85 @@ export default function Admin() {
               <CompanyCard key={company.id} company={company} />
             ))
           )}
+        </TabsContent>
+
+        {/* Report Review Tab */}
+        <TabsContent value="reports" className="mt-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="text-lg font-semibold">AI 리포트 리뷰</h3>
+              <p className="text-gray-600">생성된 AI 리포트를 검토하고 최종 배포합니다.</p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {matchingRequests.filter(request => request.status === 'completed').map((request) => (
+              <Card key={request.id}>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        <Building2 className="h-5 w-5" />
+                        {request.companies?.company_name}
+                      </CardTitle>
+                      <CardDescription>
+                        업종: {request.companies?.industry} | 국가: {request.companies?.headquarters_country} | 요청일: {new Date(request.created_at).toLocaleDateString()}
+                      </CardDescription>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={request.status === 'completed' ? "default" : "secondary"}>
+                        {request.status === 'completed' ? '분석완료' : '분석중'}
+                      </Badge>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedRequest(request);
+                          setAdminComments(request.admin_comments || '');
+                          setShowReportDialog(true);
+                        }}
+                      >
+                        <Edit className="h-4 w-4 mr-1" />
+                        리뷰
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p><strong>타겟 국가:</strong> {request.target_countries?.join(', ')}</p>
+                      <p><strong>제품/서비스:</strong> {request.product_info || '미입력'}</p>
+                    </div>
+                    <div>
+                      <p><strong>시장 정보:</strong> {request.market_info || '미입력'}</p>
+                      <p><strong>분석 완료일:</strong> {request.completed_at ? new Date(request.completed_at).toLocaleDateString() : '미완료'}</p>
+                    </div>
+                  </div>
+                  
+                  {request.final_report && (
+                    <div className="mt-4">
+                      <p className="font-medium mb-2">리포트 요약:</p>
+                      <div className="bg-gray-50 p-3 rounded text-sm max-h-32 overflow-y-auto">
+                        {typeof request.final_report === 'object' && request.final_report.summary 
+                          ? request.final_report.summary.substring(0, 200) + '...'
+                          : JSON.stringify(request.final_report).substring(0, 200) + '...'
+                        }
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+            
+            {matchingRequests.filter(request => request.status === 'completed').length === 0 && (
+              <Card>
+                <CardContent className="text-center py-8">
+                  <p className="text-gray-500">리뷰할 리포트가 없습니다.</p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
         </TabsContent>
 
         {/* AI Prompts Tab */}
@@ -1252,6 +1417,113 @@ export default function Admin() {
             <Button onClick={handleAddDataEntry}>
               <Plus className="h-4 w-4 mr-2" />
               추가
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Report Review Dialog */}
+      <Dialog open={showReportDialog} onOpenChange={setShowReportDialog}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>AI 리포트 리뷰 및 배포</DialogTitle>
+            <DialogDescription>
+              생성된 AI 리포트를 검토하고 최종 배포합니다.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedRequest && (
+            <div className="space-y-6">
+              {/* Company Info */}
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-semibold mb-2">기업 정보</h4>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p><strong>기업명:</strong> {selectedRequest.companies?.company_name}</p>
+                    <p><strong>업종:</strong> {selectedRequest.companies?.industry}</p>
+                  </div>
+                  <div>
+                    <p><strong>국가:</strong> {selectedRequest.companies?.headquarters_country}</p>
+                    <p><strong>이메일:</strong> {selectedRequest.companies?.email}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Request Info */}
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <h4 className="font-semibold mb-2">요청 정보</h4>
+                <div className="space-y-2 text-sm">
+                  <p><strong>타겟 국가:</strong> {selectedRequest.target_countries?.join(', ')}</p>
+                  <p><strong>제품/서비스:</strong> {selectedRequest.product_info || '미입력'}</p>
+                  <p><strong>시장 정보:</strong> {selectedRequest.market_info || '미입력'}</p>
+                  <p><strong>요청일:</strong> {new Date(selectedRequest.created_at).toLocaleDateString()}</p>
+                </div>
+              </div>
+
+              {/* AI Analysis Results */}
+              {selectedRequest.ai_analysis && (
+                <div className="border p-4 rounded-lg">
+                  <h4 className="font-semibold mb-2">GPT 기업 분석</h4>
+                  <div className="bg-gray-50 p-3 rounded text-sm max-h-40 overflow-y-auto">
+                    {typeof selectedRequest.ai_analysis === 'string' 
+                      ? selectedRequest.ai_analysis 
+                      : JSON.stringify(selectedRequest.ai_analysis, null, 2)
+                    }
+                  </div>
+                </div>
+              )}
+
+              {/* Market Research */}
+              {selectedRequest.market_research && (
+                <div className="border p-4 rounded-lg">
+                  <h4 className="font-semibold mb-2">Perplexity 시장 조사</h4>
+                  <div className="bg-gray-50 p-3 rounded text-sm max-h-40 overflow-y-auto">
+                    {typeof selectedRequest.market_research === 'string' 
+                      ? selectedRequest.market_research 
+                      : JSON.stringify(selectedRequest.market_research, null, 2)
+                    }
+                  </div>
+                </div>
+              )}
+
+              {/* Final Report */}
+              {selectedRequest.final_report && (
+                <div className="border p-4 rounded-lg">
+                  <h4 className="font-semibold mb-2">최종 통합 리포트</h4>
+                  <div className="bg-gray-50 p-3 rounded text-sm max-h-60 overflow-y-auto">
+                    {typeof selectedRequest.final_report === 'string' 
+                      ? selectedRequest.final_report 
+                      : JSON.stringify(selectedRequest.final_report, null, 2)
+                    }
+                  </div>
+                </div>
+              )}
+
+              {/* Admin Comments */}
+              <div>
+                <Label htmlFor="admin-comments">어드민 코멘트 및 추가 내용</Label>
+                <Textarea
+                  id="admin-comments"
+                  value={adminComments}
+                  onChange={(e) => setAdminComments(e.target.value)}
+                  placeholder="리포트에 대한 추가 의견이나 수정사항을 입력하세요..."
+                  className="h-32 mt-2"
+                />
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowReportDialog(false)}>
+              취소
+            </Button>
+            <Button 
+              onClick={handleFinalizeReport}
+              disabled={actionLoading}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              <Mail className="h-4 w-4 mr-2" />
+              최종 배포 및 이메일 발송
             </Button>
           </DialogFooter>
         </DialogContent>
