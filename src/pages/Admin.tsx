@@ -62,15 +62,29 @@ interface MarketData {
   is_active: boolean;
 }
 
+interface PerplexityPrompt {
+  id: number;
+  prompt_type: string;
+  prompt_title: string;
+  system_prompt: string;
+  user_prompt_template: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export default function Admin() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [prompts, setPrompts] = useState<GPTPrompt[]>([]);
+  const [perplexityPrompts, setPerplexityPrompts] = useState<PerplexityPrompt[]>([]);
   const [marketData, setMarketData] = useState<MarketData[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [selectedPrompt, setSelectedPrompt] = useState<GPTPrompt | null>(null);
+  const [selectedPerplexityPrompt, setSelectedPerplexityPrompt] = useState<PerplexityPrompt | null>(null);
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [showPromptDialog, setShowPromptDialog] = useState(false);
+  const [showPerplexityPromptDialog, setShowPerplexityPromptDialog] = useState(false);
   const [showDataDialog, setShowDataDialog] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
@@ -78,6 +92,7 @@ export default function Admin() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [editingPrompt, setEditingPrompt] = useState<Partial<GPTPrompt>>({});
+  const [editingPerplexityPrompt, setEditingPerplexityPrompt] = useState<Partial<PerplexityPrompt>>({});
   const [newDataEntry, setNewDataEntry] = useState({
     data_category: '',
     country: '',
@@ -94,6 +109,7 @@ export default function Admin() {
     await Promise.all([
       fetchCompanies(),
       fetchPrompts(),
+      fetchPerplexityPrompts(),
       fetchMarketData()
     ]);
   };
@@ -135,6 +151,24 @@ export default function Admin() {
       });
     }
   };
+
+  const fetchPerplexityPrompts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('gpt_prompts')
+        .select('*')
+        .ilike('prompt_type', '%perplexity%')
+        .order('prompt_type', { ascending: true });
+
+      if (error) throw error;
+      setPerplexityPrompts(data || []);
+    } catch (error: any) {
+      toast({
+        title: "퍼플렉시티 프롬프트 데이터 로드 오류",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
 
   const fetchMarketData = async () => {
     try {
@@ -312,6 +346,65 @@ export default function Admin() {
       setShowPromptDialog(false);
       setEditingPrompt({});
       fetchPrompts();
+    } catch (error: any) {
+      toast({
+        title: "저장 실패",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleSavePerplexityPrompt = async () => {
+    if (!editingPerplexityPrompt.prompt_title || !editingPerplexityPrompt.system_prompt || !editingPerplexityPrompt.user_prompt_template) {
+      toast({
+        title: "필수 정보 누락",
+        description: "모든 필드를 입력해주세요.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setActionLoading(true);
+    try {
+      if (editingPerplexityPrompt.id) {
+        // Update existing prompt
+        const { error } = await supabase
+          .from('gpt_prompts')
+          .update({
+            prompt_title: editingPerplexityPrompt.prompt_title,
+            system_prompt: editingPerplexityPrompt.system_prompt,
+            user_prompt_template: editingPerplexityPrompt.user_prompt_template,
+            is_active: editingPerplexityPrompt.is_active
+          })
+          .eq('id', editingPerplexityPrompt.id);
+
+        if (error) throw error;
+      } else {
+        // Create new prompt
+        const { error } = await supabase
+          .from('gpt_prompts')
+          .insert({
+            prompt_type: editingPerplexityPrompt.prompt_type,
+            prompt_title: editingPerplexityPrompt.prompt_title,
+            system_prompt: editingPerplexityPrompt.system_prompt,
+            user_prompt_template: editingPerplexityPrompt.user_prompt_template,
+            is_active: true
+          });
+
+        if (error) throw error;
+      }
+
+      toast({
+        title: "저장 완료",
+        description: "퍼플렉시티 프롬프트가 성공적으로 저장되었습니다.",
+      });
+
+      setShowPerplexityPromptDialog(false);
+      setEditingPerplexityPrompt({});
+      fetchPerplexityPrompts();
     } catch (error: any) {
       toast({
         title: "저장 실패",
@@ -609,11 +702,12 @@ export default function Admin() {
       </div>
 
       <Tabs defaultValue="pending" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="pending">승인 대기 ({pendingCompanies.length})</TabsTrigger>
           <TabsTrigger value="approved">승인 완료 ({approvedCompanies.length})</TabsTrigger>
           <TabsTrigger value="rejected">거부됨 ({rejectedCompanies.length})</TabsTrigger>
           <TabsTrigger value="prompts">AI 프롬프트</TabsTrigger>
+          <TabsTrigger value="perplexity">퍼플렉시티</TabsTrigger>
           <TabsTrigger value="data">시장 데이터</TabsTrigger>
         </TabsList>
         
@@ -701,6 +795,76 @@ export default function Admin() {
                         onClick={() => {
                           setEditingPrompt(prompt);
                           setShowPromptDialog(true);
+                        }}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-sm font-medium">시스템 프롬프트:</p>
+                      <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded mt-1">
+                        {prompt.system_prompt.substring(0, 200)}...
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">사용자 프롬프트 템플릿:</p>
+                      <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded mt-1">
+                        {prompt.user_prompt_template.substring(0, 200)}...
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+
+        {/* Perplexity Prompts Tab */}
+        <TabsContent value="perplexity" className="mt-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="text-lg font-semibold">퍼플렉시티 프롬프트 관리</h3>
+              <p className="text-gray-600">Perplexity 분석에 사용되는 프롬프트를 관리합니다.</p>
+            </div>
+            <Button 
+              onClick={() => {
+                setEditingPerplexityPrompt({ prompt_type: 'perplexity_custom' });
+                setShowPerplexityPromptDialog(true);
+              }}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              새 프롬프트 추가
+            </Button>
+          </div>
+
+          <div className="space-y-4">
+            {perplexityPrompts.map((prompt) => (
+              <Card key={prompt.id}>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        <Brain className="h-5 w-5" />
+                        {prompt.prompt_title}
+                      </CardTitle>
+                      <CardDescription>
+                        타입: {prompt.prompt_type} | 최종 수정: {new Date(prompt.updated_at).toLocaleDateString()}
+                      </CardDescription>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={prompt.is_active ? "default" : "secondary"}>
+                        {prompt.is_active ? "활성" : "비활성"}
+                      </Badge>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setEditingPerplexityPrompt(prompt);
+                          setShowPerplexityPromptDialog(true);
                         }}
                       >
                         <Edit className="h-4 w-4" />
@@ -941,6 +1105,77 @@ export default function Admin() {
               취소
             </Button>
             <Button onClick={handleSavePrompt} disabled={actionLoading}>
+              <Save className="h-4 w-4 mr-2" />
+              저장
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Perplexity Prompt Edit Dialog */}
+      <Dialog open={showPerplexityPromptDialog} onOpenChange={setShowPerplexityPromptDialog}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>퍼플렉시티 프롬프트 편집</DialogTitle>
+            <DialogDescription>
+              Perplexity 분석에 사용될 프롬프트를 편집합니다.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="perplexity-prompt-title">프롬프트 제목 *</Label>
+                <Input
+                  id="perplexity-prompt-title"
+                  value={editingPerplexityPrompt.prompt_title || ''}
+                  onChange={(e) => setEditingPerplexityPrompt({ ...editingPerplexityPrompt, prompt_title: e.target.value })}
+                  placeholder="프롬프트 제목을 입력하세요"
+                />
+              </div>
+              <div>
+                <Label htmlFor="perplexity-prompt-type">프롬프트 타입 *</Label>
+                <Select 
+                  value={editingPerplexityPrompt.prompt_type || ''} 
+                  onValueChange={(value) => setEditingPerplexityPrompt({ ...editingPerplexityPrompt, prompt_type: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="타입 선택" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="perplexity_market_research">퍼플렉시티 시장 조사</SelectItem>
+                    <SelectItem value="perplexity_trend_analysis">퍼플렉시티 트렌드 분석</SelectItem>
+                    <SelectItem value="perplexity_competitor_analysis">퍼플렉시티 경쟁사 분석</SelectItem>
+                    <SelectItem value="perplexity_custom">퍼플렉시티 커스텀</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="perplexity-system-prompt">시스템 프롬프트 *</Label>
+              <Textarea
+                id="perplexity-system-prompt"
+                value={editingPerplexityPrompt.system_prompt || ''}
+                onChange={(e) => setEditingPerplexityPrompt({ ...editingPerplexityPrompt, system_prompt: e.target.value })}
+                placeholder="퍼플렉시티용 시스템 프롬프트를 입력하세요..."
+                className="h-32"
+              />
+            </div>
+            <div>
+              <Label htmlFor="perplexity-user-prompt">사용자 프롬프트 템플릿 *</Label>
+              <Textarea
+                id="perplexity-user-prompt"
+                value={editingPerplexityPrompt.user_prompt_template || ''}
+                onChange={(e) => setEditingPerplexityPrompt({ ...editingPerplexityPrompt, user_prompt_template: e.target.value })}
+                placeholder="퍼플렉시티용 사용자 프롬프트 템플릿을 입력하세요... (변수: {company_name}, {target_countries} 등)"
+                className="h-48"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowPerplexityPromptDialog(false)}>
+              취소
+            </Button>
+            <Button onClick={handleSavePerplexityPrompt} disabled={actionLoading}>
               <Save className="h-4 w-4 mr-2" />
               저장
             </Button>
