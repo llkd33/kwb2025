@@ -22,27 +22,17 @@ export function HeroSection() {
   }, []);
 
   const handleStartAnalysis = () => {
-    console.log('Start analysis clicked, isLoggedIn:', isLoggedIn); // 디버깅용
-    try {
-      if (isLoggedIn) {
-        navigate('/matching-request');
-      } else {
-        navigate('/auth');
-      }
-    } catch (error) {
-      console.error('Navigation error:', error);
-      window.location.href = '/auth'; // fallback
+    console.log('Start analysis clicked, isLoggedIn:', isLoggedIn);
+    if (isLoggedIn) {
+      navigate('/matching-request');
+    } else {
+      navigate('/auth');
     }
   };
 
   const handleExploreServices = () => {
-    console.log('Explore services clicked'); // 디버깅용
-    try {
-      navigate('/services');
-    } catch (error) {
-      console.error('Navigation error:', error);
-      window.location.href = '/services'; // fallback
-    }
+    console.log('Explore services clicked');
+    navigate('/services');
   };
 
   return (

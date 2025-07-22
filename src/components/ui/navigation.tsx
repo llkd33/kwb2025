@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { useLocation } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -59,9 +59,9 @@ export function Navigation({ className }: NavigationProps) {
   return (
     <nav className={cn("flex items-center space-x-8", className)}>
       {navItems.map((item) => (
-        <a
+        <Link
           key={item.href}
-          href={item.href}
+          to={item.href}
           className={cn(
             "text-sm font-medium transition-colors hover:text-accent",
             location.pathname === item.href
@@ -70,7 +70,7 @@ export function Navigation({ className }: NavigationProps) {
           )}
         >
           {item.label}
-        </a>
+        </Link>
       ))}
       <div className="flex items-center space-x-4 ml-8">
         <LanguageSelector />
@@ -93,10 +93,10 @@ export function Navigation({ className }: NavigationProps) {
         ) : (
           <>
             <Button variant="ghost" size="sm" asChild>
-              <a href="/auth">{t('nav.login')}</a>
+              <Link to="/auth">{t('nav.login')}</Link>
             </Button>
             <Button size="sm" className="bg-gradient-primary hover:opacity-90" asChild>
-              <a href="/auth">{t('auth.signup')}</a>
+              <Link to="/auth">{t('auth.signup')}</Link>
             </Button>
           </>
         )}
