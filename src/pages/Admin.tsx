@@ -896,79 +896,349 @@ export default function Admin() {
         <TabsContent value="reports" className="mt-6">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-lg font-semibold">AI 리포트 리뷰</h3>
-              <p className="text-gray-600">생성된 AI 리포트를 검토하고 최종 배포합니다.</p>
+              <h3 className="text-lg font-semibold">리포트 리뷰 및 승인</h3>
+              <p className="text-gray-600">완성된 분석 리포트를 검토하고 최종 승인합니다.</p>
             </div>
           </div>
 
-          <div className="space-y-4">
-            {matchingRequests.filter(request => request.status === 'completed').map((request) => (
-              <Card key={request.id}>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="flex items-center gap-2">
-                        <Building2 className="h-5 w-5" />
-                        {request.companies?.company_name}
-                      </CardTitle>
-                      <CardDescription>
-                        업종: {request.companies?.industry} | 국가: {request.companies?.headquarters_country} | 요청일: {new Date(request.created_at).toLocaleDateString()}
-                      </CardDescription>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant={request.status === 'completed' ? "default" : "secondary"}>
-                        {request.status === 'completed' ? '분석완료' : '분석중'}
-                      </Badge>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedRequest(request);
-                          setAdminComments(request.admin_comments || '');
-                          setShowReportDialog(true);
-                        }}
-                      >
-                        <Edit className="h-4 w-4 mr-1" />
-                        리뷰
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <p><strong>타겟 국가:</strong> {request.target_countries?.join(', ')}</p>
-                      <p><strong>제품/서비스:</strong> {request.product_info || '미입력'}</p>
-                    </div>
-                    <div>
-                      <p><strong>시장 정보:</strong> {request.market_info || '미입력'}</p>
-                      <p><strong>분석 완료일:</strong> {request.completed_at ? new Date(request.completed_at).toLocaleDateString() : '미완료'}</p>
-                    </div>
-                  </div>
-                  
-                  {request.final_report && (
-                    <div className="mt-4">
-                      <p className="font-medium mb-2">리포트 요약:</p>
-                      <div className="bg-gray-50 p-3 rounded text-sm max-h-32 overflow-y-auto">
-                        {typeof request.final_report === 'object' && request.final_report.summary 
-                          ? request.final_report.summary.substring(0, 200) + '...'
-                          : JSON.stringify(request.final_report).substring(0, 200) + '...'
-                        }
+          <div className="space-y-6">
+            {matchingRequests
+              .filter(request => request.status === 'completed' && request.ai_analysis && request.market_research)
+              .map((request) => (
+                <Card key={request.id} className="border-2 shadow-sm">
+                  <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle className="flex items-center gap-2 text-xl">
+                          <Building2 className="h-6 w-6 text-blue-600" />
+                          {request.companies?.company_name || 'Unknown Company'}
+                        </CardTitle>
+                        <CardDescription className="text-base mt-2">
+                          📍 {request.companies?.industry} | {request.companies?.headquarters_country} | 
+                          ✅ 분석 완료: {new Date(request.completed_at || request.updated_at).toLocaleDateString()}
+                        </CardDescription>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Badge 
+                          variant={request.is_published ? "default" : "outline"}
+                          className="text-sm px-3 py-1"
+                        >
+                          {request.is_published ? "🟢 발행됨" : "🟡 검토 중"}
+                        </Badge>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="hover:bg-blue-50"
+                          onClick={() => {
+                            setSelectedRequest(request);
+                            setAdminComments(request.admin_comments || '');
+                            setShowReportDialog(true);
+                          }}
+                        >
+                          <Edit className="h-4 w-4 mr-1" />
+                          상세 리뷰
+                        </Button>
                       </div>
                     </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-            
-            {matchingRequests.filter(request => request.status === 'completed').length === 0 && (
-              <Card>
-                <CardContent className="text-center py-8">
-                  <p className="text-gray-500">리뷰할 리포트가 없습니다.</p>
-                </CardContent>
-              </Card>
-            )}
+                  </CardHeader>
+                  
+                  <CardContent className="p-6">
+                    {/* Executive Summary */}
+                    <div className="mb-6 p-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg border border-yellow-200">
+                      <h4 className="font-bold text-lg mb-3 text-yellow-900 flex items-center gap-2">
+                        ⭐ 종합 분석 요약
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                        {request.ai_analysis?.투자_파트너십_권고 && (
+                          <div className="bg-white p-3 rounded border">
+                            <p className="font-semibold text-green-700">투자 등급</p>
+                            <p className="text-xl font-bold text-green-800">
+                              {(request.ai_analysis.투자_파트너십_권고 as any)?.투자_등급 || 'N/A'}
+                            </p>
+                            <p className="text-xs text-gray-600 mt-1">
+                              성공확률: {(request.ai_analysis.투자_파트너십_권고 as any)?.성공_확률 || 'N/A'}
+                            </p>
+                          </div>
+                        )}
+                        
+                        {request.ai_analysis?.재무_현황_투자가치?.밸류에이션 && (
+                          <div className="bg-white p-3 rounded border">
+                            <p className="font-semibold text-blue-700">기업 가치</p>
+                            <p className="text-lg font-bold text-blue-800">
+                              {request.ai_analysis.재무_현황_투자가치.밸류에이션}
+                            </p>
+                          </div>
+                        )}
+                        
+                        {request.market_research?.최종_시장_진출_권고?.ROI_예측 && (
+                          <div className="bg-white p-3 rounded border">
+                            <p className="font-semibold text-purple-700">ROI 예측</p>
+                            <p className="text-sm font-bold text-purple-800">
+                              {request.market_research.최종_시장_진출_권고.ROI_예측}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {/* Company Analysis Section */}
+                      <div className="space-y-4">
+                        <h4 className="font-bold text-lg mb-4 text-blue-900 flex items-center gap-2 border-b-2 border-blue-200 pb-2">
+                          🏢 기업 분석 리포트
+                        </h4>
+                        
+                        {request.ai_analysis && typeof request.ai_analysis === 'object' ? (
+                          <div className="space-y-4">
+                            {/* Company Overview */}
+                            {request.ai_analysis.회사_개요?.기본_정보 && (
+                              <div className="border border-blue-200 rounded-lg p-4 bg-blue-50">
+                                <h5 className="font-semibold text-blue-900 mb-2">1. 회사 개요</h5>
+                                <div className="space-y-2 text-sm">
+                                  <div className="grid grid-cols-2 gap-2">
+                                    <span className="font-medium">기업명:</span>
+                                    <span>{request.ai_analysis.회사_개요.기본_정보.기업명}</span>
+                                    <span className="font-medium">설립연도:</span>
+                                    <span>{request.ai_analysis.회사_개요.기본_정보.설립연도}</span>
+                                    <span className="font-medium">사업영역:</span>
+                                    <span>{request.ai_analysis.회사_개요.기본_정보.사업_영역}</span>
+                                  </div>
+                                  <div className="mt-2 p-2 bg-green-100 rounded">
+                                    <span className="font-medium text-green-800">성공 가능성:</span>
+                                    <span className="text-green-700 ml-2">{request.ai_analysis.회사_개요.기본_정보.성공_가능성}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Business Model */}
+                            {request.ai_analysis.사업_모델_심층분석 && (
+                              <div className="border border-green-200 rounded-lg p-4 bg-green-50">
+                                <h5 className="font-semibold text-green-900 mb-2">2. 사업 모델 분석</h5>
+                                <div className="space-y-2 text-sm">
+                                  {request.ai_analysis.사업_모델_심층분석.핵심_가치_제안 && (
+                                    <div>
+                                      <span className="font-medium">문제 해결 수준:</span>
+                                      <span className="ml-2">{request.ai_analysis.사업_모델_심층분석.핵심_가치_제안.문제_해결_수준}</span>
+                                    </div>
+                                  )}
+                                  {request.ai_analysis.사업_모델_심층분석.수익_구조_분석 && (
+                                    <div className="mt-2">
+                                      <span className="font-medium">수익 구조:</span>
+                                      <div className="ml-4 mt-1 text-xs space-y-1">
+                                        <div>SaaS: {request.ai_analysis.사업_모델_심층분석.수익_구조_분석.SaaS_구독}</div>
+                                        <div>커스터마이징: {request.ai_analysis.사업_모델_심층분석.수익_구조_분석.커스터마이징}</div>
+                                        <div>반복 수익 비중: {request.ai_analysis.사업_모델_심층분석.수익_구조_분석.반복_수익_비중}</div>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Technology Innovation */}
+                            {request.ai_analysis.기술_혁신_분석 && (
+                              <div className="border border-purple-200 rounded-lg p-4 bg-purple-50">
+                                <h5 className="font-semibold text-purple-900 mb-2">3. 기술 및 혁신</h5>
+                                <div className="space-y-2 text-sm">
+                                  <div>
+                                    <span className="font-medium">기술 경쟁력:</span>
+                                    <span className="ml-2">{request.ai_analysis.기술_혁신_분석.기술_경쟁력}</span>
+                                  </div>
+                                  <div>
+                                    <span className="font-medium">IP 포트폴리오:</span>
+                                    <span className="ml-2 text-xs">{request.ai_analysis.기술_혁신_분석.IP_포트폴리오}</span>
+                                  </div>
+                                  <div>
+                                    <span className="font-medium">R&D 투자:</span>
+                                    <span className="ml-2">{request.ai_analysis.기술_혁신_분석.R_D_투자}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Financial Status */}
+                            {request.ai_analysis.재무_현황_투자가치 && (
+                              <div className="border border-orange-200 rounded-lg p-4 bg-orange-50">
+                                <h5 className="font-semibold text-orange-900 mb-2">4. 재무 현황</h5>
+                                <div className="space-y-2 text-sm">
+                                  {request.ai_analysis.재무_현황_투자가치.재무_건전성 && (
+                                    <>
+                                      <div>
+                                        <span className="font-medium">매출 성장률:</span>
+                                        <span className="ml-2">{request.ai_analysis.재무_현황_투자가치.재무_건전성.매출_성장률}</span>
+                                      </div>
+                                      <div>
+                                        <span className="font-medium">수익성:</span>
+                                        <span className="ml-2 text-xs">{request.ai_analysis.재무_현황_투자가치.재무_건전성.수익성}</span>
+                                      </div>
+                                    </>
+                                  )}
+                                  <div className="mt-2 p-2 bg-orange-100 rounded">
+                                    <span className="font-medium">밸류에이션:</span>
+                                    <span className="ml-2 font-bold">{request.ai_analysis.재무_현황_투자가치.밸류에이션}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="bg-gray-50 p-4 rounded border text-center text-gray-600">
+                            기업 분석 데이터를 불러올 수 없습니다
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Market Research Section */}
+                      <div className="space-y-4">
+                        <h4 className="font-bold text-lg mb-4 text-green-900 flex items-center gap-2 border-b-2 border-green-200 pb-2">
+                          📊 시장 분석 리포트
+                        </h4>
+                        
+                        {request.market_research && typeof request.market_research === 'object' ? (
+                          <div className="space-y-4">
+                            {/* Market Overview */}
+                            {request.market_research.시장_개관_규모분석 && (
+                              <div className="border border-teal-200 rounded-lg p-4 bg-teal-50">
+                                <h5 className="font-semibold text-teal-900 mb-2">1. 시장 개관</h5>
+                                <div className="space-y-2 text-sm">
+                                  {request.market_research.시장_개관_규모분석.시장_규모 && (
+                                    <>
+                                      <div>
+                                        <span className="font-medium">글로벌 AI 시장:</span>
+                                        <span className="ml-2">{request.market_research.시장_개관_규모분석.시장_규모.글로벌_AI_시장}</span>
+                                      </div>
+                                      <div>
+                                        <span className="font-medium">연평균 성장률:</span>
+                                        <span className="ml-2 font-bold text-green-600">{request.market_research.시장_개관_규모분석.시장_규모.CAGR}</span>
+                                      </div>
+                                      <div>
+                                        <span className="font-medium">아시아 태평양:</span>
+                                        <span className="ml-2">{request.market_research.시장_개관_규모분석.시장_규모.아시아_태평양}</span>
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Competitive Landscape */}
+                            {request.market_research.경쟁_환경_심층분석 && (
+                              <div className="border border-red-200 rounded-lg p-4 bg-red-50">
+                                <h5 className="font-semibold text-red-900 mb-2">2. 경쟁 환경</h5>
+                                <div className="space-y-2 text-sm">
+                                  {request.market_research.경쟁_환경_심층분석.주요_플레이어 && (
+                                    <div>
+                                      <span className="font-medium">주요 플레이어:</span>
+                                      <div className="ml-4 mt-1 space-y-1 text-xs">
+                                         {Object.entries((request.market_research.경쟁_환경_심층분석 as any)?.주요_플레이어 || {}).map(([company, details]) => (
+                                           <div key={company} className="flex justify-between">
+                                             <span className="font-medium">{company}:</span>
+                                             <span>{String(details)}</span>
+                                           </div>
+                                         ))}
+                                      </div>
+                                    </div>
+                                  )}
+                                  <div className="mt-2 p-2 bg-red-100 rounded">
+                                    <span className="font-medium">경쟁 강도:</span>
+                                    <span className="ml-2">{request.market_research.경쟁_환경_심층분석.경쟁_강도}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Market Opportunities */}
+                            {request.market_research.시장_기회_성장동력 && (
+                              <div className="border border-indigo-200 rounded-lg p-4 bg-indigo-50">
+                                <h5 className="font-semibold text-indigo-900 mb-2">3. 시장 기회</h5>
+                                <div className="space-y-2 text-sm">
+                                  {request.market_research.시장_기회_성장동력.신규_기회 && (
+                                    <div>
+                                      <span className="font-medium">신규 기회:</span>
+                                      <div className="ml-4 mt-1 space-y-1 text-xs">
+                                         {Object.entries((request.market_research.시장_기회_성장동력 as any)?.신규_기회 || {}).map(([opportunity, value]) => (
+                                           <div key={opportunity}>• {opportunity}: {String(value)}</div>
+                                         ))}
+                                       </div>
+                                     </div>
+                                   )}
+                                 </div>
+                               </div>
+                             )}
+
+                             {/* Market Entry Recommendation */}
+                             {request.market_research.최종_시장_진출_권고 && (
+                               <div className="border border-emerald-200 rounded-lg p-4 bg-emerald-50">
+                                 <h5 className="font-semibold text-emerald-900 mb-2">4. 시장 진출 권고</h5>
+                                 <div className="space-y-2 text-sm">
+                                   {(request.market_research.최종_시장_진출_권고 as any)?.시장_매력도 && (
+                                     <div>
+                                       <span className="font-medium">시장 매력도:</span>
+                                       <div className="ml-4 mt-1 space-y-1 text-xs">
+                                         {Object.entries((request.market_research.최종_시장_진출_권고 as any)?.시장_매력도 || {}).map(([country, score]) => (
+                                           <div key={country} className="flex justify-between items-center">
+                                             <span>{country}:</span>
+                                             <Badge variant="outline" className="text-xs">{String(score)}</Badge>
+                                           </div>
+                                         ))}
+                                       </div>
+                                     </div>
+                                   )}
+                                   {(request.market_research.최종_시장_진출_권고 as any)?.성공_확률 && (
+                                     <div className="mt-2">
+                                       <span className="font-medium">성공 확률:</span>
+                                       <div className="ml-4 mt-1 space-y-1 text-xs">
+                                         {Object.entries((request.market_research.최종_시장_진출_권고 as any)?.성공_확률 || {}).map(([country, prob]) => (
+                                           <div key={country} className="flex justify-between">
+                                             <span>{country}:</span>
+                                             <span className="font-bold text-green-600">{String(prob)}</span>
+                                           </div>
+                                         ))}
+                                       </div>
+                                     </div>
+                                   )}
+                                  <div className="mt-3 p-2 bg-emerald-100 rounded">
+                                    <span className="font-medium">ROI 예측:</span>
+                                    <span className="ml-2 font-bold">{request.market_research.최종_시장_진출_권고.ROI_예측}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="bg-gray-50 p-4 rounded border text-center text-gray-600">
+                            시장 분석 데이터를 불러올 수 없습니다
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Admin Comments */}
+                    {request.admin_comments && (
+                      <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <h5 className="font-semibold text-yellow-900 mb-2 flex items-center gap-2">
+                          💬 관리자 코멘트
+                        </h5>
+                        <p className="text-sm text-yellow-800">{request.admin_comments}</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
           </div>
+
+          {matchingRequests.filter(request => 
+            request.status === 'completed' && request.ai_analysis && request.market_research
+          ).length === 0 && (
+            <Card>
+              <CardContent className="text-center py-12">
+                <FileSpreadsheet className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <h4 className="text-lg font-semibold text-gray-600 mb-2">검토할 리포트가 없습니다</h4>
+                <p className="text-gray-500">완성된 분석 리포트가 생성되면 여기에 표시됩니다.</p>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         {/* AI Prompts Tab */}
