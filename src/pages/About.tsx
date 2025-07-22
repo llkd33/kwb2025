@@ -1,10 +1,8 @@
 import { Navigation } from "@/components/ui/navigation";
-import { HeroSection } from "@/components/ui/hero-section";
-import { CompanyBrief } from "@/components/ui/company-brief";
-import { FeaturesSection } from "@/components/ui/features-section";
+import { CompanyIntro } from "@/components/ui/company-intro";
 import { Footer } from "@/components/ui/footer";
 
-const Index = () => {
+const About = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -23,10 +21,8 @@ const Index = () => {
       </header>
 
       {/* Main Content */}
-      <main>
-        <HeroSection />
-        <CompanyBrief />
-        <FeaturesSection />
+      <main className="pt-16">
+        <CompanyIntro />
       </main>
 
       {/* Footer */}
@@ -35,4 +31,4 @@ const Index = () => {
   );
 };
 
-export default Index;
+export default About;
