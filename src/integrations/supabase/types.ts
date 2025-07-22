@@ -333,6 +333,50 @@ export type Database = {
           },
         ]
       }
+      gpt_prompts: {
+        Row: {
+          created_at: string
+          created_by: number | null
+          id: number
+          is_active: boolean
+          prompt_title: string
+          prompt_type: string
+          system_prompt: string
+          updated_at: string
+          user_prompt_template: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: number | null
+          id?: number
+          is_active?: boolean
+          prompt_title: string
+          prompt_type: string
+          system_prompt: string
+          updated_at?: string
+          user_prompt_template: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: number | null
+          id?: number
+          is_active?: boolean
+          prompt_title?: string
+          prompt_type?: string
+          system_prompt?: string
+          updated_at?: string
+          user_prompt_template?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gpt_prompts_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mail_log: {
         Row: {
           company_id: number | null
@@ -386,6 +430,53 @@ export type Database = {
             columns: ["matching_request_id"]
             isOneToOne: false
             referencedRelation: "matching_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      market_data: {
+        Row: {
+          country: string | null
+          created_at: string
+          data_category: string
+          data_content: Json
+          id: number
+          industry: string | null
+          is_active: boolean
+          source_file: string | null
+          updated_at: string
+          uploaded_by: number | null
+        }
+        Insert: {
+          country?: string | null
+          created_at?: string
+          data_category: string
+          data_content: Json
+          id?: number
+          industry?: string | null
+          is_active?: boolean
+          source_file?: string | null
+          updated_at?: string
+          uploaded_by?: number | null
+        }
+        Update: {
+          country?: string | null
+          created_at?: string
+          data_category?: string
+          data_content?: Json
+          id?: number
+          industry?: string | null
+          is_active?: boolean
+          source_file?: string | null
+          updated_at?: string
+          uploaded_by?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "market_data_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]

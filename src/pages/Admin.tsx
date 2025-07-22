@@ -6,9 +6,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Building2, Calendar, MapPin, Users, Globe, CheckCircle, XCircle, Clock, Mail } from "lucide-react";
+import { 
+  Building2, Calendar, MapPin, Users, Globe, CheckCircle, XCircle, Clock, Mail,
+  FileSpreadsheet, Brain, Upload, Edit, Trash2, Save, Plus, Settings
+} from "lucide-react";
 
 interface Company {
   id: number;
@@ -34,18 +40,63 @@ interface Company {
   rejection_reason: string;
 }
 
+interface GPTPrompt {
+  id: number;
+  prompt_type: string;
+  prompt_title: string;
+  system_prompt: string;
+  user_prompt_template: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+interface MarketData {
+  id: number;
+  data_category: string;
+  country?: string;
+  industry?: string;
+  data_content: any;
+  source_file?: string;
+  created_at: string;
+  is_active: boolean;
+}
+
 export default function Admin() {
   const [companies, setCompanies] = useState<Company[]>([]);
+  const [prompts, setPrompts] = useState<GPTPrompt[]>([]);
+  const [marketData, setMarketData] = useState<MarketData[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
+  const [selectedPrompt, setSelectedPrompt] = useState<GPTPrompt | null>(null);
   const [showRejectDialog, setShowRejectDialog] = useState(false);
+  const [showPromptDialog, setShowPromptDialog] = useState(false);
+  const [showDataDialog, setShowDataDialog] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [editingPrompt, setEditingPrompt] = useState<Partial<GPTPrompt>>({});
+  const [newDataEntry, setNewDataEntry] = useState({
+    data_category: '',
+    country: '',
+    industry: '',
+    data_content: '',
+  });
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchCompanies();
+    fetchAllData();
   }, []);
+
+  const fetchAllData = async () => {
+    await Promise.all([
+      fetchCompanies(),
+      fetchPrompts(),
+      fetchMarketData()
+    ]);
+  };
 
   const fetchCompanies = async () => {
     try {
@@ -58,12 +109,48 @@ export default function Admin() {
       setCompanies(data || []);
     } catch (error: any) {
       toast({
-        title: "데이터 로드 오류",
+        title: "기업 데이터 로드 오류",
         description: error.message,
         variant: "destructive",
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPrompts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('gpt_prompts')
+        .select('*')
+        .order('prompt_type', { ascending: true });
+
+      if (error) throw error;
+      setPrompts(data || []);
+    } catch (error: any) {
+      toast({
+        title: "프롬프트 데이터 로드 오류",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const fetchMarketData = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('market_data')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setMarketData(data || []);
+    } catch (error: any) {
+      toast({
+        title: "시장 데이터 로드 오류",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 
@@ -174,6 +261,196 @@ export default function Admin() {
       });
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  const handleSavePrompt = async () => {
+    if (!editingPrompt.prompt_title || !editingPrompt.system_prompt || !editingPrompt.user_prompt_template) {
+      toast({
+        title: "필수 정보 누락",
+        description: "모든 필드를 입력해주세요.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setActionLoading(true);
+    try {
+      if (editingPrompt.id) {
+        // Update existing prompt
+        const { error } = await supabase
+          .from('gpt_prompts')
+          .update({
+            prompt_title: editingPrompt.prompt_title,
+            system_prompt: editingPrompt.system_prompt,
+            user_prompt_template: editingPrompt.user_prompt_template,
+            is_active: editingPrompt.is_active
+          })
+          .eq('id', editingPrompt.id);
+
+        if (error) throw error;
+      } else {
+        // Create new prompt
+        const { error } = await supabase
+          .from('gpt_prompts')
+          .insert({
+            prompt_type: editingPrompt.prompt_type,
+            prompt_title: editingPrompt.prompt_title,
+            system_prompt: editingPrompt.system_prompt,
+            user_prompt_template: editingPrompt.user_prompt_template,
+            is_active: true
+          });
+
+        if (error) throw error;
+      }
+
+      toast({
+        title: "저장 완료",
+        description: "프롬프트가 성공적으로 저장되었습니다.",
+      });
+
+      setShowPromptDialog(false);
+      setEditingPrompt({});
+      fetchPrompts();
+    } catch (error: any) {
+      toast({
+        title: "저장 실패",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls') && !file.name.endsWith('.csv')) {
+      toast({
+        title: "파일 형식 오류",
+        description: "Excel 파일(.xlsx, .xls) 또는 CSV 파일만 업로드 가능합니다.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSelectedFile(file);
+  };
+
+  const handleUploadMarketData = async () => {
+    if (!selectedFile) {
+      toast({
+        title: "파일 선택 필요",
+        description: "업로드할 파일을 선택해주세요.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUploading(true);
+    setUploadProgress(0);
+
+    try {
+      // For demo purposes, we'll create a sample data entry
+      // In production, you'd parse the Excel/CSV file here
+      const sampleData = {
+        market_size: "100억 달러",
+        growth_rate: "15%",
+        key_players: ["Company A", "Company B", "Company C"],
+        regulations: "규제 정보",
+        opportunities: "시장 기회 정보"
+      };
+
+      setUploadProgress(50);
+
+      const { error } = await supabase
+        .from('market_data')
+        .insert({
+          data_category: 'market_analysis',
+          country: '미국',
+          industry: 'IT',
+          data_content: sampleData,
+          source_file: selectedFile.name
+        });
+
+      if (error) throw error;
+
+      setUploadProgress(100);
+
+      toast({
+        title: "업로드 완료",
+        description: "시장 데이터가 성공적으로 업로드되었습니다.",
+      });
+
+      setSelectedFile(null);
+      const fileInput = document.getElementById('market-data-file') as HTMLInputElement;
+      if (fileInput) fileInput.value = '';
+
+      fetchMarketData();
+    } catch (error: any) {
+      toast({
+        title: "업로드 실패",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+      setUploadProgress(0);
+    }
+  };
+
+  const handleAddDataEntry = async () => {
+    if (!newDataEntry.data_category || !newDataEntry.data_content) {
+      toast({
+        title: "필수 정보 누락",
+        description: "카테고리와 데이터 내용을 입력해주세요.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      let dataContent;
+      try {
+        dataContent = JSON.parse(newDataEntry.data_content);
+      } catch {
+        // If not valid JSON, store as simple object
+        dataContent = { content: newDataEntry.data_content };
+      }
+
+      const { error } = await supabase
+        .from('market_data')
+        .insert({
+          data_category: newDataEntry.data_category,
+          country: newDataEntry.country || null,
+          industry: newDataEntry.industry || null,
+          data_content: dataContent
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "추가 완료",
+        description: "데이터가 성공적으로 추가되었습니다.",
+      });
+
+      setNewDataEntry({
+        data_category: '',
+        country: '',
+        industry: '',
+        data_content: '',
+      });
+      setShowDataDialog(false);
+      fetchMarketData();
+    } catch (error: any) {
+      toast({
+        title: "추가 실패",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 
@@ -307,7 +584,7 @@ export default function Admin() {
     <div className="container mx-auto py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold">관리자 대시보드</h1>
-        <p className="text-gray-600 mt-2">기업 회원가입 승인 관리</p>
+        <p className="text-gray-600 mt-2">기업 승인 관리 및 AI 시스템 설정</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -332,10 +609,12 @@ export default function Admin() {
       </div>
 
       <Tabs defaultValue="pending" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="pending">승인 대기 ({pendingCompanies.length})</TabsTrigger>
           <TabsTrigger value="approved">승인 완료 ({approvedCompanies.length})</TabsTrigger>
           <TabsTrigger value="rejected">거부됨 ({rejectedCompanies.length})</TabsTrigger>
+          <TabsTrigger value="prompts">AI 프롬프트</TabsTrigger>
+          <TabsTrigger value="data">시장 데이터</TabsTrigger>
         </TabsList>
         
         <TabsContent value="pending" className="mt-6">
@@ -379,8 +658,189 @@ export default function Admin() {
             ))
           )}
         </TabsContent>
+
+        {/* AI Prompts Tab */}
+        <TabsContent value="prompts" className="mt-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="text-lg font-semibold">AI 프롬프트 관리</h3>
+              <p className="text-gray-600">GPT 분석에 사용되는 프롬프트를 관리합니다.</p>
+            </div>
+            <Button 
+              onClick={() => {
+                setEditingPrompt({ prompt_type: 'custom' });
+                setShowPromptDialog(true);
+              }}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              새 프롬프트 추가
+            </Button>
+          </div>
+
+          <div className="space-y-4">
+            {prompts.map((prompt) => (
+              <Card key={prompt.id}>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        <Brain className="h-5 w-5" />
+                        {prompt.prompt_title}
+                      </CardTitle>
+                      <CardDescription>
+                        타입: {prompt.prompt_type} | 최종 수정: {new Date(prompt.updated_at).toLocaleDateString()}
+                      </CardDescription>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={prompt.is_active ? "default" : "secondary"}>
+                        {prompt.is_active ? "활성" : "비활성"}
+                      </Badge>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setEditingPrompt(prompt);
+                          setShowPromptDialog(true);
+                        }}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-sm font-medium">시스템 프롬프트:</p>
+                      <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded mt-1">
+                        {prompt.system_prompt.substring(0, 200)}...
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">사용자 프롬프트 템플릿:</p>
+                      <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded mt-1">
+                        {prompt.user_prompt_template.substring(0, 200)}...
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+
+        {/* Market Data Tab */}
+        <TabsContent value="data" className="mt-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="text-lg font-semibold">시장 데이터 관리</h3>
+              <p className="text-gray-600">AI 분석에 참조되는 시장 데이터를 관리합니다.</p>
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline"
+                onClick={() => setShowDataDialog(true)}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                데이터 직접 추가
+              </Button>
+            </div>
+          </div>
+
+          {/* File Upload Section */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Upload className="h-5 w-5" />
+                Excel 파일 업로드
+              </CardTitle>
+              <CardDescription>
+                Excel 또는 CSV 파일로 시장 데이터를 일괄 업로드합니다.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="market-data-file">파일 선택</Label>
+                <Input
+                  id="market-data-file"
+                  type="file"
+                  accept=".xlsx,.xls,.csv"
+                  onChange={handleFileSelect}
+                  disabled={uploading}
+                />
+              </div>
+
+              {selectedFile && (
+                <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
+                  <FileSpreadsheet className="h-4 w-4 text-gray-600" />
+                  <span className="text-sm">{selectedFile.name}</span>
+                </div>
+              )}
+
+              {uploading && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span>업로드 중...</span>
+                    <span>{uploadProgress}%</span>
+                  </div>
+                  <Progress value={uploadProgress} className="w-full" />
+                </div>
+              )}
+
+              <Button 
+                onClick={handleUploadMarketData} 
+                disabled={!selectedFile || uploading}
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                {uploading ? "업로드 중..." : "업로드"}
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Market Data List */}
+          <div className="space-y-4">
+            {marketData.map((data) => (
+              <Card key={data.id}>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        <FileSpreadsheet className="h-5 w-5" />
+                        {data.data_category}
+                      </CardTitle>
+                      <CardDescription>
+                        {data.country && `국가: ${data.country}`}
+                        {data.industry && ` | 업종: ${data.industry}`}
+                        {data.source_file && ` | 파일: ${data.source_file}`}
+                      </CardDescription>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={data.is_active ? "default" : "secondary"}>
+                        {data.is_active ? "활성" : "비활성"}
+                      </Badge>
+                      <Button variant="outline" size="sm">
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button variant="destructive" size="sm">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="bg-gray-50 p-3 rounded text-sm">
+                    <pre className="whitespace-pre-wrap">
+                      {JSON.stringify(data.data_content, null, 2).substring(0, 300)}...
+                    </pre>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
       </Tabs>
 
+      {/* Reject Dialog */}
       <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
         <DialogContent>
           <DialogHeader>
@@ -412,6 +872,148 @@ export default function Admin() {
             >
               <Mail className="h-4 w-4 mr-2" />
               거부 및 이메일 발송
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Prompt Edit Dialog */}
+      <Dialog open={showPromptDialog} onOpenChange={setShowPromptDialog}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>AI 프롬프트 편집</DialogTitle>
+            <DialogDescription>
+              GPT 분석에 사용될 프롬프트를 편집합니다.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="prompt-title">프롬프트 제목 *</Label>
+                <Input
+                  id="prompt-title"
+                  value={editingPrompt.prompt_title || ''}
+                  onChange={(e) => setEditingPrompt({ ...editingPrompt, prompt_title: e.target.value })}
+                  placeholder="프롬프트 제목을 입력하세요"
+                />
+              </div>
+              <div>
+                <Label htmlFor="prompt-type">프롬프트 타입 *</Label>
+                <Select 
+                  value={editingPrompt.prompt_type || ''} 
+                  onValueChange={(value) => setEditingPrompt({ ...editingPrompt, prompt_type: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="타입 선택" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="company_analysis">기업 분석</SelectItem>
+                    <SelectItem value="market_research">시장 조사</SelectItem>
+                    <SelectItem value="final_report">최종 리포트</SelectItem>
+                    <SelectItem value="custom">커스텀</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="system-prompt">시스템 프롬프트 *</Label>
+              <Textarea
+                id="system-prompt"
+                value={editingPrompt.system_prompt || ''}
+                onChange={(e) => setEditingPrompt({ ...editingPrompt, system_prompt: e.target.value })}
+                placeholder="시스템 프롬프트를 입력하세요..."
+                className="h-32"
+              />
+            </div>
+            <div>
+              <Label htmlFor="user-prompt">사용자 프롬프트 템플릿 *</Label>
+              <Textarea
+                id="user-prompt"
+                value={editingPrompt.user_prompt_template || ''}
+                onChange={(e) => setEditingPrompt({ ...editingPrompt, user_prompt_template: e.target.value })}
+                placeholder="사용자 프롬프트 템플릿을 입력하세요... (변수: {company_name}, {target_countries} 등)"
+                className="h-48"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowPromptDialog(false)}>
+              취소
+            </Button>
+            <Button onClick={handleSavePrompt} disabled={actionLoading}>
+              <Save className="h-4 w-4 mr-2" />
+              저장
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Data Entry Dialog */}
+      <Dialog open={showDataDialog} onOpenChange={setShowDataDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>시장 데이터 직접 추가</DialogTitle>
+            <DialogDescription>
+              시장 데이터를 직접 입력하여 추가합니다.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="data-category">데이터 카테고리 *</Label>
+                <Select 
+                  value={newDataEntry.data_category} 
+                  onValueChange={(value) => setNewDataEntry({ ...newDataEntry, data_category: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="카테고리 선택" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="market_analysis">시장 분석</SelectItem>
+                    <SelectItem value="regulations">규제 정보</SelectItem>
+                    <SelectItem value="partners">파트너 정보</SelectItem>
+                    <SelectItem value="competitors">경쟁사 정보</SelectItem>
+                    <SelectItem value="trends">트렌드 정보</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="data-country">국가 (선택)</Label>
+                <Input
+                  id="data-country"
+                  value={newDataEntry.country}
+                  onChange={(e) => setNewDataEntry({ ...newDataEntry, country: e.target.value })}
+                  placeholder="예: 미국"
+                />
+              </div>
+              <div>
+                <Label htmlFor="data-industry">업종 (선택)</Label>
+                <Input
+                  id="data-industry"
+                  value={newDataEntry.industry}
+                  onChange={(e) => setNewDataEntry({ ...newDataEntry, industry: e.target.value })}
+                  placeholder="예: IT"
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="data-content">데이터 내용 *</Label>
+              <Textarea
+                id="data-content"
+                value={newDataEntry.data_content}
+                onChange={(e) => setNewDataEntry({ ...newDataEntry, data_content: e.target.value })}
+                placeholder='JSON 형식 또는 일반 텍스트로 입력하세요. 예: {"market_size": "100억 달러", "growth_rate": "15%"}'
+                className="h-32"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDataDialog(false)}>
+              취소
+            </Button>
+            <Button onClick={handleAddDataEntry}>
+              <Plus className="h-4 w-4 mr-2" />
+              추가
             </Button>
           </DialogFooter>
         </DialogContent>
