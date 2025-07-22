@@ -1,8 +1,32 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, BarChart3, Globe, Zap } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import heroImage from "@/assets/hero-bg.jpg";
 
 export function HeroSection() {
+  const navigate = useNavigate();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const company = localStorage.getItem('currentCompany');
+    setIsLoggedIn(!!company);
+  }, []);
+
+  const handleStartAnalysis = () => {
+    if (isLoggedIn) {
+      // 로그인된 경우 매칭 요청 페이지로 이동 (추후 구현)
+      navigate('/matching-request');
+    } else {
+      // 비로그인 시 회원가입 페이지로 이동
+      navigate('/auth');
+    }
+  };
+
+  const handleExploreServices = () => {
+    navigate('/services');
+  };
+
   return (
     <section 
       className="relative min-h-screen flex items-center justify-center bg-gradient-hero overflow-hidden"
@@ -46,14 +70,16 @@ export function HeroSection() {
             <Button 
               size="lg" 
               className="bg-white text-primary hover:bg-white/90 shadow-glow text-lg px-8 py-4 h-14"
+              onClick={handleStartAnalysis}
             >
-              무료 분석 시작하기
+              {isLoggedIn ? '매칭 요청하기' : '무료 분석 시작하기'}
               <ArrowRight className="ml-2 w-5 h-5" />
             </Button>
             <Button 
               variant="outline" 
               size="lg"
               className="border-white/30 text-white hover:bg-white/10 text-lg px-8 py-4 h-14"
+              onClick={handleExploreServices}
             >
               서비스 둘러보기
             </Button>
