@@ -2,10 +2,12 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, BarChart3, Globe, Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import heroImage from "@/assets/hero-bg.jpg";
 
 export function HeroSection() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
@@ -65,16 +67,28 @@ export function HeroSection() {
 
           {/* Main Heading */}
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 animate-fade-up [animation-delay:200ms]">
-            글로벌 AI·핀테크·IT
-            <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-secondary">
-              비즈니스 매칭 플랫폼
-            </span>
+            {t('home.hero.title').split('\n').map((line, index) => (
+              <span key={index}>
+                {index === 1 ? (
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-secondary">
+                    {line}
+                  </span>
+                ) : (
+                  line
+                )}
+                {index === 0 && <br />}
+              </span>
+            ))}
           </h1>
 
           {/* Subtitle */}
           <p className="text-xl md:text-2xl mb-4 text-white/90 animate-fade-up [animation-delay:400ms]">
-            세계 최고 수준의 AI 분석으로 최적의 글로벌 파트너, 투자자, 고객을 매칭합니다.
+            {t('home.hero.subtitle').split('\n').map((line, index) => (
+              <span key={index}>
+                {line}
+                {index === 0 && <br />}
+              </span>
+            ))}
           </p>
           
           <p className="text-lg md:text-xl mb-12 text-white/80 animate-fade-up [animation-delay:600ms]">
@@ -88,7 +102,7 @@ export function HeroSection() {
               onClick={handleStartAnalysis}
               type="button"
             >
-              {isLoggedIn ? '매칭 요청하기' : '무료 분석 시작하기'}
+              {isLoggedIn ? '매칭 요청하기' : t('home.hero.cta')}
               <ArrowRight className="w-5 h-5" />
             </button>
             <button 

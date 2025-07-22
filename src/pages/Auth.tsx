@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 
@@ -15,6 +16,7 @@ export default function Auth() {
   const [isLoading, setIsLoading] = useState(false);
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
   const [businessDocument, setBusinessDocument] = useState<File | null>(null);
+  const { t } = useLanguage();
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
   const [signupForm, setSignupForm] = useState({
     email: "",
@@ -216,23 +218,23 @@ export default function Auth() {
       <Card className="w-full max-w-2xl">
         <CardHeader className="text-center">
           <CardTitle className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-            NowhereMatching
+            {t('auth.title')}
           </CardTitle>
           <CardDescription>
-            해외진출 매칭 플랫폼에 오신 것을 환영합니다
+            {t('auth.subtitle')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="login" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">로그인</TabsTrigger>
-              <TabsTrigger value="signup">회원가입</TabsTrigger>
+              <TabsTrigger value="login">{t('auth.login')}</TabsTrigger>
+              <TabsTrigger value="signup">{t('auth.signup')}</TabsTrigger>
             </TabsList>
             
             <TabsContent value="login" className="space-y-4">
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="login-email">이메일</Label>
+                  <Label htmlFor="login-email">{t('auth.email')}</Label>
                   <Input
                     id="login-email"
                     type="email"
@@ -243,7 +245,7 @@ export default function Auth() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="login-password">비밀번호</Label>
+                  <Label htmlFor="login-password">{t('auth.password')}</Label>
                   <Input
                     id="login-password"
                     type="password"
@@ -253,7 +255,7 @@ export default function Auth() {
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "로그인 중..." : "로그인"}
+                  {isLoading ? t('auth.login.loading') : t('auth.login.button')}
                 </Button>
               </form>
             </TabsContent>
@@ -262,7 +264,7 @@ export default function Auth() {
               <form onSubmit={handleSignup} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="email">이메일 *</Label>
+                    <Label htmlFor="email">{t('auth.email')} {t('required')}</Label>
                     <Input
                       id="email"
                       type="email"
@@ -272,7 +274,7 @@ export default function Auth() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="password">비밀번호 *</Label>
+                    <Label htmlFor="password">{t('auth.password')} {t('required')}</Label>
                     <Input
                       id="password"
                       type="password"
@@ -282,7 +284,7 @@ export default function Auth() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="company_name">회사명 *</Label>
+                    <Label htmlFor="company_name">{t('company.name')} {t('required')}</Label>
                     <Input
                       id="company_name"
                       value={signupForm.company_name}
@@ -291,7 +293,7 @@ export default function Auth() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="ceo_name">대표자명 *</Label>
+                    <Label htmlFor="ceo_name">{t('company.ceo')} {t('required')}</Label>
                     <Input
                       id="ceo_name"
                       value={signupForm.ceo_name}
@@ -300,7 +302,7 @@ export default function Auth() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="manager_name">담당자명 *</Label>
+                    <Label htmlFor="manager_name">{t('company.manager')} {t('required')}</Label>
                     <Input
                       id="manager_name"
                       value={signupForm.manager_name}
@@ -309,7 +311,7 @@ export default function Auth() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="manager_position">담당자 직책 *</Label>
+                    <Label htmlFor="manager_position">{t('company.position')} {t('required')}</Label>
                     <Input
                       id="manager_position"
                       value={signupForm.manager_position}
@@ -318,7 +320,7 @@ export default function Auth() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="phone_number">연락처 *</Label>
+                    <Label htmlFor="phone_number">{t('company.phone')} {t('required')}</Label>
                     <Input
                       id="phone_number"
                       value={signupForm.phone_number}
@@ -327,61 +329,61 @@ export default function Auth() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="industry">업종 *</Label>
+                    <Label htmlFor="industry">{t('company.industry')} {t('required')}</Label>
                     <Select value={signupForm.industry} onValueChange={(value) => setSignupForm({ ...signupForm, industry: value })}>
                       <SelectTrigger>
-                        <SelectValue placeholder="업종 선택" />
+                        <SelectValue placeholder={t('select.placeholder')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="제조업">제조업</SelectItem>
-                        <SelectItem value="IT/소프트웨어">IT/소프트웨어</SelectItem>
-                        <SelectItem value="바이오/헬스케어">바이오/헬스케어</SelectItem>
-                        <SelectItem value="화학">화학</SelectItem>
-                        <SelectItem value="식품">식품</SelectItem>
-                        <SelectItem value="패션/뷰티">패션/뷰티</SelectItem>
-                        <SelectItem value="기타">기타</SelectItem>
+                        <SelectItem value="제조업">{t('industry.manufacturing')}</SelectItem>
+                        <SelectItem value="IT/소프트웨어">{t('industry.it')}</SelectItem>
+                        <SelectItem value="바이오/헬스케어">{t('industry.bio')}</SelectItem>
+                        <SelectItem value="화학">{t('industry.chemical')}</SelectItem>
+                        <SelectItem value="식품">{t('industry.food')}</SelectItem>
+                        <SelectItem value="패션/뷰티">{t('industry.fashion')}</SelectItem>
+                        <SelectItem value="기타">{t('industry.other')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="headquarters_country">본사 국가 *</Label>
+                    <Label htmlFor="headquarters_country">{t('company.country')} {t('required')}</Label>
                     <Select value={signupForm.headquarters_country} onValueChange={(value) => setSignupForm({ ...signupForm, headquarters_country: value })}>
                       <SelectTrigger>
-                        <SelectValue placeholder="국가 선택" />
+                        <SelectValue placeholder={t('select.placeholder')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="한국">한국</SelectItem>
-                        <SelectItem value="일본">일본</SelectItem>
-                        <SelectItem value="싱가포르">싱가포르</SelectItem>
-                        <SelectItem value="대만">대만</SelectItem>
-                        <SelectItem value="홍콩">홍콩</SelectItem>
-                        <SelectItem value="필리핀">필리핀</SelectItem>
-                        <SelectItem value="인도네시아">인도네시아</SelectItem>
-                        <SelectItem value="말레이시아">말레이시아</SelectItem>
-                        <SelectItem value="베트남">베트남</SelectItem>
-                        <SelectItem value="태국">태국</SelectItem>
-                        <SelectItem value="인도">인도</SelectItem>
-                        <SelectItem value="기타 아시아">기타 아시아</SelectItem>
-                        <SelectItem value="UAE">UAE</SelectItem>
-                        <SelectItem value="사우디아라비아">사우디아라비아</SelectItem>
-                        <SelectItem value="기타 중동">기타 중동</SelectItem>
-                        <SelectItem value="미국">미국</SelectItem>
-                        <SelectItem value="캐나다">캐나다</SelectItem>
-                        <SelectItem value="기타 북미">기타 북미</SelectItem>
-                        <SelectItem value="독일">독일</SelectItem>
-                        <SelectItem value="영국">영국</SelectItem>
-                        <SelectItem value="프랑스">프랑스</SelectItem>
-                        <SelectItem value="이탈리아">이탈리아</SelectItem>
-                        <SelectItem value="스페인">스페인</SelectItem>
-                        <SelectItem value="네덜란드">네덜란드</SelectItem>
-                        <SelectItem value="기타 유럽">기타 유럽</SelectItem>
-                        <SelectItem value="호주">호주</SelectItem>
-                        <SelectItem value="뉴질랜드">뉴질랜드</SelectItem>
+                        <SelectItem value="한국">{t('country.korea')}</SelectItem>
+                        <SelectItem value="일본">{t('country.japan')}</SelectItem>
+                        <SelectItem value="싱가포르">{t('country.singapore')}</SelectItem>
+                        <SelectItem value="대만">{t('country.taiwan')}</SelectItem>
+                        <SelectItem value="홍콩">{t('country.hongkong')}</SelectItem>
+                        <SelectItem value="필리핀">{t('country.philippines')}</SelectItem>
+                        <SelectItem value="인도네시아">{t('country.indonesia')}</SelectItem>
+                        <SelectItem value="말레이시아">{t('country.malaysia')}</SelectItem>
+                        <SelectItem value="베트남">{t('country.vietnam')}</SelectItem>
+                        <SelectItem value="태국">{t('country.thailand')}</SelectItem>
+                        <SelectItem value="인도">{t('country.india')}</SelectItem>
+                        <SelectItem value="기타 아시아">{t('country.other.asia')}</SelectItem>
+                        <SelectItem value="UAE">{t('country.uae')}</SelectItem>
+                        <SelectItem value="사우디아라비아">{t('country.saudi')}</SelectItem>
+                        <SelectItem value="기타 중동">{t('country.other.middle')}</SelectItem>
+                        <SelectItem value="미국">{t('country.usa')}</SelectItem>
+                        <SelectItem value="캐나다">{t('country.canada')}</SelectItem>
+                        <SelectItem value="기타 북미">{t('country.other.north')}</SelectItem>
+                        <SelectItem value="독일">{t('country.germany')}</SelectItem>
+                        <SelectItem value="영국">{t('country.uk')}</SelectItem>
+                        <SelectItem value="프랑스">{t('country.france')}</SelectItem>
+                        <SelectItem value="이탈리아">{t('country.italy')}</SelectItem>
+                        <SelectItem value="스페인">{t('country.spain')}</SelectItem>
+                        <SelectItem value="네덜란드">{t('country.netherlands')}</SelectItem>
+                        <SelectItem value="기타 유럽">{t('country.other.europe')}</SelectItem>
+                        <SelectItem value="호주">{t('country.australia')}</SelectItem>
+                        <SelectItem value="뉴질랜드">{t('country.newzealand')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="headquarters_city">본사 도시</Label>
+                    <Label htmlFor="headquarters_city">{t('company.city')}</Label>
                     <Input
                       id="headquarters_city"
                       value={signupForm.headquarters_city}
@@ -390,7 +392,7 @@ export default function Auth() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="founding_year">설립연도</Label>
+                    <Label htmlFor="founding_year">{t('company.year')}</Label>
                     <Input
                       id="founding_year"
                       type="number"
@@ -400,24 +402,24 @@ export default function Auth() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="employee_count">직원 수</Label>
+                    <Label htmlFor="employee_count">{t('company.employees')}</Label>
                     <Select value={signupForm.employee_count} onValueChange={(value) => setSignupForm({ ...signupForm, employee_count: value })}>
                       <SelectTrigger>
-                        <SelectValue placeholder="직원 수 선택" />
+                        <SelectValue placeholder={t('select.placeholder')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="1-10명">1-10명</SelectItem>
-                        <SelectItem value="11-50명">11-50명</SelectItem>
-                        <SelectItem value="51-100명">51-100명</SelectItem>
-                        <SelectItem value="101-500명">101-500명</SelectItem>
-                        <SelectItem value="500명 이상">500명 이상</SelectItem>
+                        <SelectItem value="1-10명">{t('employees.1-10')}</SelectItem>
+                        <SelectItem value="11-50명">{t('employees.11-50')}</SelectItem>
+                        <SelectItem value="51-100명">{t('employees.51-100')}</SelectItem>
+                        <SelectItem value="101-500명">{t('employees.101-500')}</SelectItem>
+                        <SelectItem value="500명 이상">{t('employees.500+')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="website">회사 웹사이트</Label>
+                  <Label htmlFor="website">{t('company.website')}</Label>
                   <Input
                     id="website"
                     type="url"
@@ -428,7 +430,7 @@ export default function Auth() {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="main_products">주요 제품/서비스</Label>
+                  <Label htmlFor="main_products">{t('company.products')}</Label>
                   <Textarea
                     id="main_products"
                     value={signupForm.main_products}
@@ -438,7 +440,7 @@ export default function Auth() {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="target_market">타겟 시장</Label>
+                  <Label htmlFor="target_market">{t('company.target')}</Label>
                   <Textarea
                     id="target_market"
                     value={signupForm.target_market}
@@ -448,7 +450,7 @@ export default function Auth() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="business_document">사업자등록증 *</Label>
+                  <Label htmlFor="business_document">{t('company.document')} {t('required')}</Label>
                   <Input
                     id="business_document"
                     type="file"
@@ -457,12 +459,12 @@ export default function Auth() {
                     required
                   />
                   <p className="text-sm text-muted-foreground">
-                    PDF, JPG, PNG 파일만 업로드 가능합니다.
+                    {t('company.document.note')}
                   </p>
                 </div>
                 
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "회원가입 중..." : "회원가입"}
+                  {isLoading ? t('auth.signup.loading') : t('auth.signup.button')}
                 </Button>
               </form>
             </TabsContent>
@@ -473,16 +475,16 @@ export default function Auth() {
       <Dialog open={showApprovalDialog} onOpenChange={setShowApprovalDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>회원가입 완료</DialogTitle>
+            <DialogTitle>{t('auth.signup.complete')}</DialogTitle>
             <DialogDescription>
-              회원가입이 완료되었습니다. 관리자 승인 후 이메일로 알려드리겠습니다.
+              {t('auth.signup.complete.message')}
             </DialogDescription>
           </DialogHeader>
           <Button onClick={() => {
             setShowApprovalDialog(false);
             navigate('/');
           }}>
-            확인
+            {t('auth.confirm')}
           </Button>
         </DialogContent>
       </Dialog>

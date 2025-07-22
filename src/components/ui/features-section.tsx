@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { 
   FileText, 
   Globe, 
@@ -13,11 +14,12 @@ import {
 } from "lucide-react";
 
 export function FeaturesSection() {
+  const { t } = useLanguage();
   const features = [
     {
       icon: Upload,
-      title: "회사소개서 업로드",
-      description: "PDF, PPT 형식의 회사소개서를 간편하게 업로드하고 진출 희망 국가를 선택하세요.",
+      title: t('home.features.ai.title'),
+      description: t('home.features.ai.desc'),
       color: "text-blue-600"
     },
     {
@@ -28,8 +30,8 @@ export function FeaturesSection() {
     },
     {
       icon: Users,
-      title: "전문가 검토",
-      description: "글로벌 비즈니스 전문가들이 AI 분석 결과를 검토하고 보완하여 정확성을 높입니다.",
+      title: t('home.features.expert.title'),
+      description: t('home.features.expert.desc'),
       color: "text-purple-600"
     },
     {
@@ -40,8 +42,8 @@ export function FeaturesSection() {
     },
     {
       icon: Globe,
-      title: "글로벌 네트워크",
-      description: "전 세계 파트너, 투자자, 고객과의 매칭을 통해 해외진출 기회를 확대합니다.",
+      title: t('home.features.global.title'),
+      description: t('home.features.global.desc'),
       color: "text-cyan-600"
     },
     {
@@ -71,9 +73,7 @@ export function FeaturesSection() {
               핵심 기능
             </Badge>
             <h2 className="text-3xl md:text-4xl font-bold mb-6">
-              AI 기반 해외진출 분석의
-              <br />
-              <span className="text-primary">새로운 기준</span>
+              {t('home.features.title')}
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
               노웨어브릿지만의 차별화된 AI 분석 시스템으로 글로벌 비즈니스 성공을 앞당기세요.

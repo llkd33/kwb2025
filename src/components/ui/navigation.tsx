@@ -2,6 +2,8 @@ import { Button } from "@/components/ui/button";
 import { useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { LanguageSelector } from "@/components/ui/language-selector";
 
 interface NavigationProps {
   className?: string;
@@ -9,6 +11,7 @@ interface NavigationProps {
 
 export function Navigation({ className }: NavigationProps) {
   const location = useLocation();
+  const { t } = useLanguage();
   const [currentCompany, setCurrentCompany] = useState<any>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
@@ -26,14 +29,14 @@ export function Navigation({ className }: NavigationProps) {
 
   // 기본 네비게이션 아이템
   const baseNavItems = [
-    { href: "/", label: "홈" },
-    { href: "/about", label: "회사소개" },
+    { href: "/", label: t('nav.home') },
+    { href: "/about", label: t('nav.about') },
   ];
 
   // 로그인된 사용자용 아이템
   const userNavItems = [
     { href: "/business-documents", label: "서류관리" },
-    { href: "/dashboard", label: "마이페이지" },
+    { href: "/dashboard", label: t('nav.dashboard') },
   ];
 
   // 관리자용 아이템
@@ -70,6 +73,7 @@ export function Navigation({ className }: NavigationProps) {
         </a>
       ))}
       <div className="flex items-center space-x-4 ml-8">
+        <LanguageSelector />
         {isLoggedIn ? (
           <div className="flex items-center space-x-4">
             <span className="text-sm text-muted-foreground">
@@ -83,16 +87,16 @@ export function Navigation({ className }: NavigationProps) {
                 window.location.href = '/';
               }}
             >
-              로그아웃
+              {t('nav.logout')}
             </Button>
           </div>
         ) : (
           <>
             <Button variant="ghost" size="sm" asChild>
-              <a href="/auth">로그인</a>
+              <a href="/auth">{t('nav.login')}</a>
             </Button>
             <Button size="sm" className="bg-gradient-primary hover:opacity-90" asChild>
-              <a href="/auth">회원가입</a>
+              <a href="/auth">{t('auth.signup')}</a>
             </Button>
           </>
         )}
