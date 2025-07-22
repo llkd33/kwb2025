@@ -9,22 +9,38 @@ export function HeroSection() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    const company = localStorage.getItem('currentCompany');
-    setIsLoggedIn(!!company);
+    try {
+      const company = localStorage.getItem('currentCompany');
+      setIsLoggedIn(!!company);
+      console.log('Login status:', !!company); // 디버깅용
+    } catch (error) {
+      console.error('Error checking login status:', error);
+      setIsLoggedIn(false);
+    }
   }, []);
 
   const handleStartAnalysis = () => {
-    if (isLoggedIn) {
-      // 로그인된 경우 마이페이지로 이동 (매칭 요청 페이지는 추후 구현)
-      navigate('/dashboard');
-    } else {
-      // 비로그인 시 회원가입 페이지로 이동
-      navigate('/auth');
+    console.log('Start analysis clicked, isLoggedIn:', isLoggedIn); // 디버깅용
+    try {
+      if (isLoggedIn) {
+        navigate('/dashboard');
+      } else {
+        navigate('/auth');
+      }
+    } catch (error) {
+      console.error('Navigation error:', error);
+      window.location.href = '/auth'; // fallback
     }
   };
 
   const handleExploreServices = () => {
-    navigate('/services');
+    console.log('Explore services clicked'); // 디버깅용
+    try {
+      navigate('/services');
+    } catch (error) {
+      console.error('Navigation error:', error);
+      window.location.href = '/services'; // fallback
+    }
   };
 
   return (
@@ -67,22 +83,21 @@ export function HeroSection() {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16 animate-fade-up [animation-delay:800ms]">
-            <Button 
-              size="lg" 
-              className="bg-white text-primary hover:bg-white/90 shadow-glow text-lg px-8 py-4 h-14"
+            <button 
+              className="bg-white text-gray-800 hover:bg-gray-100 font-medium text-lg px-8 py-4 h-14 rounded-lg flex items-center justify-center gap-2 transition-colors"
               onClick={handleStartAnalysis}
+              type="button"
             >
               {isLoggedIn ? '매칭 요청하기' : '무료 분석 시작하기'}
-              <ArrowRight className="ml-2 w-5 h-5" />
-            </Button>
-            <Button 
-              variant="outline" 
-              size="lg"
-              className="border-white/30 text-white hover:bg-white/10 text-lg px-8 py-4 h-14"
+              <ArrowRight className="w-5 h-5" />
+            </button>
+            <button 
+              className="border-2 border-white/30 text-white hover:bg-white/10 font-medium text-lg px-8 py-4 h-14 rounded-lg flex items-center justify-center transition-colors"
               onClick={handleExploreServices}
+              type="button"
             >
               서비스 둘러보기
-            </Button>
+            </button>
           </div>
 
           {/* Feature Pills */}
