@@ -173,7 +173,8 @@ export default function MatchingRequest() {
     setSubmitting(true);
 
     try {
-      const { error } = await supabase
+      // 1. Create matching request
+      const { data: newRequest, error } = await supabase
         .from('matching_requests')
         .insert({
           company_id: currentCompany.id,
@@ -183,14 +184,33 @@ export default function MatchingRequest() {
           product_info: productInfo,
           market_info: marketInfo,
           status: 'pending'
-        });
+        })
+        .select()
+        .single();
 
       if (error) throw error;
 
-      toast({
-        title: "매칭 요청 완료",
-        description: "AI 분석이 시작됩니다. 결과는 이메일로 알려드리겠습니다.",
+      // 2. Start AI analysis in background
+      const analysisStarted = await supabase.functions.invoke('comprehensive-analysis', {
+        body: {
+          matchingRequestId: newRequest.id
+        }
       });
+
+      if (analysisStarted.error) {
+        console.error('Failed to start analysis:', analysisStarted.error);
+        // Don't throw error - the request was created successfully
+        toast({
+          title: "매칭 요청 완료",
+          description: "요청이 접수되었으나 분석 시작에 실패했습니다. 관리자에게 문의해주세요.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "매칭 요청 완료",
+          description: "AI 분석이 시작되었습니다. 완료되면 이메일로 알려드리겠습니다. (약 5-10분 소요)",
+        });
+      }
 
       navigate('/dashboard');
     } catch (error: any) {

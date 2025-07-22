@@ -424,9 +424,11 @@ export default function Dashboard() {
               <h3 className="text-lg font-semibold">매칭 요청</h3>
               <p className="text-gray-600">해외진출 매칭 요청 현황</p>
             </div>
-            <Button disabled={!currentCompany.is_approved}>
-              <Target className="h-4 w-4 mr-2" />
-              새 매칭 요청
+            <Button disabled={!currentCompany.is_approved} asChild>
+              <a href="/matching-request">
+                <Target className="h-4 w-4 mr-2" />
+                새 매칭 요청
+              </a>
             </Button>
           </div>
           
@@ -439,34 +441,70 @@ export default function Dashboard() {
                   {!currentCompany.is_approved ? (
                     <p className="text-sm text-orange-600">계정 승인 후 매칭 요청이 가능합니다.</p>
                   ) : (
-                    <Button className="mt-4">
-                      <Target className="h-4 w-4 mr-2" />
-                      첫 매칭 요청하기
+                    <Button asChild className="mt-4">
+                      <a href="/matching-request">
+                        <Target className="h-4 w-4 mr-2" />
+                        첫 매칭 요청하기
+                      </a>
                     </Button>
                   )}
                 </div>
               ) : (
                 <div className="space-y-4">
                   {matchingRequests.map((request) => (
-                    <div key={request.id} className="p-4 border rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-medium">
-                          매칭 요청 #{request.id}
-                        </h4>
-                        <Badge variant={request.status === 'completed' ? 'default' : 'secondary'}>
-                          {request.status === 'completed' ? '완료' : '진행중'}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-gray-600 mb-2">
-                        타겟 국가: {request.target_countries.join(', ')}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        요청일: {new Date(request.created_at).toLocaleDateString()}
-                        {request.completed_at && (
-                          <> · 완료일: {new Date(request.completed_at).toLocaleDateString()}</>
-                        )}
-                      </p>
-                    </div>
+                    <Card key={request.id} className="border">
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-medium">
+                            매칭 요청 #{request.id}
+                          </h4>
+                          <Badge variant={request.status === 'completed' ? 'default' : 'secondary'}>
+                            {request.status === 'completed' ? '분석완료' : request.status === 'pending' ? '분석중' : '진행중'}
+                          </Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2">
+                          <p className="text-sm text-gray-600">
+                            <strong>타겟 국가:</strong> {request.target_countries.join(', ')}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            요청일: {new Date(request.created_at).toLocaleDateString()}
+                            {request.completed_at && (
+                              <> · 완료일: {new Date(request.completed_at).toLocaleDateString()}</>
+                            )}
+                          </p>
+                          
+                          {request.status === 'completed' && (
+                            <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                              <div className="flex items-center justify-between mb-2">
+                                <h5 className="font-medium text-green-800">📊 AI 분석 완료</h5>
+                                <CheckCircle className="h-5 w-5 text-green-600" />
+                              </div>
+                              <p className="text-sm text-green-700 mb-3">
+                                Goldman Sachs급 종합 분석 리포트가 준비되었습니다.
+                              </p>
+                              <Button size="sm" className="bg-green-600 hover:bg-green-700">
+                                <FileText className="h-4 w-4 mr-1" />
+                                분석 결과 보기
+                              </Button>
+                            </div>
+                          )}
+                          
+                          {request.status === 'pending' && (
+                            <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                              <div className="flex items-center mb-2">
+                                <Clock className="h-4 w-4 text-blue-600 mr-2" />
+                                <h5 className="font-medium text-blue-800">AI 분석 진행중</h5>
+                              </div>
+                              <p className="text-sm text-blue-700">
+                                GPT-4 + Perplexity AI가 종합 분석 중입니다. 완료되면 이메일로 알려드립니다.
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
                   ))}
                 </div>
               )}
