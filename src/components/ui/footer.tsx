@@ -1,9 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Mail, Phone, MapPin, ExternalLink } from "lucide-react";
-
 export function Footer() {
-  return (
-    <footer className="bg-primary text-primary-foreground">
+  return <footer className="bg-primary text-primary-foreground">
       <div className="container px-4 sm:px-6 lg:px-8 py-16">
         <div className="max-w-6xl mx-auto">
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
@@ -29,35 +27,7 @@ export function Footer() {
             </div>
 
             {/* Contact Info */}
-            <div>
-              <h4 className="text-lg font-semibold mb-4">연락처</h4>
-              <div className="space-y-3">
-                <div className="flex items-start gap-3">
-                  <Mail className="w-5 h-5 mt-0.5 text-accent" />
-                  <div>
-                    <p className="font-medium">이메일</p>
-                    <p className="text-sm text-primary-foreground/80">contact@nowherebridge.com</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Phone className="w-5 h-5 mt-0.5 text-accent" />
-                  <div>
-                    <p className="font-medium">전화</p>
-                    <p className="text-sm text-primary-foreground/80">+82-2-1234-5678</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <MapPin className="w-5 h-5 mt-0.5 text-accent" />
-                  <div>
-                    <p className="font-medium">주소</p>
-                    <p className="text-sm text-primary-foreground/80">
-                      서울특별시 강남구 테헤란로<br />
-                      123, KnowWhere Bridge Matching 서비스빌딩 10층
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
+            
 
             {/* Quick Links */}
             <div>
@@ -97,6 +67,5 @@ export function Footer() {
           </div>
         </div>
       </div>
-    </footer>
-  );
+    </footer>;
 }
