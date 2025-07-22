@@ -840,11 +840,12 @@ export default function Admin() {
       </div>
 
       <Tabs defaultValue="pending" className="w-full">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-8">
           <TabsTrigger value="pending">승인 대기 ({pendingCompanies.length})</TabsTrigger>
           <TabsTrigger value="approved">승인 완료 ({approvedCompanies.length})</TabsTrigger>
           <TabsTrigger value="rejected">거부됨 ({rejectedCompanies.length})</TabsTrigger>
           <TabsTrigger value="reports">리포트 리뷰</TabsTrigger>
+          <TabsTrigger value="history">배포 히스토리</TabsTrigger>
           <TabsTrigger value="prompts">AI 프롬프트</TabsTrigger>
           <TabsTrigger value="perplexity">퍼플렉시티</TabsTrigger>
           <TabsTrigger value="data">시장 데이터</TabsTrigger>
@@ -1241,6 +1242,177 @@ export default function Admin() {
           )}
         </TabsContent>
 
+        {/* Report History Tab */}
+        <TabsContent value="history" className="mt-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="text-lg font-semibold">📋 배포된 리포트 히스토리</h3>
+              <p className="text-gray-600">배포 완료된 AI 분석 리포트들을 관리하고 수정할 수 있습니다.</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="text-green-600">
+                {matchingRequests.filter(request => request.is_published).length}개 배포됨
+              </Badge>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {matchingRequests
+              .filter(request => request.is_published && request.ai_analysis && request.market_research)
+              .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
+              .map((request) => (
+                <Card key={request.id} className="border-2 border-green-200 shadow-sm bg-green-50">
+                  <CardHeader className="bg-gradient-to-r from-green-100 to-emerald-100">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle className="flex items-center gap-2 text-xl">
+                          <Badge className="bg-green-600 text-white">PUBLISHED</Badge>
+                          <Building2 className="h-5 w-5 text-green-700" />
+                          {request.companies?.company_name || 'Unknown Company'}
+                        </CardTitle>
+                        <CardDescription className="text-base mt-2 text-green-800">
+                          📍 {request.companies?.industry} | {request.companies?.headquarters_country} | 
+                          📤 배포일: {request.published_at ? new Date(request.published_at).toLocaleDateString() : new Date(request.updated_at).toLocaleDateString()}
+                        </CardDescription>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="border-green-300 hover:bg-green-200"
+                          onClick={() => {
+                            setSelectedRequest(request);
+                            setAdminComments(request.admin_comments || '');
+                            setShowReportDialog(true);
+                          }}
+                        >
+                          <Edit className="h-4 w-4 mr-1" />
+                          수정
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="border-blue-300 hover:bg-blue-100"
+                          onClick={async () => {
+                            // 재배포 로직
+                            try {
+                              const { error: emailError } = await supabase.functions.invoke('send-analysis-complete-email', {
+                                body: {
+                                  companyId: request.company_id,
+                                  matchingRequestId: request.id,
+                                  reportSummary: '리포트가 재전송되었습니다.'
+                                }
+                              });
+
+                              if (emailError) {
+                                toast({
+                                  title: "재배포 실패",
+                                  description: "이메일 발송에 실패했습니다.",
+                                  variant: "destructive",
+                                });
+                              } else {
+                                toast({
+                                  title: "재배포 완료",
+                                  description: "리포트가 성공적으로 재배포되었습니다.",
+                                });
+                              }
+                            } catch (error: any) {
+                              toast({
+                                title: "재배포 실패",
+                                description: error.message,
+                                variant: "destructive",
+                              });
+                            }
+                          }}
+                        >
+                          <Mail className="h-4 w-4 mr-1" />
+                          재배포
+                        </Button>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  
+                  <CardContent className="p-6">
+                    {/* Executive Summary */}
+                    <div className="mb-4 p-4 bg-white rounded-lg border border-green-200">
+                      <h4 className="font-bold text-lg mb-3 text-green-900 flex items-center gap-2">
+                        ⭐ 리포트 요약
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                        {request.ai_analysis?.투자_파트너십_권고 && (
+                          <div className="bg-green-50 p-3 rounded border">
+                            <p className="font-semibold text-green-700">투자 등급</p>
+                            <p className="text-lg font-bold text-green-800">
+                              {(request.ai_analysis as any).투자_파트너십_권고?.투자_등급 || 'N/A'}
+                            </p>
+                          </div>
+                        )}
+                        
+                        {request.ai_analysis?.재무_현황_투자가치?.밸류에이션 && (
+                          <div className="bg-blue-50 p-3 rounded border">
+                            <p className="font-semibold text-blue-700">기업 가치</p>
+                            <p className="text-sm font-bold text-blue-800">
+                              {(request.ai_analysis as any).재무_현황_투자가치?.밸류에이션}
+                            </p>
+                          </div>
+                        )}
+                        
+                        {request.market_research?.최종_시장_진출_권고?.ROI_예측 && (
+                          <div className="bg-purple-50 p-3 rounded border">
+                            <p className="font-semibold text-purple-700">ROI 예측</p>
+                            <p className="text-sm font-bold text-purple-800">
+                              {(request.market_research as any).최종_시장_진출_권고?.ROI_예측}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Quick Stats */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      <div className="bg-white p-3 rounded border">
+                        <p className="text-gray-600">타겟 시장</p>
+                        <p className="font-semibold">{request.target_countries?.join(', ')}</p>
+                      </div>
+                      <div className="bg-white p-3 rounded border">
+                        <p className="text-gray-600">분석 완료</p>
+                        <p className="font-semibold">{new Date(request.completed_at || request.updated_at).toLocaleDateString()}</p>
+                      </div>
+                      <div className="bg-white p-3 rounded border">
+                        <p className="text-gray-600">배포 상태</p>
+                        <Badge className="bg-green-600 text-white">배포됨</Badge>
+                      </div>
+                      <div className="bg-white p-3 rounded border">
+                        <p className="text-gray-600">최종 수정</p>
+                        <p className="font-semibold">{new Date(request.updated_at).toLocaleDateString()}</p>
+                      </div>
+                    </div>
+
+                    {/* Admin Comments History */}
+                    {request.admin_comments && (
+                      <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <h5 className="font-semibold text-yellow-900 mb-2 flex items-center gap-2">
+                          💬 관리자 코멘트
+                        </h5>
+                        <p className="text-sm text-yellow-800">{request.admin_comments}</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+          </div>
+
+          {matchingRequests.filter(request => request.is_published).length === 0 && (
+            <Card>
+              <CardContent className="text-center py-12">
+                <FileSpreadsheet className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <h4 className="text-lg font-semibold text-gray-600 mb-2">배포된 리포트가 없습니다</h4>
+                <p className="text-gray-500">리포트 리뷰 탭에서 분석을 완료하고 배포하면 여기에 표시됩니다.</p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
         {/* AI Prompts Tab */}
         <TabsContent value="prompts" className="mt-6">
           <div className="flex items-center justify-between mb-6">
@@ -1528,9 +1700,6 @@ export default function Admin() {
             </div>
           </div>
         </TabsContent>
-
-        {/* Market Data Tab */}
-        <TabsContent value="data" className="mt-6">
 
         {/* Market Data Tab */}
         <TabsContent value="data" className="mt-6">
