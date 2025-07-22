@@ -274,7 +274,7 @@ export default function Services() {
                 <Award className="w-5 h-5 mr-2" />
                 무료 분석 신청
               </Button>
-              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
+              <Button size="lg" variant="outline" className="border-white text-white bg-transparent hover:bg-white/10">
                 상담 요청하기
               </Button>
             </div>
