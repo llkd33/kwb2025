@@ -1,8 +1,10 @@
 import { Navigation } from "@/components/ui/navigation";
 import { CompanyIntro } from "@/components/ui/company-intro";
 import { Footer } from "@/components/ui/footer";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const About = () => {
+  const { t } = useLanguage();
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -13,7 +15,7 @@ const About = () => {
               <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-sm">NB</span>
               </div>
-              <span className="text-xl font-bold text-primary">KnowWhere Bridge Matching 서비스</span>
+              <span className="text-xl font-bold text-primary">{t('service.name')}</span>
             </div>
             <Navigation />
           </div>

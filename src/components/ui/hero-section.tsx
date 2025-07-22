@@ -52,7 +52,7 @@ export function HeroSection() {
           {/* Badge */}
           <div className="inline-flex items-center px-4 py-2 bg-white/10 rounded-full border border-white/20 backdrop-blur-sm mb-8 animate-fade-up">
             <Zap className="w-4 h-4 mr-2 text-accent" />
-            <span className="text-sm font-medium">AI 기반 글로벌 비즈니스 분석</span>
+            <span className="text-sm font-medium">{t('home.hero.badge')}</span>
           </div>
 
           {/* Main Heading */}
@@ -82,7 +82,7 @@ export function HeroSection() {
           </p>
           
           <p className="text-lg md:text-xl mb-12 text-white/80 animate-fade-up [animation-delay:600ms]">
-            Goldman Sachs급 시장분석 리포트를 경험하세요.
+            {t('home.hero.goldman')}
           </p>
 
           {/* CTA Buttons */}
@@ -92,7 +92,7 @@ export function HeroSection() {
               onClick={handleStartAnalysis}
               type="button"
             >
-              {isLoggedIn ? '매칭 요청하기' : t('home.hero.cta')}
+              {isLoggedIn ? t('home.hero.matching_request') : t('home.hero.cta')}
               <ArrowRight className="w-5 h-5" />
             </button>
             <button 
@@ -100,7 +100,7 @@ export function HeroSection() {
               onClick={handleExploreServices}
               type="button"
             >
-              서비스 둘러보기
+              {t('home.hero.explore')}
             </button>
           </div>
 
@@ -108,15 +108,15 @@ export function HeroSection() {
           <div className="flex flex-wrap justify-center gap-4 animate-fade-up [animation-delay:1000ms]">
             <div className="inline-flex items-center px-4 py-2 bg-white/10 rounded-full backdrop-blur-sm">
               <Globe className="w-4 h-4 mr-2 text-accent" />
-              <span className="text-sm">글로벌 네트워크</span>
+              <span className="text-sm">{t('home.hero.global_network')}</span>
             </div>
             <div className="inline-flex items-center px-4 py-2 bg-white/10 rounded-full backdrop-blur-sm">
               <BarChart3 className="w-4 h-4 mr-2 text-accent" />
-              <span className="text-sm">AI 시장 분석</span>
+              <span className="text-sm">{t('home.hero.ai_analysis')}</span>
             </div>
             <div className="inline-flex items-center px-4 py-2 bg-white/10 rounded-full backdrop-blur-sm">
               <Zap className="w-4 h-4 mr-2 text-accent" />
-              <span className="text-sm">맞춤형 매칭</span>
+              <span className="text-sm">{t('home.hero.custom_matching')}</span>
             </div>
           </div>
         </div>

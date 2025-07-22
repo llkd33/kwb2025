@@ -24,8 +24,8 @@ export function FeaturesSection() {
     },
     {
       icon: BarChart3,
-      title: "AI 자동 분석",
-      description: "GPT와 Perplexity를 활용하여 핵심 비즈니스 요소를 자동으로 추출하고 분석합니다.",
+      title: t('home.features.auto_analysis'),
+      description: t('home.features.auto_analysis_desc'),
       color: "text-emerald-600"
     },
     {
@@ -36,8 +36,8 @@ export function FeaturesSection() {
     },
     {
       icon: FileText,
-      title: "맞춤형 리포트",
-      description: "Goldman Sachs 수준의 전문적인 시장분석 리포트를 마이페이지에서 확인할 수 있습니다.",
+      title: t('home.features.custom_report'),
+      description: t('home.features.custom_report_desc'),
       color: "text-orange-600"
     },
     {
@@ -48,19 +48,19 @@ export function FeaturesSection() {
     },
     {
       icon: Shield,
-      title: "보안 & 신뢰성",
-      description: "사업자등록증 검증과 어드민 승인 시스템으로 신뢰할 수 있는 비즈니스 환경을 제공합니다.",
+      title: t('home.features.security'),
+      description: t('home.features.security_desc'),
       color: "text-red-600"
     }
   ];
 
   const process = [
-    { step: "01", title: "회원가입", desc: "소셜 로그인 또는 이메일로 간편 가입" },
-    { step: "02", title: "사업자등록증 제출", desc: "사업자등록증 업로드 후 어드민 승인 대기" },
-    { step: "03", title: "회사정보 제출", desc: "회사소개서 업로드 및 진출 희망 국가 선택" },
-    { step: "04", title: "AI 분석", desc: "GPT/Perplexity 기반 자동 분석 수행" },
-    { step: "05", title: "전문가 검토", desc: "어드민이 분석 결과 검토 및 보완" },
-    { step: "06", title: "리포트 제공", desc: "마이페이지에서 최종 분석 리포트 확인" }
+    { step: "01", title: t('home.process.step1'), desc: t('home.process.step1_desc') },
+    { step: "02", title: t('home.process.step2'), desc: t('home.process.step2_desc') },
+    { step: "03", title: t('home.process.step3'), desc: t('home.process.step3_desc') },
+    { step: "04", title: t('home.process.step4'), desc: t('home.process.step4_desc') },
+    { step: "05", title: t('home.process.step5'), desc: t('home.process.step5_desc') },
+    { step: "06", title: t('home.process.step6'), desc: t('home.process.step6_desc') }
   ];
 
   return (
@@ -70,13 +70,13 @@ export function FeaturesSection() {
           {/* Section Header */}
           <div className="text-center mb-16">
             <Badge variant="outline" className="mb-4">
-              핵심 기능
+              {t('home.features.core_features')}
             </Badge>
             <h2 className="text-3xl md:text-4xl font-bold mb-6">
               {t('home.features.title')}
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              KnowWhere Bridge Matching 서비스만의 차별화된 AI 분석 시스템으로 글로벌 비즈니스 성공을 앞당기세요.
+              {t('home.features.subtitle')}
             </p>
           </div>
 
@@ -103,12 +103,12 @@ export function FeaturesSection() {
           <div className="bg-gradient-card rounded-2xl p-8 md:p-12">
             <div className="text-center mb-12">
               <h3 className="text-2xl md:text-3xl font-bold mb-4">
-                간단한 6단계로 완성되는
+                {t('home.process.title')}
                 <br />
-                <span className="text-primary">전문 분석 리포트</span>
+                <span className="text-primary">{t('home.process.subtitle')}</span>
               </h3>
               <p className="text-muted-foreground">
-                복잡한 절차 없이 빠르고 정확한 해외진출 분석을 경험하세요.
+                {t('home.process.desc')}
               </p>
             </div>
 

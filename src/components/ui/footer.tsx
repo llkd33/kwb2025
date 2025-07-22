@@ -1,18 +1,17 @@
-import { Button } from "@/components/ui/button";
-import { Mail, Phone, MapPin, ExternalLink } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 export function Footer() {
+  const { t } = useLanguage();
   return <footer className="bg-primary text-primary-foreground">
       <div className="container px-4 sm:px-6 lg:px-8 py-16">
         <div className="max-w-6xl mx-auto">
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
             {/* Company Info */}
             <div className="lg:col-span-2">
-              <h3 className="text-2xl font-bold mb-4">KnowWhere Bridge Matching 서비스</h3>
+              <h3 className="text-2xl font-bold mb-4">{t('service.name')}</h3>
               <p className="text-primary-foreground/80 mb-6 leading-relaxed">
-                전세계 AI·Fintech·IT 생태계 활성화에 기여하는 맞춤형 비즈니스 매칭 전문기업입니다. 
-                글로벌 시장에서 여러분의 성공적인 비즈니스를 위해 최선을 다하겠습니다.
+                {t('footer.description')}
               </p>
-              <div className="text-sm text-primary-foreground/80 space-y-1 mb-4">
+              <div className="text-sm text-primary-foreground/80 space-y-1">
                 <p>상호명 : (주)노웨어브릿지</p>
                 <p>대표 : 홍 동 표</p>
                 <p>TEL : 02-525-7121</p>
@@ -20,10 +19,6 @@ export function Footer() {
                 <p>사업자 등록번호 : 755-88-02896</p>
                 <p>주소 : 서울특별시 서초구 서초대로 77길 39, 11층 106호</p>
               </div>
-              <Button variant="secondary" className="bg-white/10 hover:bg-white/20 border-white/20">
-                회사소개서 다운로드
-                <ExternalLink className="ml-2 w-4 h-4" />
-              </Button>
             </div>
 
             {/* Contact Info */}
@@ -34,16 +29,16 @@ export function Footer() {
               <h4 className="text-lg font-semibold mb-4">바로가기</h4>
               <div className="space-y-2">
                 <a href="/about" className="block text-primary-foreground/80 hover:text-white transition-colors">
-                  회사소개
+                  {t('nav.about')}
                 </a>
                 <a href="/services" className="block text-primary-foreground/80 hover:text-white transition-colors">
-                  서비스
+                  {t('nav.services')}
                 </a>
                 <a href="/dashboard" className="block text-primary-foreground/80 hover:text-white transition-colors">
-                  대시보드
+                  {t('nav.dashboard')}
                 </a>
                 <a href="/contact" className="block text-primary-foreground/80 hover:text-white transition-colors">
-                  문의하기
+                  {t('footer.contact')}
                 </a>
               </div>
             </div>
@@ -53,14 +48,14 @@ export function Footer() {
           <div className="border-t border-white/20 pt-8">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
               <p className="text-sm text-primary-foreground/60">
-                Copyright 2024. 노웨어 브릿지 Co. All rights reserved.
+                {t('footer.copyright')}
               </p>
               <div className="flex gap-6 text-sm">
                 <a href="/privacy" className="text-primary-foreground/60 hover:text-white transition-colors">
-                  개인정보처리방침
+                  {t('footer.privacy')}
                 </a>
                 <a href="/terms" className="text-primary-foreground/60 hover:text-white transition-colors">
-                  이용약관
+                  {t('footer.terms')}
                 </a>
               </div>
             </div>

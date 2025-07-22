@@ -38,10 +38,10 @@ export function CompanyIntro() {
             <h2 className="text-3xl md:text-4xl font-bold mb-6">
               전세계 AI·Fintech·IT 생태계 활성화에 기여하는
               <br />
-              <span className="text-primary">KnowWhere Bridge Matching 서비스</span>
+              <span className="text-primary">KnowWhere Bridge</span>
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              맞춤형 비즈니스 매칭 전문기업 KnowWhere Bridge Matching 서비스입니다.
+              맞춤형 비즈니스 매칭 전문기업 KnowWhere Bridge입니다.
             </p>
           </div>
 
@@ -58,7 +58,7 @@ export function CompanyIntro() {
                     <p className="text-muted-foreground">
                       글로벌 AI·Fintech·IT 분야 비즈니스 협업플랫폼 기업
                       <br />
-                      ㈜KnowWhere Bridge Matching 서비스 Founder & CEO
+                      ㈜KnowWhere Bridge Founder & CEO
                     </p>
                   </div>
                 </div>
@@ -122,14 +122,14 @@ export function CompanyIntro() {
               <h3 className="text-2xl font-bold mb-6">CEO 인사말</h3>
               <div className="space-y-4 text-white/90 leading-relaxed">
                 <p>
-                  안녕하세요, KnowWhere Bridge Matching 서비스 창업자 홍동표입니다. 저희 홈페이지를 방문해 주신 여러분께 진심으로 감사드립니다.
+                  안녕하세요, KnowWhere Bridge 창업자 홍동표입니다. 저희 홈페이지를 방문해 주신 여러분께 진심으로 감사드립니다.
                 </p>
                 <p>
-                  KnowWhere Bridge Matching 서비스는 국내외 AI, 핀테크, IT 분야의 기업들에게 맞춤형 비즈니스 매칭 서비스를 제공하는 전문기업입니다. 
+                  KnowWhere Bridge는 국내외 AI, 핀테크, IT 분야의 기업들에게 맞춤형 비즈니스 매칭 서비스를 제공하는 전문기업입니다. 
                   저희 회사는 자체 개발한 AI 플랫폼과 글로벌 전문가 그룹을 활용하여, 여러분의 최적의 비즈니스 엠베서더로서 역할을 하고 있습니다.
                 </p>
                 <p>
-                  KnowWhere Bridge Matching 서비스의 이름처럼, 필요한 고객을 찾아내고 (KnowWhere), 연결(Bridge)함으로써 전 세계 AI, 핀테크, IT 생태계를 활성화하는 데 기여하고자 합니다. 
+                  KnowWhere Bridge의 이름처럼, 필요한 고객을 찾아내고 (KnowWhere), 연결(Bridge)함으로써 전 세계 AI, 핀테크, IT 생태계를 활성화하는 데 기여하고자 합니다. 
                   이 과정에서 저 또한 여러분의 멘토로서 함께하며 지원을 아끼지 않을 것입니다.
                 </p>
                 <p className="font-medium">
