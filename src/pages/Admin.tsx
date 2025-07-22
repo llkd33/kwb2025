@@ -170,6 +170,8 @@ export default function Admin() {
       });
     }
 
+  };
+
   const fetchMarketData = async () => {
     try {
       const { data, error } = await supabase
@@ -298,6 +300,65 @@ export default function Admin() {
     }
   };
 
+  const handleSavePerplexityPrompt = async () => {
+    if (!editingPerplexityPrompt.prompt_title || !editingPerplexityPrompt.system_prompt || !editingPerplexityPrompt.user_prompt_template) {
+      toast({
+        title: "필수 정보 누락",
+        description: "모든 필드를 입력해주세요.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setActionLoading(true);
+    try {
+      if (editingPerplexityPrompt.id) {
+        // Update existing prompt
+        const { error } = await supabase
+          .from('gpt_prompts')
+          .update({
+            prompt_title: editingPerplexityPrompt.prompt_title,
+            system_prompt: editingPerplexityPrompt.system_prompt,
+            user_prompt_template: editingPerplexityPrompt.user_prompt_template,
+            is_active: editingPerplexityPrompt.is_active
+          })
+          .eq('id', editingPerplexityPrompt.id);
+
+        if (error) throw error;
+      } else {
+        // Create new prompt
+        const { error } = await supabase
+          .from('gpt_prompts')
+          .insert({
+            prompt_type: editingPerplexityPrompt.prompt_type,
+            prompt_title: editingPerplexityPrompt.prompt_title,
+            system_prompt: editingPerplexityPrompt.system_prompt,
+            user_prompt_template: editingPerplexityPrompt.user_prompt_template,
+            is_active: true
+          });
+
+        if (error) throw error;
+      }
+
+      toast({
+        title: "저장 완료",
+        description: "퍼플렉시티 프롬프트가 성공적으로 저장되었습니다.",
+      });
+
+      setShowPerplexityPromptDialog(false);
+      setEditingPerplexityPrompt({});
+      fetchPerplexityPrompts();
+    } catch (error: any) {
+      toast({
+        title: "저장 실패",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const handleSavePrompt = async () => {
     if (!editingPrompt.prompt_title || !editingPrompt.system_prompt || !editingPrompt.user_prompt_template) {
       toast({
@@ -357,64 +418,6 @@ export default function Admin() {
     }
   };
 
-  const handleSavePerplexityPrompt = async () => {
-    if (!editingPerplexityPrompt.prompt_title || !editingPerplexityPrompt.system_prompt || !editingPerplexityPrompt.user_prompt_template) {
-      toast({
-        title: "필수 정보 누락",
-        description: "모든 필드를 입력해주세요.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setActionLoading(true);
-    try {
-      if (editingPerplexityPrompt.id) {
-        // Update existing prompt
-        const { error } = await supabase
-          .from('gpt_prompts')
-          .update({
-            prompt_title: editingPerplexityPrompt.prompt_title,
-            system_prompt: editingPerplexityPrompt.system_prompt,
-            user_prompt_template: editingPerplexityPrompt.user_prompt_template,
-            is_active: editingPerplexityPrompt.is_active
-          })
-          .eq('id', editingPerplexityPrompt.id);
-
-        if (error) throw error;
-      } else {
-        // Create new prompt
-        const { error } = await supabase
-          .from('gpt_prompts')
-          .insert({
-            prompt_type: editingPerplexityPrompt.prompt_type,
-            prompt_title: editingPerplexityPrompt.prompt_title,
-            system_prompt: editingPerplexityPrompt.system_prompt,
-            user_prompt_template: editingPerplexityPrompt.user_prompt_template,
-            is_active: true
-          });
-
-        if (error) throw error;
-      }
-
-      toast({
-        title: "저장 완료",
-        description: "퍼플렉시티 프롬프트가 성공적으로 저장되었습니다.",
-      });
-
-      setShowPerplexityPromptDialog(false);
-      setEditingPerplexityPrompt({});
-      fetchPerplexityPrompts();
-    } catch (error: any) {
-      toast({
-        title: "저장 실패",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setActionLoading(false);
-    }
-  };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
