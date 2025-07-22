@@ -23,7 +23,7 @@ export function HeroSection() {
     console.log('Start analysis clicked, isLoggedIn:', isLoggedIn); // 디버깅용
     try {
       if (isLoggedIn) {
-        navigate('/dashboard');
+        navigate('/matching-request');
       } else {
         navigate('/auth');
       }
