@@ -33,11 +33,11 @@ export function Navigation({ className }: NavigationProps) {
         </a>
       ))}
       <div className="flex items-center space-x-4 ml-8">
-        <Button variant="ghost" size="sm">
-          로그인
+        <Button variant="ghost" size="sm" asChild>
+          <a href="/auth">로그인</a>
         </Button>
-        <Button size="sm" className="bg-gradient-primary hover:opacity-90">
-          회원가입
+        <Button size="sm" className="bg-gradient-primary hover:opacity-90" asChild>
+          <a href="/auth">회원가입</a>
         </Button>
       </div>
     </nav>
