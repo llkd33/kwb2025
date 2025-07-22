@@ -635,6 +635,56 @@ export default function Admin() {
     }
   };
 
+  // Helper function to render analysis content in a structured way
+  const renderAnalysisContent = (data: any) => {
+    if (typeof data === 'string') {
+      return <div className="prose prose-sm max-w-none">{data}</div>;
+    }
+
+    if (typeof data === 'object' && data !== null) {
+      return (
+        <div className="space-y-4">
+          {Object.entries(data).map(([key, value]) => (
+            <div key={key} className="border-l-4 border-blue-200 pl-4">
+              <h5 className="font-medium text-gray-900 mb-2 capitalize">
+                {key.replace(/[_-]/g, ' ')}
+              </h5>
+              {Array.isArray(value) ? (
+                <ul className="list-disc list-inside space-y-1 text-sm text-gray-700">
+                  {value.map((item, index) => (
+                    <li key={index}>{typeof item === 'object' ? JSON.stringify(item) : item}</li>
+                  ))}
+                </ul>
+              ) : typeof value === 'object' && value !== null ? (
+                <div className="bg-gray-50 p-3 rounded text-sm space-y-2">
+                  {Object.entries(value).map(([subKey, subValue]) => (
+                    <div key={subKey}>
+                      <span className="font-medium text-gray-800">
+                        {subKey.replace(/[_-]/g, ' ')}:
+                      </span>
+                      <span className="ml-2 text-gray-600">
+                        {Array.isArray(subValue) 
+                          ? subValue.join(', ') 
+                          : typeof subValue === 'object' 
+                            ? JSON.stringify(subValue)
+                            : String(subValue)
+                        }
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-700">{String(value)}</p>
+              )}
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    return <div className="text-gray-500">데이터가 없습니다.</div>;
+  };
+
   const pendingCompanies = companies.filter(c => c.is_approved === false && !c.rejection_reason);
   const approvedCompanies = companies.filter(c => c.is_approved === true);
   const rejectedCompanies = companies.filter(c => c.rejection_reason);
@@ -1463,39 +1513,33 @@ export default function Admin() {
               {/* AI Analysis Results */}
               {selectedRequest.ai_analysis && (
                 <div className="border p-4 rounded-lg">
-                  <h4 className="font-semibold mb-2">GPT 기업 분석</h4>
-                  <div className="bg-gray-50 p-3 rounded text-sm max-h-40 overflow-y-auto">
-                    {typeof selectedRequest.ai_analysis === 'string' 
-                      ? selectedRequest.ai_analysis 
-                      : JSON.stringify(selectedRequest.ai_analysis, null, 2)
-                    }
-                  </div>
+                  <h4 className="font-semibold mb-4 flex items-center gap-2">
+                    <Brain className="h-5 w-5 text-blue-600" />
+                    GPT 기업 분석
+                  </h4>
+                  {renderAnalysisContent(selectedRequest.ai_analysis)}
                 </div>
               )}
 
               {/* Market Research */}
               {selectedRequest.market_research && (
                 <div className="border p-4 rounded-lg">
-                  <h4 className="font-semibold mb-2">Perplexity 시장 조사</h4>
-                  <div className="bg-gray-50 p-3 rounded text-sm max-h-40 overflow-y-auto">
-                    {typeof selectedRequest.market_research === 'string' 
-                      ? selectedRequest.market_research 
-                      : JSON.stringify(selectedRequest.market_research, null, 2)
-                    }
-                  </div>
+                  <h4 className="font-semibold mb-4 flex items-center gap-2">
+                    <Globe className="h-5 w-5 text-green-600" />
+                    Perplexity 시장 조사
+                  </h4>
+                  {renderAnalysisContent(selectedRequest.market_research)}
                 </div>
               )}
 
               {/* Final Report */}
               {selectedRequest.final_report && (
                 <div className="border p-4 rounded-lg">
-                  <h4 className="font-semibold mb-2">최종 통합 리포트</h4>
-                  <div className="bg-gray-50 p-3 rounded text-sm max-h-60 overflow-y-auto">
-                    {typeof selectedRequest.final_report === 'string' 
-                      ? selectedRequest.final_report 
-                      : JSON.stringify(selectedRequest.final_report, null, 2)
-                    }
-                  </div>
+                  <h4 className="font-semibold mb-4 flex items-center gap-2">
+                    <FileSpreadsheet className="h-5 w-5 text-purple-600" />
+                    최종 통합 리포트
+                  </h4>
+                  {renderAnalysisContent(selectedRequest.final_report)}
                 </div>
               )}
 
