@@ -87,21 +87,32 @@ export function HeroSection() {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16 animate-fade-up [animation-delay:800ms]">
-            <button 
-              className="bg-white text-gray-800 hover:bg-gray-100 font-medium text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 h-12 sm:h-14 rounded-lg flex items-center justify-center gap-2 transition-colors w-full sm:w-auto"
-              onClick={handleStartAnalysis}
-              type="button"
+            <Button 
+              size="lg"
+              className="bg-white text-gray-800 hover:bg-gray-100 font-medium text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 h-12 sm:h-14 transition-colors w-full sm:w-auto cursor-pointer"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Start analysis button clicked!');
+                handleStartAnalysis();
+              }}
             >
               {isLoggedIn ? t('home.hero.matching_request') : t('home.hero.cta')}
-              <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
-            <button 
-              className="border-2 border-white/30 text-white hover:bg-white/10 font-medium text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 h-12 sm:h-14 rounded-lg flex items-center justify-center transition-colors w-full sm:w-auto"
-              onClick={handleExploreServices}
-              type="button"
+              <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2" />
+            </Button>
+            <Button 
+              size="lg"
+              variant="outline"
+              className="border-2 border-white/30 text-white hover:bg-white/10 bg-transparent font-medium text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 h-12 sm:h-14 transition-colors w-full sm:w-auto cursor-pointer"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Explore services button clicked!');
+                handleExploreServices();
+              }}
             >
               {t('home.hero.explore')}
-            </button>
+            </Button>
           </div>
 
           {/* Feature Pills */}
