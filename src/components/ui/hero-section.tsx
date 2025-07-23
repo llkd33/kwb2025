@@ -56,7 +56,7 @@ export function HeroSection() {
           </div>
 
           {/* Main Heading */}
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 animate-fade-up [animation-delay:200ms]">
+          <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold mb-6 animate-fade-up [animation-delay:200ms]">
             {t('home.hero.title').split('\n').map((line, index) => (
               <span key={index}>
                 {index === 1 ? (
@@ -72,7 +72,7 @@ export function HeroSection() {
           </h1>
 
           {/* Subtitle */}
-          <p className="text-xl md:text-2xl mb-4 text-white/90 animate-fade-up [animation-delay:400ms]">
+          <p className="text-lg sm:text-xl md:text-2xl mb-4 text-white/90 animate-fade-up [animation-delay:400ms]">
             {t('home.hero.subtitle').split('\n').map((line, index) => (
               <span key={index}>
                 {line}
@@ -81,22 +81,22 @@ export function HeroSection() {
             ))}
           </p>
           
-          <p className="text-lg md:text-xl mb-12 text-white/80 animate-fade-up [animation-delay:600ms]">
+          <p className="text-base sm:text-lg md:text-xl mb-8 sm:mb-12 text-white/80 animate-fade-up [animation-delay:600ms]">
             {t('home.hero.goldman')}
           </p>
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16 animate-fade-up [animation-delay:800ms]">
             <button 
-              className="bg-white text-gray-800 hover:bg-gray-100 font-medium text-lg px-8 py-4 h-14 rounded-lg flex items-center justify-center gap-2 transition-colors"
+              className="bg-white text-gray-800 hover:bg-gray-100 font-medium text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 h-12 sm:h-14 rounded-lg flex items-center justify-center gap-2 transition-colors w-full sm:w-auto"
               onClick={handleStartAnalysis}
               type="button"
             >
               {isLoggedIn ? t('home.hero.matching_request') : t('home.hero.cta')}
-              <ArrowRight className="w-5 h-5" />
+              <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
             <button 
-              className="border-2 border-white/30 text-white hover:bg-white/10 font-medium text-lg px-8 py-4 h-14 rounded-lg flex items-center justify-center transition-colors"
+              className="border-2 border-white/30 text-white hover:bg-white/10 font-medium text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 h-12 sm:h-14 rounded-lg flex items-center justify-center transition-colors w-full sm:w-auto"
               onClick={handleExploreServices}
               type="button"
             >

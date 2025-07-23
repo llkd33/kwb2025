@@ -47,6 +47,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
       'nav.login': '로그인',
       'nav.dashboard': '대시보드',
       'nav.logout': '로그아웃',
+      'nav.menu': '메뉴',
       
       // Homepage
       'home.hero.badge': 'AI 기반 글로벌 비즈니스 분석',
@@ -144,6 +145,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
       'nav.login': 'Login',
       'nav.dashboard': 'Dashboard',
       'nav.logout': 'Logout',
+      'nav.menu': 'Menu',
       
       // Homepage
       'home.hero.badge': 'AI-Powered Global Business Analysis',
@@ -241,6 +243,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
       'nav.login': 'ログイン',
       'nav.dashboard': 'ダッシュボード',
       'nav.logout': 'ログアウト',
+      'nav.menu': 'メニュー',
       
       // Homepage
       'home.hero.badge': 'AI基盤グローバルビジネス分析',
