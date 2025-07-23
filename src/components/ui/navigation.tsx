@@ -77,15 +77,15 @@ export function Navigation({ className }: NavigationProps) {
         {/* Mobile Menu Overlay */}
         {mobileMenuOpen && (
           <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)}>
-            <div className="fixed right-0 top-0 h-full w-80 bg-white shadow-xl" onClick={(e) => e.stopPropagation()}>
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-8">
-                  <span className="text-lg font-semibold">{t('nav.menu')}</span>
-                  <button
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                  >
-                    <X className="w-5 h-5" />
+            <div className="fixed right-0 top-0 h-full w-80 bg-gray-900 shadow-xl" onClick={(e) => e.stopPropagation()}>
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-8">
+                    <span className="text-lg font-semibold text-white">{t('nav.menu')}</span>
+                    <button
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="p-2 hover:bg-gray-800 rounded-lg transition-colors text-white"
+                    >
+                      <X className="w-5 h-5" />
                   </button>
                 </div>
                 
@@ -95,26 +95,26 @@ export function Navigation({ className }: NavigationProps) {
                       key={item.href}
                       to={item.href}
                       onClick={() => setMobileMenuOpen(false)}
-                      className={cn(
-                        "block text-lg font-medium transition-colors py-2",
-                        location.pathname === item.href
-                          ? "text-primary"
-                          : "text-muted-foreground hover:text-accent"
-                      )}
+                        className={cn(
+                          "block text-lg font-medium transition-colors py-2",
+                          location.pathname === item.href
+                            ? "text-accent"
+                            : "text-gray-300 hover:text-white"
+                        )}
                     >
                       {item.label}
                     </Link>
                   ))}
                   
-                  <div className="pt-6 border-t">
+                  <div className="pt-6 border-t border-gray-700">
                     {isLoggedIn ? (
                       <div className="space-y-4">
-                        <div className="text-sm text-muted-foreground">
+                        <div className="text-sm text-gray-400">
                           {currentCompany?.company_name}님
                         </div>
                         <Button 
                           variant="outline" 
-                          className="w-full"
+                          className="w-full border-gray-600 text-white hover:bg-gray-800"
                           onClick={() => {
                             localStorage.removeItem('currentCompany');
                             window.location.href = '/';
@@ -125,7 +125,7 @@ export function Navigation({ className }: NavigationProps) {
                       </div>
                     ) : (
                       <div className="space-y-3">
-                        <Button variant="ghost" className="w-full" asChild>
+                        <Button variant="ghost" className="w-full text-white hover:bg-gray-800" asChild>
                           <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
                             {t('nav.login')}
                           </Link>
