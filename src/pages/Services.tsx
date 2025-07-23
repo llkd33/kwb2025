@@ -4,10 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Play } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import flowStep1 from "@/assets/flow-step1.jpg";
-import flowStep2 from "@/assets/flow-step2.jpg";
-import flowStep3 from "@/assets/flow-step3.jpg";
-import flowStep4 from "@/assets/flow-step4.jpg";
 
 export default function Services() {
   const navigate = useNavigate();
@@ -21,7 +17,6 @@ export default function Services() {
       step: 1,
       title: "회원가입 & 승인",
       description: "기업 정보를 등록하고 관리자 승인을 받습니다",
-      image: flowStep1,
       details: [
         "기업 기본 정보 입력",
         "대표자 및 담당자 정보",
@@ -33,7 +28,6 @@ export default function Services() {
       step: 2,
       title: "서류 업로드",
       description: "필요한 비즈니스 문서들을 업로드합니다",
-      image: flowStep2,
       details: [
         "사업자등록증 첨부",
         "회사 소개서 업로드", 
@@ -45,7 +39,6 @@ export default function Services() {
       step: 3,
       title: "AI 분석 요청",
       description: "진출 희망 국가를 선택하고 AI 분석을 요청합니다",
-      image: flowStep3,
       details: [
         "타겟 국가 선택",
         "비즈니스 목표 설정",
@@ -57,7 +50,6 @@ export default function Services() {
       step: 4,
       title: "매칭 결과 수령",
       description: "맞춤형 분석 리포트와 매칭 결과를 받습니다",
-      image: flowStep4,
       details: [
         "Goldman Sachs급 분석 리포트",
         "최적 파트너 매칭 리스트",
@@ -117,55 +109,44 @@ export default function Services() {
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="space-y-20">
               {flowSteps.map((step, index) => (
-                <div key={step.step} className={`flex flex-col ${index % 2 === 1 ? 'lg:flex-row-reverse' : 'lg:flex-row'} items-center gap-12 lg:gap-20`}>
-                  {/* Image */}
-                  <div className="flex-1 w-full">
-                    <div className="relative rounded-2xl overflow-hidden shadow-2xl">
-                      <img 
-                        src={step.image} 
-                        alt={`${step.title} 화면`}
-                        className="w-full h-auto"
-                      />
-                      <div className="absolute top-4 left-4">
-                        <div className="w-12 h-12 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold text-lg shadow-lg">
-                          {step.step}
-                        </div>
-                      </div>
+                <div key={step.step} className="flex flex-col items-center gap-8 max-w-4xl mx-auto">
+                  {/* Step Badge */}
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-12 h-12 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold text-lg shadow-lg">
+                      {step.step}
                     </div>
+                    <Badge variant="outline">
+                      STEP {step.step}
+                    </Badge>
                   </div>
 
                   {/* Content */}
-                  <div className="flex-1 w-full">
-                    <div className="space-y-6">
-                      <div>
-                        <Badge variant="outline" className="mb-4">
-                          STEP {step.step}
-                        </Badge>
-                        <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                          {step.title}
-                        </h2>
-                        <p className="text-xl text-muted-foreground">
-                          {step.description}
-                        </p>
-                      </div>
-
-                      {/* Details */}
-                      <div className="space-y-3">
-                        {step.details.map((detail, detailIndex) => (
-                          <div key={detailIndex} className="flex items-center gap-3">
-                            <div className="w-2 h-2 bg-primary rounded-full"></div>
-                            <span className="text-muted-foreground">{detail}</span>
-                          </div>
-                        ))}
-                      </div>
-
-                      {step.step === 1 && (
-                        <Button onClick={handleStartDemo} variant="outline" className="mt-6">
-                          회원가입 시작하기
-                          <ArrowRight className="ml-2 w-4 h-4" />
-                        </Button>
-                      )}
+                  <div className="text-center space-y-6">
+                    <div>
+                      <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                        {step.title}
+                      </h2>
+                      <p className="text-xl text-muted-foreground mb-6">
+                        {step.description}
+                      </p>
                     </div>
+
+                    {/* Details */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+                      {step.details.map((detail, detailIndex) => (
+                        <div key={detailIndex} className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
+                          <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0"></div>
+                          <span className="text-muted-foreground">{detail}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {step.step === 1 && (
+                      <Button onClick={handleStartDemo} variant="outline" className="mt-6">
+                        회원가입 시작하기
+                        <ArrowRight className="ml-2 w-4 h-4" />
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))}
