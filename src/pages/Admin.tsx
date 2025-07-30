@@ -1236,6 +1236,26 @@ export default function Admin() {
               <h3 className="text-lg font-semibold">리포트 리뷰 및 승인</h3>
               <p className="text-gray-600">완성된 분석 리포트를 검토하고 최종 승인합니다.</p>
             </div>
+            <div className="flex items-center gap-4">
+              <Button
+                onClick={() => {
+                  fetchMatchingRequests();
+                  toast({
+                    title: "데이터 새로고침",
+                    description: "매칭 요청 데이터를 새로고침했습니다.",
+                  });
+                }}
+                variant="outline"
+                size="sm"
+              >
+                🔄 새로고침
+              </Button>
+              <Badge variant="outline" className="text-green-600">
+                {matchingRequests.filter(request => 
+                  request.status === 'completed' && request.ai_analysis && request.market_research
+                ).length}개 리뷰 대기
+              </Badge>
+            </div>
           </div>
 
           <div className="space-y-6">
