@@ -258,9 +258,42 @@ const handler = async (req: Request): Promise<Response> => {
 
   } catch (error: any) {
     console.error('Analysis error:', error);
+    console.error('Error stack:', error.stack);
+    
+    // Try to parse the request body to get matchingRequestId for cleanup
+    let matchingRequestId: number | null = null;
+    try {
+      const body = await req.clone().json();
+      matchingRequestId = body.matchingRequestId;
+    } catch {
+      // Ignore parsing errors
+    }
+    
+    // Try to update matching request status back to pending on error
+    if (matchingRequestId) {
+      try {
+        const supabaseClient = createClient(
+          Deno.env.get('SUPABASE_URL') ?? '',
+          Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+        );
+        
+        await supabaseClient
+          .from('matching_requests')
+          .update({ 
+            status: 'pending',
+            admin_comments: `분석 실패: ${error.message}`
+          })
+          .eq('id', matchingRequestId);
+      } catch (updateError) {
+        console.error('Error updating status back to pending:', updateError);
+      }
+    }
+    
     return new Response(JSON.stringify({ 
       error: error.message,
-      success: false 
+      details: error.stack,
+      success: false,
+      timestamp: new Date().toISOString()
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -269,37 +302,56 @@ const handler = async (req: Request): Promise<Response> => {
 };
 
 async function performGPTAnalysis(systemPrompt: string, userPrompt: string, analysisType: string) {
+  console.log(`Starting GPT analysis for: ${analysisType}`);
   const startTime = Date.now();
   
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o-mini',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt }
-      ],
-      temperature: 0.7,
-      max_tokens: 4000
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`GPT API error: ${response.statusText}`);
+  const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
+  if (!openaiApiKey) {
+    throw new Error('OpenAI API key not found in environment variables');
   }
+  
+  console.log(`OpenAI API key exists: ${!!openaiApiKey}`);
+  
+  try {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openaiApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4.1-2025-04-14',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ],
+        temperature: 0.7,
+        max_tokens: 4000
+      }),
+    });
 
-  const data = await response.json();
-  const processingTime = Date.now() - startTime;
+    console.log(`OpenAI API response status: ${response.status}`);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`OpenAI API error: ${response.status} - ${errorText}`);
+      throw new Error(`GPT API error: ${response.status} - ${errorText}`);
+    }
 
-  return {
-    content: data.choices[0].message.content,
-    tokens: data.usage?.total_tokens || 0,
-    processingTime
-  };
+    const data = await response.json();
+    const processingTime = Date.now() - startTime;
+    
+    console.log(`GPT analysis completed for ${analysisType}, tokens used: ${data.usage?.total_tokens}, time: ${processingTime}ms`);
+
+    return {
+      content: data.choices[0].message.content,
+      tokens: data.usage?.total_tokens || 0,
+      processingTime
+    };
+  } catch (error: any) {
+    console.error(`Error in performGPTAnalysis for ${analysisType}:`, error);
+    throw error;
+  }
 }
 
 async function performPerplexityResearch(query: string) {
