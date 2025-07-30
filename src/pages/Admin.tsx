@@ -842,10 +842,11 @@ export default function Admin() {
       </div>
 
       <Tabs defaultValue="pending" className="w-full">
-        <TabsList className="grid w-full grid-cols-8">
+        <TabsList className="grid w-full grid-cols-9">
           <TabsTrigger value="pending">승인 대기 ({pendingCompanies.length})</TabsTrigger>
           <TabsTrigger value="approved">승인 완료 ({approvedCompanies.length})</TabsTrigger>
           <TabsTrigger value="rejected">거부됨 ({rejectedCompanies.length})</TabsTrigger>
+          <TabsTrigger value="matching">매칭 요청 ({matchingRequests.filter(r => r.status === 'pending').length})</TabsTrigger>
           <TabsTrigger value="reports">리포트 리뷰</TabsTrigger>
           <TabsTrigger value="history">배포 히스토리</TabsTrigger>
           <TabsTrigger value="prompts">AI 프롬프트</TabsTrigger>
@@ -892,6 +893,230 @@ export default function Admin() {
             rejectedCompanies.map(company => (
               <CompanyCard key={company.id} company={company} />
             ))
+          )}
+        </TabsContent>
+
+        {/* Matching Requests Tab */}
+        <TabsContent value="matching" className="mt-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="text-lg font-semibold">📋 매칭 요청 관리</h3>
+              <p className="text-gray-600">기업의 매칭 요청을 확인하고 AI 분석을 시작할 수 있습니다.</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="text-orange-600">
+                {matchingRequests.filter(r => r.status === 'pending').length}개 대기 중
+              </Badge>
+              <Badge variant="outline" className="text-blue-600">
+                {matchingRequests.filter(r => r.status === 'processing').length}개 처리 중
+              </Badge>
+              <Badge variant="outline" className="text-green-600">
+                {matchingRequests.filter(r => r.status === 'completed').length}개 완료
+              </Badge>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {matchingRequests
+              .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+              .map((request) => (
+                <Card key={request.id} className={`border-2 ${
+                  request.status === 'pending' ? 'border-orange-200 bg-orange-50' :
+                  request.status === 'processing' ? 'border-blue-200 bg-blue-50' :
+                  request.status === 'completed' ? 'border-green-200 bg-green-50' :
+                  'border-gray-200'
+                }`}>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle className="flex items-center gap-2">
+                          <Building2 className="h-5 w-5" />
+                          {request.companies?.company_name || 'Unknown Company'}
+                          <Badge 
+                            variant={
+                              request.status === 'pending' ? 'secondary' :
+                              request.status === 'processing' ? 'default' :
+                              request.status === 'completed' ? 'outline' :
+                              'secondary'
+                            }
+                            className={
+                              request.status === 'pending' ? 'bg-orange-100 text-orange-800' :
+                              request.status === 'processing' ? 'bg-blue-100 text-blue-800' :
+                              request.status === 'completed' ? 'bg-green-100 text-green-800' :
+                              ''
+                            }
+                          >
+                            {request.status === 'pending' ? '🟡 대기 중' :
+                             request.status === 'processing' ? '🔵 처리 중' :
+                             request.status === 'completed' ? '🟢 완료' : request.status}
+                          </Badge>
+                        </CardTitle>
+                        <CardDescription>
+                          📧 {request.companies?.email} | 
+                          🏢 {request.companies?.industry} | 
+                          🌍 {request.companies?.headquarters_country} |
+                          📅 요청일: {new Date(request.created_at).toLocaleDateString()}
+                        </CardDescription>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {request.status === 'pending' && (
+                          <Button
+                            onClick={async () => {
+                              setActionLoading(true);
+                              try {
+                                // Update status to processing first
+                                const { error: updateError } = await supabase
+                                  .from('matching_requests')
+                                  .update({ status: 'processing' })
+                                  .eq('id', request.id);
+
+                                if (updateError) throw updateError;
+
+                                // Refresh UI immediately
+                                fetchMatchingRequests();
+
+                                // Start comprehensive analysis
+                                const { error } = await supabase.functions.invoke('comprehensive-analysis', {
+                                  body: { matchingRequestId: request.id }
+                                });
+
+                                if (error) {
+                                  console.error('Analysis error:', error);
+                                  
+                                  // Revert status back to pending on error
+                                  await supabase
+                                    .from('matching_requests')
+                                    .update({ status: 'pending' })
+                                    .eq('id', request.id);
+                                  
+                                  toast({
+                                    title: "분석 시작 실패",
+                                    description: error.message || "분석을 시작할 수 없습니다.",
+                                    variant: "destructive",
+                                  });
+                                } else {
+                                  toast({
+                                    title: "분석 시작됨",
+                                    description: "AI 분석이 시작되었습니다. 완료까지 몇 분 소요될 수 있습니다.",
+                                  });
+                                }
+                                
+                                // Refresh matching requests again
+                                fetchMatchingRequests();
+                              } catch (error: any) {
+                                toast({
+                                  title: "분석 시작 실패",
+                                  description: error.message,
+                                  variant: "destructive",
+                                });
+                              } finally {
+                                setActionLoading(false);
+                              }
+                            }}
+                            disabled={actionLoading}
+                            size="sm"
+                            className="bg-orange-600 hover:bg-orange-700"
+                          >
+                            <Brain className="h-4 w-4 mr-1" />
+                            분석 시작
+                          </Button>
+                        )}
+                        {request.status === 'processing' && (
+                          <div className="flex items-center gap-2 text-blue-600">
+                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent"></div>
+                            <span className="text-sm">처리 중...</span>
+                          </div>
+                        )}
+                        {request.status === 'completed' && (
+                          <Badge className="bg-green-600 text-white">
+                            ✅ 완료
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </CardHeader>
+                  
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <h4 className="font-semibold mb-2">매칭 요청 정보</h4>
+                        <div className="space-y-2 text-sm">
+                          <div>
+                            <span className="font-medium">타겟 국가:</span>
+                            <div className="mt-1">
+                              {request.target_countries?.map((country: string, index: number) => (
+                                <Badge key={index} variant="outline" className="mr-1 mb-1">
+                                  {country}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                          {request.company_description && (
+                            <div>
+                              <span className="font-medium">회사 설명:</span>
+                              <p className="text-gray-600 mt-1">{request.company_description}</p>
+                            </div>
+                          )}
+                          {request.product_info && (
+                            <div>
+                              <span className="font-medium">제품 정보:</span>
+                              <p className="text-gray-600 mt-1">{request.product_info}</p>
+                            </div>
+                          )}
+                          {request.market_info && (
+                            <div>
+                              <span className="font-medium">시장 정보:</span>
+                              <p className="text-gray-600 mt-1">{request.market_info}</p>
+                            </div>
+                          )}
+                          {request.additional_questions && (
+                            <div>
+                              <span className="font-medium">추가 질문:</span>
+                              <p className="text-gray-600 mt-1">{request.additional_questions}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <h4 className="font-semibold mb-2">진행 상태</h4>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex items-center gap-2">
+                            <div className={`w-3 h-3 rounded-full ${
+                              request.status === 'pending' ? 'bg-orange-400' :
+                              request.status === 'processing' ? 'bg-blue-400 animate-pulse' :
+                              request.status === 'completed' ? 'bg-green-400' : 'bg-gray-400'
+                            }`}></div>
+                            <span>요청 접수: {new Date(request.created_at).toLocaleString()}</span>
+                          </div>
+                          {request.completed_at && (
+                            <div className="flex items-center gap-2">
+                              <div className="w-3 h-3 rounded-full bg-green-400"></div>
+                              <span>분석 완료: {new Date(request.completed_at).toLocaleString()}</span>
+                            </div>
+                          )}
+                          {request.document_name && (
+                            <div className="mt-2 p-2 bg-gray-100 rounded">
+                              <span className="font-medium">첨부 문서:</span>
+                              <p className="text-xs">{request.document_name}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+          </div>
+
+          {matchingRequests.length === 0 && (
+            <Card>
+              <CardContent className="text-center py-12">
+                <Building2 className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <h4 className="text-lg font-semibold text-gray-600 mb-2">매칭 요청이 없습니다</h4>
+                <p className="text-gray-500">기업에서 매칭 요청을 제출하면 여기에 표시됩니다.</p>
+              </CardContent>
+            </Card>
           )}
         </TabsContent>
 
