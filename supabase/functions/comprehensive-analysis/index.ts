@@ -31,12 +31,21 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    console.log('Starting comprehensive analysis function');
+    
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { matchingRequestId }: AnalysisRequest = await req.json();
+    const requestBody = await req.json();
+    console.log('Request body:', requestBody);
+    
+    const { matchingRequestId }: AnalysisRequest = requestBody;
+
+    if (!matchingRequestId) {
+      throw new Error('matchingRequestId is required');
+    }
 
     console.log(`Starting comprehensive analysis for request ${matchingRequestId}`);
 
@@ -50,33 +59,61 @@ const handler = async (req: Request): Promise<Response> => {
       .eq('id', matchingRequestId)
       .single();
 
-    if (requestError || !matchingRequest) {
+    if (requestError) {
+      console.error('Error fetching matching request:', requestError);
+      throw new Error(`매칭 요청을 찾을 수 없습니다: ${requestError.message}`);
+    }
+
+    if (!matchingRequest) {
       throw new Error('매칭 요청을 찾을 수 없습니다.');
     }
 
     const company = matchingRequest.companies;
+    if (!company) {
+      throw new Error('회사 정보를 찾을 수 없습니다.');
+    }
+    
     console.log(`Analyzing company: ${company.company_name}`);
 
     // 2. Get active prompts
-    const { data: prompts } = await supabaseClient
+    const { data: prompts, error: promptError } = await supabaseClient
       .from('gpt_prompts')
       .select('*')
       .eq('is_active', true);
+
+    if (promptError) {
+      console.error('Error fetching prompts:', promptError);
+      throw new Error(`프롬프트를 불러오는데 실패했습니다: ${promptError.message}`);
+    }
 
     const companyAnalysisPrompt = prompts?.find(p => p.prompt_type === 'company_analysis');
     const marketResearchPrompt = prompts?.find(p => p.prompt_type === 'market_research');
     const finalReportPrompt = prompts?.find(p => p.prompt_type === 'final_report');
 
+    console.log(`Found prompts - company: ${!!companyAnalysisPrompt}, market: ${!!marketResearchPrompt}, final: ${!!finalReportPrompt}`);
+
     // 3. Get relevant market data
-    const { data: marketData } = await supabaseClient
-      .from('market_data')
-      .select('*')
-      .eq('is_active', true)
-      .or(`country.in.(${matchingRequest.target_countries.join(',')}),industry.eq.${company.industry}`);
+    let marketData = [];
+    try {
+      const { data, error: marketError } = await supabaseClient
+        .from('market_data')
+        .select('*')
+        .eq('is_active', true);
+
+      if (marketError) {
+        console.error('Error fetching market data:', marketError);
+      } else {
+        marketData = data || [];
+      }
+    } catch (marketErr) {
+      console.error('Market data fetch failed:', marketErr);
+      // Continue without market data
+    }
 
     console.log(`Found ${marketData?.length || 0} relevant market data entries`);
 
     // 4. Step 1: Company Analysis with GPT
+    console.log('Starting company analysis...');
     const companyAnalysis = await performGPTAnalysis(
       companyAnalysisPrompt?.system_prompt || 'You are a business analyst.',
       fillPromptTemplate(companyAnalysisPrompt?.user_prompt_template || '', {
@@ -154,25 +191,38 @@ const handler = async (req: Request): Promise<Response> => {
         processing_time: finalReport.processingTime
       });
 
-    // 7. Update matching request status
-    await supabaseClient
-      .from('matching_requests')
-      .update({
-        status: 'completed',
-        completed_at: new Date().toISOString(),
-        ai_analysis: {
-          company_analysis: companyAnalysis.content,
-          market_research: marketResearch.content,
-          final_report: finalReport.content
-        },
-        final_report: {
-          content: finalReport.content,
-          generated_at: new Date().toISOString(),
-          total_tokens: companyAnalysis.tokens + marketResearch.tokens + finalReport.tokens,
-          total_processing_time: companyAnalysis.processingTime + marketResearch.processingTime + finalReport.processingTime
-        }
-      })
-      .eq('id', matchingRequestId);
+     // 7. Parse and structure the results
+     let parsedCompanyAnalysis: any;
+     let parsedMarketResearch: any;
+     
+     try {
+       parsedCompanyAnalysis = JSON.parse(companyAnalysis.content);
+     } catch {
+       parsedCompanyAnalysis = { analysis: companyAnalysis.content };
+     }
+     
+     try {
+       parsedMarketResearch = JSON.parse(marketResearch.content);
+     } catch {
+       parsedMarketResearch = { research: marketResearch.content };
+     }
+
+     // 8. Update matching request status
+     await supabaseClient
+       .from('matching_requests')
+       .update({
+         status: 'completed',
+         completed_at: new Date().toISOString(),
+         ai_analysis: parsedCompanyAnalysis,
+         market_research: parsedMarketResearch,
+         final_report: {
+           content: finalReport.content,
+           generated_at: new Date().toISOString(),
+           total_tokens: companyAnalysis.tokens + marketResearch.tokens + finalReport.tokens,
+           total_processing_time: companyAnalysis.processingTime + marketResearch.processingTime + finalReport.processingTime
+         }
+       })
+       .eq('id', matchingRequestId);
 
     // 8. Send completion email
     try {
@@ -228,7 +278,7 @@ async function performGPTAnalysis(systemPrompt: string, userPrompt: string, anal
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'gpt-4.1-2025-04-14',
+      model: 'gpt-4o-mini',
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
