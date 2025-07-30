@@ -1026,66 +1026,109 @@ export default function Admin() {
                       </div>
                       <div className="flex items-center gap-2">
                         {request.status === 'pending' && (
-                          <Button
-                            onClick={async () => {
-                              setActionLoading(true);
-                              try {
-                                // Update status to processing first
-                                const { error: updateError } = await supabase
-                                  .from('matching_requests')
-                                  .update({ status: 'processing' })
-                                  .eq('id', request.id);
+                          <div className="flex gap-2">
+                            <Button
+                              onClick={async () => {
+                                setActionLoading(true);
+                                try {
+                                  // Test minimal analysis first
+                                  const { error } = await supabase.functions.invoke('minimal-analysis', {
+                                    body: { matchingRequestId: request.id }
+                                  });
 
-                                if (updateError) throw updateError;
-
-                                // Refresh UI immediately
-                                fetchMatchingRequests();
-
-                                // Start comprehensive analysis
-                                const { error } = await supabase.functions.invoke('comprehensive-analysis', {
-                                  body: { matchingRequestId: request.id }
-                                });
-
-                                if (error) {
-                                  console.error('Analysis error:', error);
-                                  
-                                  // Revert status back to pending on error
-                                  await supabase
-                                    .from('matching_requests')
-                                    .update({ status: 'pending' })
-                                    .eq('id', request.id);
-                                  
+                                  if (error) {
+                                    console.error('Minimal analysis error:', error);
+                                    toast({
+                                      title: "최소 분석 실패",
+                                      description: error.message,
+                                      variant: "destructive",
+                                    });
+                                  } else {
+                                    toast({
+                                      title: "최소 분석 성공",
+                                      description: "간단한 AI 분석이 완료되었습니다.",
+                                    });
+                                    fetchMatchingRequests();
+                                  }
+                                } catch (error: any) {
                                   toast({
-                                    title: "분석 시작 실패",
-                                    description: error.message || "분석을 시작할 수 없습니다.",
+                                    title: "최소 분석 실패",
+                                    description: error.message,
                                     variant: "destructive",
                                   });
-                                } else {
-                                  toast({
-                                    title: "분석 시작됨",
-                                    description: "AI 분석이 시작되었습니다. 완료까지 몇 분 소요될 수 있습니다.",
-                                  });
+                                } finally {
+                                  setActionLoading(false);
                                 }
-                                
-                                // Refresh matching requests again
-                                fetchMatchingRequests();
-                              } catch (error: any) {
-                                toast({
-                                  title: "분석 시작 실패",
-                                  description: error.message,
-                                  variant: "destructive",
-                                });
-                              } finally {
-                                setActionLoading(false);
-                              }
-                            }}
-                            disabled={actionLoading}
-                            size="sm"
-                            className="bg-orange-600 hover:bg-orange-700"
-                          >
-                            <Brain className="h-4 w-4 mr-1" />
-                            분석 시작
-                          </Button>
+                              }}
+                              disabled={actionLoading}
+                              size="sm"
+                              variant="outline"
+                              className="border-blue-300 hover:bg-blue-100"
+                            >
+                              <Brain className="h-4 w-4 mr-1" />
+                              최소 분석
+                            </Button>
+                            <Button
+                              onClick={async () => {
+                                setActionLoading(true);
+                                try {
+                                  // Update status to processing first
+                                  const { error: updateError } = await supabase
+                                    .from('matching_requests')
+                                    .update({ status: 'processing' })
+                                    .eq('id', request.id);
+
+                                  if (updateError) throw updateError;
+
+                                  // Refresh UI immediately
+                                  fetchMatchingRequests();
+
+                                  // Start comprehensive analysis
+                                  const { error } = await supabase.functions.invoke('comprehensive-analysis', {
+                                    body: { matchingRequestId: request.id }
+                                  });
+
+                                  if (error) {
+                                    console.error('Analysis error:', error);
+                                    
+                                    // Revert status back to pending on error
+                                    await supabase
+                                      .from('matching_requests')
+                                      .update({ status: 'pending' })
+                                      .eq('id', request.id);
+                                    
+                                    toast({
+                                      title: "분석 시작 실패",
+                                      description: error.message || "분석을 시작할 수 없습니다.",
+                                      variant: "destructive",
+                                    });
+                                  } else {
+                                    toast({
+                                      title: "분석 시작됨",
+                                      description: "AI 분석이 시작되었습니다. 완료까지 몇 분 소요될 수 있습니다.",
+                                    });
+                                  }
+                                  
+                                  // Refresh matching requests again
+                                  fetchMatchingRequests();
+                                } catch (error: any) {
+                                  toast({
+                                    title: "분석 시작 실패",
+                                    description: error.message,
+                                    variant: "destructive",
+                                  });
+                                } finally {
+                                  setActionLoading(false);
+                                }
+                              }}
+                              disabled={actionLoading}
+                              size="sm"
+                              className="bg-orange-600 hover:bg-orange-700"
+                            >
+                              <Brain className="h-4 w-4 mr-1" />
+                              전체 분석
+                            </Button>
+                          </div>
                         )}
                         {request.status === 'processing' && (
                           <div className="flex items-center gap-2 text-blue-600">
