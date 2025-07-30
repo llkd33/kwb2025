@@ -7,271 +7,163 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface AnalysisRequest {
-  matchingRequestId: number;
-}
-
-interface CompanyData {
-  id: number;
-  company_name: string;
-  industry: string;
-  target_countries: string[];
-  company_description?: string;
-  product_info?: string;
-  market_info?: string;
-  additional_questions?: string;
-  main_products?: string;
-  target_market?: string;
-  competitive_advantage?: string;
-}
-
-const handler = async (req: Request): Promise<Response> => {
+serve(async (req: Request) => {
+  console.log('=== COMPREHENSIVE ANALYSIS STARTED ===');
+  
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    console.log('Starting comprehensive analysis function');
-    
+    console.log('1. Initializing Supabase client...');
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
+    console.log('2. Parsing request body...');
     const requestBody = await req.json();
-    console.log('Request body:', requestBody);
-    
-    const { matchingRequestId }: AnalysisRequest = requestBody;
+    const { matchingRequestId } = requestBody;
+    console.log(`Matching request ID: ${matchingRequestId}`);
 
     if (!matchingRequestId) {
       throw new Error('matchingRequestId is required');
     }
 
-    console.log(`Starting comprehensive analysis for request ${matchingRequestId}`);
-
-    // 1. Get matching request and company data
+    console.log('3. Fetching matching request data...');
     const { data: matchingRequest, error: requestError } = await supabaseClient
       .from('matching_requests')
-      .select(`
-        *,
-        companies (*)
-      `)
+      .select(`*, companies(*)`)
       .eq('id', matchingRequestId)
       .single();
 
     if (requestError) {
-      console.error('Error fetching matching request:', requestError);
-      throw new Error(`매칭 요청을 찾을 수 없습니다: ${requestError.message}`);
+      console.error('Request fetch error:', requestError);
+      throw new Error(`Failed to fetch matching request: ${requestError.message}`);
     }
 
     if (!matchingRequest) {
-      throw new Error('매칭 요청을 찾을 수 없습니다.');
+      throw new Error('Matching request not found');
     }
 
-    const company = matchingRequest.companies;
-    if (!company) {
-      throw new Error('회사 정보를 찾을 수 없습니다.');
+    console.log(`4. Found company: ${matchingRequest.companies.company_name}`);
+
+    console.log('5. Checking OpenAI API key...');
+    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
+    if (!openaiApiKey) {
+      throw new Error('OpenAI API key not found');
     }
+    console.log(`OpenAI key length: ${openaiApiKey.length}`);
+
+    console.log('6. Making OpenAI API call...');
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openaiApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          { 
+            role: 'system', 
+            content: 'You are a business analyst. Provide analysis in JSON format with Korean text. Respond with a simple analysis object.' 
+          },
+          { 
+            role: 'user', 
+            content: `회사명: ${matchingRequest.companies.company_name}
+업종: ${matchingRequest.companies.industry}
+타겟 국가: ${matchingRequest.target_countries.join(', ')}
+
+이 회사에 대한 간단한 분석을 JSON 형태로 제공해주세요. 다음 형식을 사용하세요:
+{
+  "회사_개요": "...",
+  "강점": "...",
+  "시장_기회": "...",
+  "추천사항": "..."
+}` 
+          }
+        ],
+        max_tokens: 1000,
+        temperature: 0.7
+      }),
+    });
+
+    console.log(`OpenAI response status: ${response.status}`);
     
-    console.log(`Analyzing company: ${company.company_name}`);
-
-    // 2. Get active prompts
-    const { data: prompts, error: promptError } = await supabaseClient
-      .from('gpt_prompts')
-      .select('*')
-      .eq('is_active', true);
-
-    if (promptError) {
-      console.error('Error fetching prompts:', promptError);
-      throw new Error(`프롬프트를 불러오는데 실패했습니다: ${promptError.message}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`OpenAI error response: ${errorText}`);
+      throw new Error(`OpenAI API failed with status ${response.status}: ${errorText}`);
     }
 
-    const companyAnalysisPrompt = prompts?.find(p => p.prompt_type === 'company_analysis');
-    const marketResearchPrompt = prompts?.find(p => p.prompt_type === 'market_research');
-    const finalReportPrompt = prompts?.find(p => p.prompt_type === 'final_report');
+    const openaiData = await response.json();
+    console.log('7. OpenAI call successful, tokens used:', openaiData.usage?.total_tokens);
 
-    console.log(`Found prompts - company: ${!!companyAnalysisPrompt}, market: ${!!marketResearchPrompt}, final: ${!!finalReportPrompt}`);
-
-    // 3. Get relevant market data
-    let marketData = [];
+    const analysisContent = openaiData.choices[0].message.content;
+    
+    // Try to parse as JSON, fallback to text
+    let parsedAnalysis;
     try {
-      const { data, error: marketError } = await supabaseClient
-        .from('market_data')
-        .select('*')
-        .eq('is_active', true);
-
-      if (marketError) {
-        console.error('Error fetching market data:', marketError);
-      } else {
-        marketData = data || [];
-      }
-    } catch (marketErr) {
-      console.error('Market data fetch failed:', marketErr);
-      // Continue without market data
+      parsedAnalysis = JSON.parse(analysisContent);
+    } catch {
+      parsedAnalysis = { analysis: analysisContent };
     }
 
-    console.log(`Found ${marketData?.length || 0} relevant market data entries`);
-
-    // 4. Step 1: Company Analysis with GPT
-    console.log('Starting company analysis...');
-    const companyAnalysis = await performGPTAnalysis(
-      companyAnalysisPrompt?.system_prompt || 'You are a business analyst.',
-      fillPromptTemplate(companyAnalysisPrompt?.user_prompt_template || '', {
-        company_name: company.company_name,
-        industry: company.industry,
-        target_countries: matchingRequest.target_countries.join(', '),
-        company_description: matchingRequest.company_description || company.main_products || '',
-        product_info: matchingRequest.product_info || company.main_products || '',
-        market_info: matchingRequest.market_info || company.target_market || ''
-      }),
-      'company_analysis'
-    );
-
-    // Save intermediate result
-    await supabaseClient
-      .from('gpt_analysis')
-      .insert({
-        matching_request_id: matchingRequestId,
-        analysis_type: 'company_analysis',
-        prompt_used: companyAnalysisPrompt?.user_prompt_template,
-        raw_response: companyAnalysis.content,
-        structured_data: { analysis: companyAnalysis.content },
-        tokens_used: companyAnalysis.tokens,
-        processing_time: companyAnalysis.processingTime
-      });
-
-    // 5. Step 2: Market Research with Perplexity
-    const marketResearch = await performPerplexityResearch(
-      fillPromptTemplate(marketResearchPrompt?.user_prompt_template || '', {
-        company_name: company.company_name,
-        target_countries: matchingRequest.target_countries.join(', '),
-        industry: company.industry,
-        additional_questions: matchingRequest.additional_questions || ''
+    console.log('8. Updating matching request...');
+    const { error: updateError } = await supabaseClient
+      .from('matching_requests')
+      .update({
+        status: 'completed',
+        completed_at: new Date().toISOString(),
+        ai_analysis: parsedAnalysis,
+        market_research: { message: "시장 분석은 단순화된 버전에서 제외됨" },
+        final_report: { 
+          content: analysisContent,
+          tokens: openaiData.usage?.total_tokens || 0,
+          generated_at: new Date().toISOString()
+        }
       })
-    );
+      .eq('id', matchingRequestId);
 
-    // Save intermediate result
-    await supabaseClient
-      .from('gpt_analysis')
-      .insert({
-        matching_request_id: matchingRequestId,
-        analysis_type: 'market_research',
-        prompt_used: marketResearchPrompt?.user_prompt_template,
-        raw_response: marketResearch.content,
-        structured_data: { research: marketResearch.content },
-        tokens_used: marketResearch.tokens,
-        processing_time: marketResearch.processingTime
-      });
+    if (updateError) {
+      console.error('Update error:', updateError);
+      throw new Error(`Failed to update matching request: ${updateError.message}`);
+    }
 
-    // 6. Step 3: Final Comprehensive Report with GPT
-    const finalReport = await performGPTAnalysis(
-      finalReportPrompt?.system_prompt || 'You are creating a comprehensive business report.',
-      fillPromptTemplate(finalReportPrompt?.user_prompt_template || '', {
-        company_analysis: companyAnalysis.content,
-        market_research: marketResearch.content,
-        reference_data: formatMarketData(marketData || [])
-      }),
-      'final_report'
-    );
-
-    // Save final result
-    await supabaseClient
-      .from('gpt_analysis')
-      .insert({
-        matching_request_id: matchingRequestId,
-        analysis_type: 'final_report',
-        prompt_used: finalReportPrompt?.user_prompt_template,
-        raw_response: finalReport.content,
-        structured_data: { 
-          final_report: finalReport.content,
-          company_analysis: companyAnalysis.content,
-          market_research: marketResearch.content
-        },
-        tokens_used: finalReport.tokens,
-        processing_time: finalReport.processingTime
-      });
-
-     // 7. Parse and structure the results
-     let parsedCompanyAnalysis: any;
-     let parsedMarketResearch: any;
-     
-     try {
-       parsedCompanyAnalysis = JSON.parse(companyAnalysis.content);
-     } catch {
-       parsedCompanyAnalysis = { analysis: companyAnalysis.content };
-     }
-     
-     try {
-       parsedMarketResearch = JSON.parse(marketResearch.content);
-     } catch {
-       parsedMarketResearch = { research: marketResearch.content };
-     }
-
-     // 8. Update matching request status
-     await supabaseClient
-       .from('matching_requests')
-       .update({
-         status: 'completed',
-         completed_at: new Date().toISOString(),
-         ai_analysis: parsedCompanyAnalysis,
-         market_research: parsedMarketResearch,
-         final_report: {
-           content: finalReport.content,
-           generated_at: new Date().toISOString(),
-           total_tokens: companyAnalysis.tokens + marketResearch.tokens + finalReport.tokens,
-           total_processing_time: companyAnalysis.processingTime + marketResearch.processingTime + finalReport.processingTime
-         }
-       })
-       .eq('id', matchingRequestId);
-
-    // 8. Send completion email
+    console.log('9. Sending completion email...');
     try {
       await supabaseClient.functions.invoke('send-analysis-complete-email', {
         body: {
-          companyId: company.id,
+          companyId: matchingRequest.companies.id,
           matchingRequestId: matchingRequestId,
-          reportSummary: finalReport.content.substring(0, 500) + '...'
+          reportSummary: analysisContent.substring(0, 200) + '...'
         }
       });
+      console.log('Email sent successfully');
     } catch (emailError) {
-      console.error('Failed to send completion email:', emailError);
+      console.error('Email failed (continuing anyway):', emailError);
     }
 
-    console.log(`Analysis completed for request ${matchingRequestId}`);
-
+    console.log('=== ANALYSIS COMPLETED SUCCESSFULLY ===');
     return new Response(JSON.stringify({
       success: true,
-      message: '종합 분석이 완료되었습니다.',
-      analysis: {
-        company_analysis: companyAnalysis.content,
-        market_research: marketResearch.content,
-        final_report: finalReport.content
-      },
-      metadata: {
-        total_tokens: companyAnalysis.tokens + marketResearch.tokens + finalReport.tokens,
-        total_processing_time: companyAnalysis.processingTime + marketResearch.processingTime + finalReport.processingTime
-      }
+      message: '분석이 성공적으로 완료되었습니다.',
+      tokens: openaiData.usage?.total_tokens || 0
     }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error: any) {
-    console.error('Analysis error:', error);
+    console.error('=== ANALYSIS FAILED ===');
+    console.error('Error message:', error.message);
     console.error('Error stack:', error.stack);
     
-    // Try to parse the request body to get matchingRequestId for cleanup
-    let matchingRequestId: number | null = null;
+    // Try to revert status on error
     try {
       const body = await req.clone().json();
-      matchingRequestId = body.matchingRequestId;
-    } catch {
-      // Ignore parsing errors
-    }
-    
-    // Try to update matching request status back to pending on error
-    if (matchingRequestId) {
-      try {
+      if (body.matchingRequestId) {
         const supabaseClient = createClient(
           Deno.env.get('SUPABASE_URL') ?? '',
           Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -283,149 +175,19 @@ const handler = async (req: Request): Promise<Response> => {
             status: 'pending',
             admin_comments: `분석 실패: ${error.message}`
           })
-          .eq('id', matchingRequestId);
-      } catch (updateError) {
-        console.error('Error updating status back to pending:', updateError);
+          .eq('id', body.matchingRequestId);
       }
+    } catch (revertError) {
+      console.error('Failed to revert status:', revertError);
     }
-    
-    return new Response(JSON.stringify({ 
+
+    return new Response(JSON.stringify({
       error: error.message,
-      details: error.stack,
-      success: false,
-      timestamp: new Date().toISOString()
+      stack: error.stack,
+      success: false
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
-};
-
-async function performGPTAnalysis(systemPrompt: string, userPrompt: string, analysisType: string) {
-  console.log(`Starting GPT analysis for: ${analysisType}`);
-  const startTime = Date.now();
-  
-  const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
-  if (!openaiApiKey) {
-    throw new Error('OpenAI API key not found in environment variables');
-  }
-  
-  console.log(`OpenAI API key exists: ${!!openaiApiKey}`);
-  
-  try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openaiApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-        temperature: 0.7,
-        max_tokens: 4000
-      }),
-    });
-
-    console.log(`OpenAI API response status: ${response.status}`);
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`OpenAI API error: ${response.status} - ${errorText}`);
-      throw new Error(`GPT API error: ${response.status} - ${errorText}`);
-    }
-
-    const data = await response.json();
-    const processingTime = Date.now() - startTime;
-    
-    console.log(`GPT analysis completed for ${analysisType}, tokens used: ${data.usage?.total_tokens}, time: ${processingTime}ms`);
-
-    return {
-      content: data.choices[0].message.content,
-      tokens: data.usage?.total_tokens || 0,
-      processingTime
-    };
-  } catch (error: any) {
-    console.error(`Error in performGPTAnalysis for ${analysisType}:`, error);
-    throw error;
-  }
-}
-
-async function performPerplexityResearch(query: string) {
-  const startTime = Date.now();
-  
-  const response = await fetch('https://api.perplexity.ai/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${Deno.env.get('PERPLEXITY_API_KEY')}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'llama-3.1-sonar-large-128k-online',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a market research expert. Provide comprehensive, current market analysis with specific data points, trends, and actionable insights. Include recent developments and regulatory changes.'
-        },
-        {
-          role: 'user',
-          content: query
-        }
-      ],
-      temperature: 0.2,
-      top_p: 0.9,
-      max_tokens: 4000,
-      return_images: false,
-      return_related_questions: false,
-      search_recency_filter: 'month',
-      frequency_penalty: 1,
-      presence_penalty: 0
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Perplexity API error: ${response.statusText}`);
-  }
-
-  const data = await response.json();
-  const processingTime = Date.now() - startTime;
-
-  return {
-    content: data.choices[0].message.content,
-    tokens: data.usage?.total_tokens || 0,
-    processingTime
-  };
-}
-
-function fillPromptTemplate(template: string, variables: Record<string, string>): string {
-  let result = template;
-  
-  Object.entries(variables).forEach(([key, value]) => {
-    const placeholder = `{${key}}`;
-    result = result.replace(new RegExp(placeholder, 'g'), value || '정보 없음');
-  });
-  
-  return result;
-}
-
-function formatMarketData(marketData: any[]): string {
-  if (!marketData.length) {
-    return '참조 가능한 시장 데이터가 없습니다.';
-  }
-
-  return marketData.map(data => {
-    const header = `=== ${data.data_category} ===`;
-    const location = data.country ? `국가: ${data.country}` : '';
-    const industry = data.industry ? `업종: ${data.industry}` : '';
-    const content = typeof data.data_content === 'object' 
-      ? JSON.stringify(data.data_content, null, 2)
-      : data.data_content;
-    
-    return [header, location, industry, content].filter(Boolean).join('\n');
-  }).join('\n\n');
-}
-
-serve(handler);
+});
