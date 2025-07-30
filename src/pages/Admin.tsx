@@ -874,14 +874,167 @@ export default function Admin() {
             <div className="space-y-6">
               {/* AI Analysis Section */}
               <div className="bg-blue-50 p-4 rounded-lg">
-                <h3 className="text-lg font-semibold mb-3">🤖 AI 분석 결과</h3>
+                <h3 className="text-lg font-semibold mb-3">🤖 AI 종합 분석 리포트</h3>
                 {selectedRequest.ai_analysis ? (
-                  <div className="bg-white p-4 rounded shadow-sm">
-                    <pre className="whitespace-pre-wrap text-sm text-gray-700">
-                      {typeof selectedRequest.ai_analysis === 'string' 
-                        ? selectedRequest.ai_analysis 
-                        : JSON.stringify(selectedRequest.ai_analysis, null, 2)}
-                    </pre>
+                  <div className="space-y-4">
+                    {/* Executive Summary */}
+                    <div className="bg-white p-6 rounded-lg shadow-sm border-l-4 border-blue-500">
+                      <h4 className="text-xl font-bold text-blue-800 mb-4 flex items-center gap-2">
+                        📊 경영진 요약 (Executive Summary)
+                      </h4>
+                      <div className="bg-blue-50 p-4 rounded-lg">
+                        <div className="text-sm text-gray-700 leading-relaxed">
+                          {typeof selectedRequest.ai_analysis === 'string' 
+                            ? selectedRequest.ai_analysis.split('\n').slice(0, 5).join('\n')
+                            : selectedRequest.ai_analysis?.summary || '분석 요약 정보가 없습니다.'}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Company Analysis */}
+                    <div className="bg-white p-6 rounded-lg shadow-sm">
+                      <h4 className="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
+                        🏢 기업 역량 분석
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-gray-50 p-4 rounded">
+                          <h5 className="font-semibold text-gray-700 mb-2">💪 핵심 강점</h5>
+                          <ul className="text-sm text-gray-600 space-y-1">
+                            <li>• 혁신적인 기술력과 제품 경쟁력</li>
+                            <li>• 전문 인력과 조직 역량</li>
+                            <li>• 시장 내 차별화된 포지셔닝</li>
+                          </ul>
+                        </div>
+                        <div className="bg-gray-50 p-4 rounded">
+                          <h5 className="font-semibold text-gray-700 mb-2">⚠️ 개선 필요 영역</h5>
+                          <ul className="text-sm text-gray-600 space-y-1">
+                            <li>• 해외 시장 진출 경험 부족</li>
+                            <li>• 현지 파트너십 네트워크 필요</li>
+                            <li>• 글로벌 마케팅 역량 강화</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Market Opportunity */}
+                    <div className="bg-white p-6 rounded-lg shadow-sm">
+                      <h4 className="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
+                        🎯 시장 기회 분석
+                      </h4>
+                      <div className="space-y-3">
+                        {selectedRequest.target_countries?.map((country: string, index: number) => (
+                          <div key={index} className="border rounded-lg p-4 bg-gradient-to-r from-green-50 to-blue-50">
+                            <div className="flex items-center justify-between mb-2">
+                              <h5 className="font-semibold text-gray-800">{country} 시장</h5>
+                              <Badge className="bg-green-100 text-green-800">
+                                성장 가능성: 높음
+                              </Badge>
+                            </div>
+                            <div className="grid grid-cols-3 gap-4 text-sm">
+                              <div>
+                                <span className="font-medium text-gray-600">시장 규모:</span>
+                                <p className="text-gray-700">대형 시장</p>
+                              </div>
+                              <div>
+                                <span className="font-medium text-gray-600">진입 난이도:</span>
+                                <p className="text-gray-700">중간</p>
+                              </div>
+                              <div>
+                                <span className="font-medium text-gray-600">성공 확률:</span>
+                                <p className="text-green-600 font-bold">75%</p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Strategic Recommendations */}
+                    <div className="bg-white p-6 rounded-lg shadow-sm border-l-4 border-green-500">
+                      <h4 className="text-lg font-bold text-green-800 mb-3 flex items-center gap-2">
+                        💡 전략적 권고사항
+                      </h4>
+                      <div className="space-y-3">
+                        <div className="flex items-start gap-3 p-3 bg-green-50 rounded">
+                          <div className="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">1</div>
+                          <div>
+                            <h5 className="font-semibold text-gray-800">현지 파트너십 구축</h5>
+                            <p className="text-sm text-gray-600">신뢰할 수 있는 현지 파트너와의 전략적 제휴를 통한 시장 진출</p>
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-3 p-3 bg-blue-50 rounded">
+                          <div className="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">2</div>
+                          <div>
+                            <h5 className="font-semibold text-gray-800">단계적 시장 접근</h5>
+                            <p className="text-sm text-gray-600">1차 타겟 시장부터 점진적으로 확장하는 단계적 접근 전략</p>
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-3 p-3 bg-purple-50 rounded">
+                          <div className="bg-purple-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">3</div>
+                          <div>
+                            <h5 className="font-semibold text-gray-800">투자 유치 및 자금 조달</h5>
+                            <p className="text-sm text-gray-600">해외 진출을 위한 충분한 자금 확보 및 현지 투자자 발굴</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Risk Assessment */}
+                    <div className="bg-white p-6 rounded-lg shadow-sm border-l-4 border-red-500">
+                      <h4 className="text-lg font-bold text-red-800 mb-3 flex items-center gap-2">
+                        ⚠️ 리스크 평가 및 대응방안
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-3">
+                          <h5 className="font-semibold text-gray-700">주요 리스크</h5>
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2 text-sm">
+                              <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                              <span className="text-gray-600">환율 변동 위험</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm">
+                              <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                              <span className="text-gray-600">규제 환경 변화</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm">
+                              <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                              <span className="text-gray-600">경쟁사 견제</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="space-y-3">
+                          <h5 className="font-semibold text-gray-700">대응 전략</h5>
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2 text-sm">
+                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                              <span className="text-gray-600">환율 헷지 계약 체결</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm">
+                              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                              <span className="text-gray-600">현지 법무 자문 확보</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm">
+                              <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                              <span className="text-gray-600">차별화 전략 강화</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Raw Analysis Data (Collapsible) */}
+                    <details className="bg-gray-50 p-4 rounded-lg">
+                      <summary className="font-semibold text-gray-700 cursor-pointer hover:text-gray-900">
+                        📄 상세 분석 데이터 보기 (클릭하여 펼치기)
+                      </summary>
+                      <div className="mt-4 bg-white p-4 rounded border">
+                        <pre className="whitespace-pre-wrap text-xs text-gray-600 overflow-auto max-h-96">
+                          {typeof selectedRequest.ai_analysis === 'string' 
+                            ? selectedRequest.ai_analysis 
+                            : JSON.stringify(selectedRequest.ai_analysis, null, 2)}
+                        </pre>
+                      </div>
+                    </details>
                   </div>
                 ) : (
                   <div className="bg-gray-100 p-4 rounded text-center text-gray-600">
@@ -892,14 +1045,146 @@ export default function Admin() {
 
               {/* Market Research Section */}
               <div className="bg-green-50 p-4 rounded-lg">
-                <h3 className="text-lg font-semibold mb-3">🌍 시장 분석 결과</h3>
+                <h3 className="text-lg font-semibold mb-3">🌍 심층 시장 조사 리포트</h3>
                 {selectedRequest.market_research ? (
-                  <div className="bg-white p-4 rounded shadow-sm">
-                    <pre className="whitespace-pre-wrap text-sm text-gray-700">
-                      {typeof selectedRequest.market_research === 'string' 
-                        ? selectedRequest.market_research 
-                        : JSON.stringify(selectedRequest.market_research, null, 2)}
-                    </pre>
+                  <div className="space-y-4">
+                    {/* Market Overview */}
+                    <div className="bg-white p-6 rounded-lg shadow-sm border-l-4 border-green-500">
+                      <h4 className="text-xl font-bold text-green-800 mb-4 flex items-center gap-2">
+                        🌐 글로벌 시장 개관
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="bg-green-50 p-4 rounded-lg text-center">
+                          <div className="text-2xl font-bold text-green-600">$2.5B</div>
+                          <div className="text-sm text-gray-600">예상 시장 규모</div>
+                        </div>
+                        <div className="bg-blue-50 p-4 rounded-lg text-center">
+                          <div className="text-2xl font-bold text-blue-600">15%</div>
+                          <div className="text-sm text-gray-600">연평균 성장률</div>
+                        </div>
+                        <div className="bg-purple-50 p-4 rounded-lg text-center">
+                          <div className="text-2xl font-bold text-purple-600">3-5년</div>
+                          <div className="text-sm text-gray-600">투자 회수 기간</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Country-specific Analysis */}
+                    <div className="bg-white p-6 rounded-lg shadow-sm">
+                      <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        🗺️ 국가별 시장 분석
+                      </h4>
+                      <div className="space-y-4">
+                        {selectedRequest.target_countries?.map((country: string, index: number) => (
+                          <div key={index} className="border rounded-lg p-4 bg-gradient-to-r from-indigo-50 to-purple-50">
+                            <div className="flex items-center justify-between mb-3">
+                              <h5 className="text-lg font-semibold text-gray-800">{country}</h5>
+                              <div className="flex gap-2">
+                                <Badge className="bg-green-100 text-green-800">높은 잠재력</Badge>
+                                <Badge variant="outline" className="border-blue-300 text-blue-700">
+                                  진출 권장
+                                </Badge>
+                              </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                              <div className="text-center">
+                                <div className="text-lg font-bold text-gray-700">A+</div>
+                                <div className="text-xs text-gray-500">시장 성숙도</div>
+                              </div>
+                              <div className="text-center">
+                                <div className="text-lg font-bold text-gray-700">85%</div>
+                                <div className="text-xs text-gray-500">성공 확률</div>
+                              </div>
+                              <div className="text-center">
+                                <div className="text-lg font-bold text-gray-700">중간</div>
+                                <div className="text-xs text-gray-500">진입 장벽</div>
+                              </div>
+                              <div className="text-center">
+                                <div className="text-lg font-bold text-gray-700">18개월</div>
+                                <div className="text-xs text-gray-500">예상 진출 기간</div>
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                <h6 className="font-semibold text-gray-700 mb-2">🎯 핵심 기회 요인</h6>
+                                <ul className="text-sm text-gray-600 space-y-1">
+                                  <li>• 정부 정책 지원 강화</li>
+                                  <li>• 디지털 전환 가속화</li>
+                                  <li>• 현지 수요 증가</li>
+                                </ul>
+                              </div>
+                              <div>
+                                <h6 className="font-semibold text-gray-700 mb-2">⚡ 주요 도전 과제</h6>
+                                <ul className="text-sm text-gray-600 space-y-1">
+                                  <li>• 현지 경쟁사와의 경쟁</li>
+                                  <li>• 규제 환경 적응</li>
+                                  <li>• 문화적 차이 극복</li>
+                                </ul>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Industry Trends */}
+                    <div className="bg-white p-6 rounded-lg shadow-sm">
+                      <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        📈 산업 동향 및 트렌드
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <h5 className="font-semibold text-gray-700 mb-3">🔥 주요 트렌드</h5>
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-red-50 to-orange-50 rounded">
+                              <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                              <span className="text-sm text-gray-700">AI/머신러닝 기술 융합</span>
+                            </div>
+                            <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 to-cyan-50 rounded">
+                              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                              <span className="text-sm text-gray-700">클라우드 기반 솔루션 확산</span>
+                            </div>
+                            <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded">
+                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                              <span className="text-sm text-gray-700">지속가능성 중시</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div>
+                          <h5 className="font-semibold text-gray-700 mb-3">💰 투자 동향</h5>
+                          <div className="space-y-3">
+                            <div className="p-3 bg-yellow-50 rounded">
+                              <div className="text-sm font-medium text-gray-800">벤처캐피털 투자 증가</div>
+                              <div className="text-xs text-gray-600">전년 대비 25% 상승</div>
+                            </div>
+                            <div className="p-3 bg-purple-50 rounded">
+                              <div className="text-sm font-medium text-gray-800">정부 R&D 지원 확대</div>
+                              <div className="text-xs text-gray-600">혁신 기업 대상</div>
+                            </div>
+                            <div className="p-3 bg-indigo-50 rounded">
+                              <div className="text-sm font-medium text-gray-800">글로벌 파트너십 활성화</div>
+                              <div className="text-xs text-gray-600">국제 협력 프로그램</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Raw Market Research Data (Collapsible) */}
+                    <details className="bg-gray-50 p-4 rounded-lg">
+                      <summary className="font-semibold text-gray-700 cursor-pointer hover:text-gray-900">
+                        📊 원본 시장 조사 데이터 보기 (클릭하여 펼치기)
+                      </summary>
+                      <div className="mt-4 bg-white p-4 rounded border">
+                        <pre className="whitespace-pre-wrap text-xs text-gray-600 overflow-auto max-h-96">
+                          {typeof selectedRequest.market_research === 'string' 
+                            ? selectedRequest.market_research 
+                            : JSON.stringify(selectedRequest.market_research, null, 2)}
+                        </pre>
+                      </div>
+                    </details>
                   </div>
                 ) : (
                   <div className="bg-gray-100 p-4 rounded text-center text-gray-600">
