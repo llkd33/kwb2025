@@ -903,16 +903,50 @@ export default function Admin() {
               <h3 className="text-lg font-semibold">📋 매칭 요청 관리</h3>
               <p className="text-gray-600">기업의 매칭 요청을 확인하고 AI 분석을 시작할 수 있습니다.</p>
             </div>
-            <div className="flex items-center gap-2">
-              <Badge variant="outline" className="text-orange-600">
-                {matchingRequests.filter(r => r.status === 'pending').length}개 대기 중
-              </Badge>
-              <Badge variant="outline" className="text-blue-600">
-                {matchingRequests.filter(r => r.status === 'processing').length}개 처리 중
-              </Badge>
-              <Badge variant="outline" className="text-green-600">
-                {matchingRequests.filter(r => r.status === 'completed').length}개 완료
-              </Badge>
+            <div className="flex items-center gap-4">
+              <Button
+                onClick={async () => {
+                  try {
+                    const { data, error } = await supabase.functions.invoke('test-openai', {
+                      body: {}
+                    });
+                    
+                    if (error) {
+                      toast({
+                        title: "OpenAI 연결 테스트 실패",
+                        description: error.message,
+                        variant: "destructive",
+                      });
+                    } else {
+                      toast({
+                        title: "OpenAI 연결 성공",
+                        description: data.message,
+                      });
+                    }
+                  } catch (error: any) {
+                    toast({
+                      title: "테스트 실패",
+                      description: error.message,
+                      variant: "destructive",
+                    });
+                  }
+                }}
+                variant="outline"
+                size="sm"
+              >
+                🔧 OpenAI 연결 테스트
+              </Button>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="text-orange-600">
+                  {matchingRequests.filter(r => r.status === 'pending').length}개 대기 중
+                </Badge>
+                <Badge variant="outline" className="text-blue-600">
+                  {matchingRequests.filter(r => r.status === 'processing').length}개 처리 중
+                </Badge>
+                <Badge variant="outline" className="text-green-600">
+                  {matchingRequests.filter(r => r.status === 'completed').length}개 완료
+                </Badge>
+              </div>
             </div>
           </div>
 
