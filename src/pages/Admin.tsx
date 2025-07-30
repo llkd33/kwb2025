@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   Building2, Calendar, MapPin, Users, Globe, CheckCircle, XCircle, Clock, Mail,
-  FileSpreadsheet, Brain, Upload, Edit, Trash2, Save, Plus, Settings
+  FileSpreadsheet, Brain, Upload, Edit, Trash2, Save, Plus, Settings, RefreshCw
 } from "lucide-react";
 
 interface Company {
@@ -105,6 +105,16 @@ export default function Admin() {
   });
   const { toast } = useToast();
 
+  // Filter companies by status
+  const pendingCompanies = companies.filter(c => c.is_approved === null);
+  const approvedCompanies = companies.filter(c => c.is_approved === true);
+  const rejectedCompanies = companies.filter(c => c.is_approved === false);
+
+  // Filter completed requests for report review
+  const completedRequests = matchingRequests.filter(request => 
+    request.status === 'completed' && request.ai_analysis && request.market_research
+  );
+
   useEffect(() => {
     fetchAllData();
   }, []);
@@ -174,7 +184,6 @@ export default function Admin() {
         variant: "destructive",
       });
     }
-
   };
 
   const fetchMarketData = async () => {
@@ -331,454 +340,88 @@ export default function Admin() {
     }
   };
 
-  const handleSavePerplexityPrompt = async () => {
-    if (!editingPerplexityPrompt.prompt_title || !editingPerplexityPrompt.system_prompt || !editingPerplexityPrompt.user_prompt_template) {
-      toast({
-        title: "필수 정보 누락",
-        description: "모든 필드를 입력해주세요.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setActionLoading(true);
-    try {
-      if (editingPerplexityPrompt.id) {
-        // Update existing prompt
-        const { error } = await supabase
-          .from('gpt_prompts')
-          .update({
-            prompt_title: editingPerplexityPrompt.prompt_title,
-            system_prompt: editingPerplexityPrompt.system_prompt,
-            user_prompt_template: editingPerplexityPrompt.user_prompt_template,
-            is_active: editingPerplexityPrompt.is_active
-          })
-          .eq('id', editingPerplexityPrompt.id);
-
-        if (error) throw error;
-      } else {
-        // Create new prompt
-        const { error } = await supabase
-          .from('gpt_prompts')
-          .insert({
-            prompt_type: editingPerplexityPrompt.prompt_type,
-            prompt_title: editingPerplexityPrompt.prompt_title,
-            system_prompt: editingPerplexityPrompt.system_prompt,
-            user_prompt_template: editingPerplexityPrompt.user_prompt_template,
-            is_active: true
-          });
-
-        if (error) throw error;
-      }
-
-      toast({
-        title: "저장 완료",
-        description: "퍼플렉시티 프롬프트가 성공적으로 저장되었습니다.",
-      });
-
-      setShowPerplexityPromptDialog(false);
-      setEditingPerplexityPrompt({});
-      fetchPerplexityPrompts();
-    } catch (error: any) {
-      toast({
-        title: "저장 실패",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleSavePrompt = async () => {
-    if (!editingPrompt.prompt_title || !editingPrompt.system_prompt || !editingPrompt.user_prompt_template) {
-      toast({
-        title: "필수 정보 누락",
-        description: "모든 필드를 입력해주세요.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setActionLoading(true);
-    try {
-      if (editingPrompt.id) {
-        // Update existing prompt
-        const { error } = await supabase
-          .from('gpt_prompts')
-          .update({
-            prompt_title: editingPrompt.prompt_title,
-            system_prompt: editingPrompt.system_prompt,
-            user_prompt_template: editingPrompt.user_prompt_template,
-            is_active: editingPrompt.is_active
-          })
-          .eq('id', editingPrompt.id);
-
-        if (error) throw error;
-      } else {
-        // Create new prompt
-        const { error } = await supabase
-          .from('gpt_prompts')
-          .insert({
-            prompt_type: editingPrompt.prompt_type,
-            prompt_title: editingPrompt.prompt_title,
-            system_prompt: editingPrompt.system_prompt,
-            user_prompt_template: editingPrompt.user_prompt_template,
-            is_active: true
-          });
-
-        if (error) throw error;
-      }
-
-      toast({
-        title: "저장 완료",
-        description: "프롬프트가 성공적으로 저장되었습니다.",
-      });
-
-      setShowPromptDialog(false);
-      setEditingPrompt({});
-      fetchPrompts();
-    } catch (error: any) {
-      toast({
-        title: "저장 실패",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    // Validate file type
-    if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls') && !file.name.endsWith('.csv')) {
-      toast({
-        title: "파일 형식 오류",
-        description: "Excel 파일(.xlsx, .xls) 또는 CSV 파일만 업로드 가능합니다.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setSelectedFile(file);
-  };
-
-  const handleUploadMarketData = async () => {
-    if (!selectedFile) {
-      toast({
-        title: "파일 선택 필요",
-        description: "업로드할 파일을 선택해주세요.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setUploading(true);
-    setUploadProgress(0);
-
-    try {
-      // For demo purposes, we'll create a sample data entry
-      // In production, you'd parse the Excel/CSV file here
-      const sampleData = {
-        market_size: "100억 달러",
-        growth_rate: "15%",
-        key_players: ["Company A", "Company B", "Company C"],
-        regulations: "규제 정보",
-        opportunities: "시장 기회 정보"
-      };
-
-      setUploadProgress(50);
-
-      const { error } = await supabase
-        .from('market_data')
-        .insert({
-          data_category: 'market_analysis',
-          country: '미국',
-          industry: 'IT',
-          data_content: sampleData,
-          source_file: selectedFile.name
-        });
-
-      if (error) throw error;
-
-      setUploadProgress(100);
-
-      toast({
-        title: "업로드 완료",
-        description: "시장 데이터가 성공적으로 업로드되었습니다.",
-      });
-
-      setSelectedFile(null);
-      const fileInput = document.getElementById('market-data-file') as HTMLInputElement;
-      if (fileInput) fileInput.value = '';
-
-      fetchMarketData();
-    } catch (error: any) {
-      toast({
-        title: "업로드 실패",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setUploading(false);
-      setUploadProgress(0);
-    }
-  };
-
-  const handleAddDataEntry = async () => {
-    if (!newDataEntry.data_category || !newDataEntry.data_content) {
-      toast({
-        title: "필수 정보 누락",
-        description: "카테고리와 데이터 내용을 입력해주세요.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      let dataContent;
-      try {
-        dataContent = JSON.parse(newDataEntry.data_content);
-      } catch {
-        // If not valid JSON, store as simple object
-        dataContent = { content: newDataEntry.data_content };
-      }
-
-      const { error } = await supabase
-        .from('market_data')
-        .insert({
-          data_category: newDataEntry.data_category,
-          country: newDataEntry.country || null,
-          industry: newDataEntry.industry || null,
-          data_content: dataContent
-        });
-
-      if (error) throw error;
-
-      toast({
-        title: "추가 완료",
-        description: "데이터가 성공적으로 추가되었습니다.",
-      });
-
-      setNewDataEntry({
-        data_category: '',
-        country: '',
-        industry: '',
-        data_content: '',
-      });
-      setShowDataDialog(false);
-      fetchMarketData();
-    } catch (error: any) {
-      toast({
-        title: "추가 실패",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleFinalizeReport = async () => {
-    if (!selectedRequest) return;
-
-    setActionLoading(true);
-    try {
-      // Update matching request with admin comments and published status
-      const { error: updateError } = await supabase
-        .from('matching_requests')
-        .update({
-          admin_comments: adminComments,
-          status: 'published',
-          is_published: true,
-          published_at: new Date().toISOString()
-        })
-        .eq('id', selectedRequest.id);
-
-      if (updateError) throw updateError;
-
-      // Send final report email to company
-      const { error: emailError } = await supabase.functions.invoke('send-analysis-complete-email', {
-        body: {
-          companyId: selectedRequest.company_id,
-          matchingRequestId: selectedRequest.id,
-          reportSummary: selectedRequest.final_report?.summary || '리포트가 준비되었습니다.'
-        }
-      });
-
-      if (emailError) {
-        console.error('Email sending failed:', emailError);
-        toast({
-          title: "배포 완료",
-          description: "리포트 배포는 완료되었으나 이메일 발송에 실패했습니다.",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "배포 완료",
-          description: "리포트가 성공적으로 배포되었고 기업에 알림 이메일이 발송되었습니다.",
-        });
-      }
-
-      setShowReportDialog(false);
-      setSelectedRequest(null);
-      setAdminComments('');
-      fetchMatchingRequests();
-    } catch (error: any) {
-      toast({
-        title: "배포 실패",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  // Helper function to render analysis content in a structured way
-  const renderAnalysisContent = (data: any) => {
-    if (typeof data === 'string') {
-      return <div className="prose prose-sm max-w-none">{data}</div>;
-    }
-
-    if (typeof data === 'object' && data !== null) {
-      return (
-        <div className="space-y-4">
-          {Object.entries(data).map(([key, value]) => (
-            <div key={key} className="border-l-4 border-blue-200 pl-4">
-              <h5 className="font-medium text-gray-900 mb-2 capitalize">
-                {key.replace(/[_-]/g, ' ')}
-              </h5>
-              {Array.isArray(value) ? (
-                <ul className="list-disc list-inside space-y-1 text-sm text-gray-700">
-                  {value.map((item, index) => (
-                    <li key={index}>{typeof item === 'object' ? JSON.stringify(item) : item}</li>
-                  ))}
-                </ul>
-              ) : typeof value === 'object' && value !== null ? (
-                <div className="bg-gray-50 p-3 rounded text-sm space-y-2">
-                  {Object.entries(value).map(([subKey, subValue]) => (
-                    <div key={subKey}>
-                      <span className="font-medium text-gray-800">
-                        {subKey.replace(/[_-]/g, ' ')}:
-                      </span>
-                      <span className="ml-2 text-gray-600">
-                        {Array.isArray(subValue) 
-                          ? subValue.join(', ') 
-                          : typeof subValue === 'object' 
-                            ? JSON.stringify(subValue)
-                            : String(subValue)
-                        }
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-gray-700">{String(value)}</p>
-              )}
-            </div>
-          ))}
-        </div>
-      );
-    }
-
-    return <div className="text-gray-500">데이터가 없습니다.</div>;
-  };
-
-  const pendingCompanies = companies.filter(c => c.is_approved === false && !c.rejection_reason);
-  const approvedCompanies = companies.filter(c => c.is_approved === true);
-  const rejectedCompanies = companies.filter(c => c.rejection_reason);
-
+  // Company Card Component
   const CompanyCard = ({ company, showActions = false }: { company: Company; showActions?: boolean }) => (
-    <Card className="mb-4">
+    <Card key={company.id} className="mb-4">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="flex items-center gap-2">
               <Building2 className="h-5 w-5" />
               {company.company_name}
+              {company.is_approved === true && <Badge className="bg-green-100 text-green-800">승인됨</Badge>}
+              {company.is_approved === false && <Badge variant="destructive">거부됨</Badge>}
             </CardTitle>
-            <CardDescription className="flex items-center gap-4 mt-2">
-              <span className="flex items-center gap-1">
-                <Users className="h-4 w-4" />
-                {company.ceo_name} 대표
-              </span>
-              <span className="flex items-center gap-1">
-                <MapPin className="h-4 w-4" />
-                {company.headquarters_country}
-              </span>
-              <span className="flex items-center gap-1">
-                <Calendar className="h-4 w-4" />
-                {new Date(company.created_at).toLocaleDateString()}
-              </span>
+            <CardDescription>
+              CEO: {company.ceo_name} | 담당자: {company.manager_name} ({company.manager_position})
             </CardDescription>
           </div>
-          <div className="flex items-center gap-2">
-            {company.is_approved ? (
-              <Badge variant="default" className="bg-green-100 text-green-800">
-                <CheckCircle className="h-3 w-3 mr-1" />
-                승인완료
-              </Badge>
-            ) : company.rejection_reason ? (
-              <Badge variant="destructive">
-                <XCircle className="h-3 w-3 mr-1" />
-                거부됨
-              </Badge>
-            ) : (
-              <Badge variant="secondary">
-                <Clock className="h-3 w-3 mr-1" />
-                승인대기
-              </Badge>
-            )}
+          <div className="text-right text-sm text-gray-500">
+            <div className="flex items-center gap-1">
+              <Calendar className="h-4 w-4" />
+              {new Date(company.created_at).toLocaleDateString()}
+            </div>
           </div>
         </div>
       </CardHeader>
+      
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div>
-            <p><strong>업종:</strong> {company.industry}</p>
-            <p><strong>담당자:</strong> {company.manager_name} ({company.manager_position})</p>
-            <p><strong>연락처:</strong> {company.phone_number}</p>
-            <p><strong>이메일:</strong> {company.email}</p>
-          </div>
-          <div>
-            <p><strong>설립연도:</strong> {company.founding_year || '미입력'}</p>
-            <p><strong>직원 수:</strong> {company.employee_count || '미입력'}</p>
-            {company.website && (
-              <p className="flex items-center gap-1">
+            <h4 className="font-semibold mb-2">기업 정보</h4>
+            <div className="space-y-2 text-sm">
+              <div className="flex items-center gap-2">
+                <Mail className="h-4 w-4" />
+                <span>{company.email}</span>
+              </div>
+              <div className="flex items-center gap-2">
                 <Globe className="h-4 w-4" />
-                <a href={company.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                  웹사이트
-                </a>
-              </p>
-            )}
+                <span>{company.industry}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <MapPin className="h-4 w-4" />
+                <span>{company.headquarters_country}, {company.headquarters_city}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                <span>{company.employee_count} 직원</span>
+              </div>
+              <div>
+                <span className="font-medium">설립년도:</span> {company.founding_year}
+              </div>
+              <div>
+                <span className="font-medium">매출 규모:</span> {company.revenue_scale}
+              </div>
+            </div>
+          </div>
+          
+          <div>
+            <h4 className="font-semibold mb-2">사업 정보</h4>
+            <div className="space-y-2 text-sm">
+              <div>
+                <span className="font-medium">주요 제품:</span>
+                <p className="text-gray-600 mt-1">{company.main_products}</p>
+              </div>
+              <div>
+                <span className="font-medium">목표 시장:</span>
+                <p className="text-gray-600 mt-1">{company.target_market}</p>
+              </div>
+              <div>
+                <span className="font-medium">경쟁 우위:</span>
+                <p className="text-gray-600 mt-1">{company.competitive_advantage}</p>
+              </div>
+            </div>
           </div>
         </div>
-        
-        {company.main_products && (
-          <div className="mt-4">
-            <p><strong>주요 제품/서비스:</strong></p>
-            <p className="text-gray-600 mt-1">{company.main_products}</p>
-          </div>
-        )}
-        
-        {company.target_market && (
-          <div className="mt-4">
-            <p><strong>타겟 시장:</strong></p>
-            <p className="text-gray-600 mt-1">{company.target_market}</p>
+
+        {company.rejection_reason && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+            <h4 className="font-semibold text-red-800 mb-1">거부 사유</h4>
+            <p className="text-red-700 text-sm">{company.rejection_reason}</p>
           </div>
         )}
 
-        {company.rejection_reason && (
-          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded">
-            <p><strong>거부 사유:</strong></p>
-            <p className="text-red-700 mt-1">{company.rejection_reason}</p>
-          </div>
-        )}
-        
-        {showActions && (
+        {showActions && company.is_approved === null && (
           <div className="flex gap-2 mt-4">
             <Button 
               onClick={() => handleApprove(company)}
@@ -789,12 +432,12 @@ export default function Admin() {
               승인
             </Button>
             <Button 
-              variant="destructive"
               onClick={() => {
                 setSelectedCompany(company);
                 setShowRejectDialog(true);
               }}
               disabled={actionLoading}
+              variant="destructive"
             >
               <XCircle className="h-4 w-4 mr-2" />
               거부
@@ -842,16 +485,12 @@ export default function Admin() {
       </div>
 
       <Tabs defaultValue="pending" className="w-full">
-        <TabsList className="grid w-full grid-cols-9">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="pending">승인 대기 ({pendingCompanies.length})</TabsTrigger>
           <TabsTrigger value="approved">승인 완료 ({approvedCompanies.length})</TabsTrigger>
           <TabsTrigger value="rejected">거부됨 ({rejectedCompanies.length})</TabsTrigger>
           <TabsTrigger value="matching">매칭 요청 ({matchingRequests.filter(r => r.status === 'pending').length})</TabsTrigger>
-          <TabsTrigger value="reports">리포트 리뷰</TabsTrigger>
-          <TabsTrigger value="history">배포 히스토리</TabsTrigger>
-          <TabsTrigger value="prompts">AI 프롬프트</TabsTrigger>
-          <TabsTrigger value="perplexity">퍼플렉시티</TabsTrigger>
-          <TabsTrigger value="data">시장 데이터</TabsTrigger>
+          <TabsTrigger value="reports">리포트 리뷰 ({completedRequests.length})</TabsTrigger>
         </TabsList>
         
         <TabsContent value="pending" className="mt-6">
@@ -903,82 +542,16 @@ export default function Admin() {
               <h3 className="text-lg font-semibold">📋 매칭 요청 관리</h3>
               <p className="text-gray-600">기업의 매칭 요청을 확인하고 AI 분석을 시작할 수 있습니다.</p>
             </div>
-            <div className="flex items-center gap-4">
-              <Button
-                onClick={async () => {
-                  try {
-                    const { data, error } = await supabase.functions.invoke('simple-test', {
-                      body: {}
-                    });
-                    
-                    if (error) {
-                      toast({
-                        title: "간단한 테스트 실패",
-                        description: error.message,
-                        variant: "destructive",
-                      });
-                    } else {
-                      toast({
-                        title: "간단한 테스트 성공",
-                        description: `환경변수 확인 완료: OpenAI 키 ${data.environment.hasOpenAIKey ? '있음' : '없음'}`,
-                      });
-                    }
-                  } catch (error: any) {
-                    toast({
-                      title: "테스트 실패",
-                      description: error.message,
-                      variant: "destructive",
-                    });
-                  }
-                }}
-                variant="outline"
-                size="sm"
-              >
-                🔧 간단한 테스트
-              </Button>
-              <Button
-                onClick={async () => {
-                  try {
-                    const { data, error } = await supabase.functions.invoke('test-openai', {
-                      body: {}
-                    });
-                    
-                    if (error) {
-                      toast({
-                        title: "OpenAI 연결 테스트 실패",
-                        description: error.message,
-                        variant: "destructive",
-                      });
-                    } else {
-                      toast({
-                        title: "OpenAI 연결 성공",
-                        description: data.message,
-                      });
-                    }
-                  } catch (error: any) {
-                    toast({
-                      title: "테스트 실패",
-                      description: error.message,
-                      variant: "destructive",
-                    });
-                  }
-                }}
-                variant="outline"
-                size="sm"
-              >
-                🤖 OpenAI 연결 테스트
-              </Button>
-              <div className="flex items-center gap-2">
-                <Badge variant="outline" className="text-orange-600">
-                  {matchingRequests.filter(r => r.status === 'pending').length}개 대기 중
-                </Badge>
-                <Badge variant="outline" className="text-blue-600">
-                  {matchingRequests.filter(r => r.status === 'processing').length}개 처리 중
-                </Badge>
-                <Badge variant="outline" className="text-green-600">
-                  {matchingRequests.filter(r => r.status === 'completed').length}개 완료
-                </Badge>
-              </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="text-orange-600">
+                {matchingRequests.filter(r => r.status === 'pending').length}개 대기 중
+              </Badge>
+              <Badge variant="outline" className="text-blue-600">
+                {matchingRequests.filter(r => r.status === 'processing').length}개 처리 중
+              </Badge>
+              <Badge variant="outline" className="text-green-600">
+                {matchingRequests.filter(r => r.status === 'completed').length}개 완료
+              </Badge>
             </div>
           </div>
 
@@ -1172,44 +745,6 @@ export default function Admin() {
                               <p className="text-gray-600 mt-1">{request.product_info}</p>
                             </div>
                           )}
-                          {request.market_info && (
-                            <div>
-                              <span className="font-medium">시장 정보:</span>
-                              <p className="text-gray-600 mt-1">{request.market_info}</p>
-                            </div>
-                          )}
-                          {request.additional_questions && (
-                            <div>
-                              <span className="font-medium">추가 질문:</span>
-                              <p className="text-gray-600 mt-1">{request.additional_questions}</p>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <h4 className="font-semibold mb-2">진행 상태</h4>
-                        <div className="space-y-2 text-sm">
-                          <div className="flex items-center gap-2">
-                            <div className={`w-3 h-3 rounded-full ${
-                              request.status === 'pending' ? 'bg-orange-400' :
-                              request.status === 'processing' ? 'bg-blue-400 animate-pulse' :
-                              request.status === 'completed' ? 'bg-green-400' : 'bg-gray-400'
-                            }`}></div>
-                            <span>요청 접수: {new Date(request.created_at).toLocaleString()}</span>
-                          </div>
-                          {request.completed_at && (
-                            <div className="flex items-center gap-2">
-                              <div className="w-3 h-3 rounded-full bg-green-400"></div>
-                              <span>분석 완료: {new Date(request.completed_at).toLocaleString()}</span>
-                            </div>
-                          )}
-                          {request.document_name && (
-                            <div className="mt-2 p-2 bg-gray-100 rounded">
-                              <span className="font-medium">첨부 문서:</span>
-                              <p className="text-xs">{request.document_name}</p>
-                            </div>
-                          )}
                         </div>
                       </div>
                     </div>
@@ -1217,912 +752,72 @@ export default function Admin() {
                 </Card>
               ))}
           </div>
-
-          {matchingRequests.length === 0 && (
-            <Card>
-              <CardContent className="text-center py-12">
-                <Building2 className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <h4 className="text-lg font-semibold text-gray-600 mb-2">매칭 요청이 없습니다</h4>
-                <p className="text-gray-500">기업에서 매칭 요청을 제출하면 여기에 표시됩니다.</p>
-              </CardContent>
-            </Card>
-          )}
         </TabsContent>
 
         {/* Report Review Tab */}
         <TabsContent value="reports" className="mt-6">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-lg font-semibold">리포트 리뷰 및 승인</h3>
-              <p className="text-gray-600">완성된 분석 리포트를 검토하고 최종 승인합니다.</p>
+              <h3 className="text-lg font-semibold">📊 AI 분석 리포트 검토</h3>
+              <p className="text-gray-600">완료된 AI 분석 리포트를 검토하고 최종 승인할 수 있습니다.</p>
             </div>
             <div className="flex items-center gap-4">
               <Button
-                onClick={() => {
-                  fetchMatchingRequests();
-                  toast({
-                    title: "데이터 새로고침",
-                    description: "매칭 요청 데이터를 새로고침했습니다.",
-                  });
-                }}
+                onClick={fetchMatchingRequests}
                 variant="outline"
                 size="sm"
+                className="gap-2"
               >
+                <RefreshCw className="h-4 w-4" />
                 🔄 새로고침
               </Button>
               <Badge variant="outline" className="text-green-600">
-                {matchingRequests.filter(request => 
-                  request.status === 'completed' && request.ai_analysis && request.market_research
-                ).length}개 리뷰 대기
-              </Badge>
-            </div>
-          </div>
-
-          <div className="space-y-6">
-            {matchingRequests
-              .filter(request => request.status === 'completed' && request.ai_analysis && request.market_research)
-              .map((request) => (
-                <Card key={request.id} className="border-2 shadow-sm">
-                  <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <CardTitle className="flex items-center gap-2 text-xl">
-                          <Building2 className="h-6 w-6 text-blue-600" />
-                          {request.companies?.company_name || 'Unknown Company'}
-                        </CardTitle>
-                        <CardDescription className="text-base mt-2">
-                          📍 {request.companies?.industry} | {request.companies?.headquarters_country} | 
-                          ✅ 분석 완료: {new Date(request.completed_at || request.updated_at).toLocaleDateString()}
-                        </CardDescription>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <Badge 
-                          variant={request.is_published ? "default" : "outline"}
-                          className="text-sm px-3 py-1"
-                        >
-                          {request.is_published ? "🟢 발행됨" : "🟡 검토 중"}
-                        </Badge>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="hover:bg-blue-50"
-                          onClick={() => {
-                            setSelectedRequest(request);
-                            setAdminComments(request.admin_comments || '');
-                            setShowReportDialog(true);
-                          }}
-                        >
-                          <Edit className="h-4 w-4 mr-1" />
-                          상세 리뷰
-                        </Button>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  
-                  <CardContent className="p-6">
-                    {/* Executive Summary */}
-                    <div className="mb-6 p-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg border border-yellow-200">
-                      <h4 className="font-bold text-lg mb-3 text-yellow-900 flex items-center gap-2">
-                        ⭐ 종합 분석 요약
-                      </h4>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                        {request.ai_analysis?.투자_파트너십_권고 && (
-                          <div className="bg-white p-3 rounded border">
-                            <p className="font-semibold text-green-700">투자 등급</p>
-                            <p className="text-xl font-bold text-green-800">
-                              {(request.ai_analysis.투자_파트너십_권고 as any)?.투자_등급 || 'N/A'}
-                            </p>
-                            <p className="text-xs text-gray-600 mt-1">
-                              성공확률: {(request.ai_analysis.투자_파트너십_권고 as any)?.성공_확률 || 'N/A'}
-                            </p>
-                          </div>
-                        )}
-                        
-                        {request.ai_analysis?.재무_현황_투자가치?.밸류에이션 && (
-                          <div className="bg-white p-3 rounded border">
-                            <p className="font-semibold text-blue-700">기업 가치</p>
-                            <p className="text-lg font-bold text-blue-800">
-                              {request.ai_analysis.재무_현황_투자가치.밸류에이션}
-                            </p>
-                          </div>
-                        )}
-                        
-                        {request.market_research?.최종_시장_진출_권고?.ROI_예측 && (
-                          <div className="bg-white p-3 rounded border">
-                            <p className="font-semibold text-purple-700">ROI 예측</p>
-                            <p className="text-sm font-bold text-purple-800">
-                              {request.market_research.최종_시장_진출_권고.ROI_예측}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      {/* Company Analysis Section */}
-                      <div className="space-y-4">
-                        <h4 className="font-bold text-lg mb-4 text-blue-900 flex items-center gap-2 border-b-2 border-blue-200 pb-2">
-                          🏢 기업 분석 리포트
-                        </h4>
-                        
-                        {request.ai_analysis && typeof request.ai_analysis === 'object' ? (
-                          <div className="space-y-4">
-                            {(() => {
-                              // Handle different ai_analysis structures
-                              let analysisData = request.ai_analysis;
-                              
-                              // If ai_analysis has an 'analysis' field with JSON string, parse it
-                              if (analysisData.analysis && typeof analysisData.analysis === 'string') {
-                                try {
-                                  analysisData = JSON.parse(analysisData.analysis);
-                                } catch {
-                                  // If parsing fails, use original data
-                                }
-                              }
-                              
-                              return (
-                                <>
-                                  {/* Simple Analysis Format */}
-                                  {analysisData.회사_개요 && (
-                                    <div className="border border-blue-200 rounded-lg p-4 bg-blue-50">
-                                      <h5 className="font-semibold text-blue-900 mb-2">회사 개요</h5>
-                                      <p className="text-sm text-blue-800">{analysisData.회사_개요}</p>
-                                    </div>
-                                  )}
-                                  
-                                  {analysisData.강점 && (
-                                    <div className="border border-green-200 rounded-lg p-4 bg-green-50">
-                                      <h5 className="font-semibold text-green-900 mb-2">주요 강점</h5>
-                                      <p className="text-sm text-green-800">{analysisData.강점}</p>
-                                    </div>
-                                  )}
-                                  
-                                  {analysisData.시장_기회 && (
-                                    <div className="border border-purple-200 rounded-lg p-4 bg-purple-50">
-                                      <h5 className="font-semibold text-purple-900 mb-2">시장 기회</h5>
-                                      <p className="text-sm text-purple-800">{analysisData.시장_기회}</p>
-                                    </div>
-                                  )}
-                                  
-                                  {analysisData.추천사항 && (
-                                    <div className="border border-orange-200 rounded-lg p-4 bg-orange-50">
-                                      <h5 className="font-semibold text-orange-900 mb-2">추천사항</h5>
-                                      <p className="text-sm text-orange-800">{analysisData.추천사항}</p>
-                                    </div>
-                                  )}
-
-                                  {/* Complex Analysis Format (Legacy support) */}
-                                  {analysisData.회사_개요?.기본_정보 && (
-                                    <div className="border border-blue-200 rounded-lg p-4 bg-blue-50">
-                                      <h5 className="font-semibold text-blue-900 mb-2">1. 회사 개요</h5>
-                                      <div className="space-y-2 text-sm">
-                                        <div className="grid grid-cols-2 gap-2">
-                                          <span className="font-medium">기업명:</span>
-                                          <span>{analysisData.회사_개요.기본_정보.기업명}</span>
-                                          <span className="font-medium">설립연도:</span>
-                                          <span>{analysisData.회사_개요.기본_정보.설립연도}</span>
-                                          <span className="font-medium">사업영역:</span>
-                                          <span>{analysisData.회사_개요.기본_정보.사업_영역}</span>
-                                        </div>
-                                        <div className="mt-2 p-2 bg-green-100 rounded">
-                                          <span className="font-medium text-green-800">성공 가능성:</span>
-                                          <span className="text-green-700 ml-2">{analysisData.회사_개요.기본_정보.성공_가능성}</span>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  )}
-
-                                  {/* Raw Analysis Display */}
-                                  {!analysisData.회사_개요 && !analysisData.회사_개요?.기본_정보 && (
-                                    <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                                      <h5 className="font-semibold text-gray-900 mb-2">분석 결과</h5>
-                                      <pre className="text-sm text-gray-800 whitespace-pre-wrap">{JSON.stringify(analysisData, null, 2)}</pre>
-                                    </div>
-                                  )}
-                                </>
-                              );
-                            })()}
-                          </div>
-                        ) : (
-                          <div className="bg-gray-50 p-4 rounded border text-center text-gray-600">
-                            기업 분석 데이터를 불러올 수 없습니다
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Market Research Section */}
-                      <div className="space-y-4">
-                        <h4 className="font-bold text-lg mb-4 text-green-900 flex items-center gap-2 border-b-2 border-green-200 pb-2">
-                          📊 시장 분석 리포트
-                        </h4>
-                        
-                        {request.market_research && typeof request.market_research === 'object' ? (
-                          <div className="space-y-4">
-                            {(() => {
-                              // Handle different market_research structures
-                              let marketData = request.market_research;
-                              
-                              return (
-                                <>
-                                  {/* Simple Message Format */}
-                                  {marketData.message && (
-                                    <div className="border border-teal-200 rounded-lg p-4 bg-teal-50">
-                                      <h5 className="font-semibold text-teal-900 mb-2">시장 분석 정보</h5>
-                                      <p className="text-sm text-teal-800">{marketData.message}</p>
-                                    </div>
-                                  )}
-
-                                  {/* Complex Market Research Format */}
-                                  {marketData.시장_개관_규모분석 && (
-                                    <div className="border border-teal-200 rounded-lg p-4 bg-teal-50">
-                                      <h5 className="font-semibold text-teal-900 mb-2">1. 시장 개관</h5>
-                                      <div className="space-y-2 text-sm">
-                                        {marketData.시장_개관_규모분석.시장_규모 && (
-                                          <>
-                                            <div>
-                                              <span className="font-medium">글로벌 AI 시장:</span>
-                                              <span className="ml-2">{marketData.시장_개관_규모분석.시장_규모.글로벌_AI_시장}</span>
-                                            </div>
-                                            <div>
-                                              <span className="font-medium">연평균 성장률:</span>
-                                              <span className="ml-2 font-bold text-green-600">{marketData.시장_개관_규모분석.시장_규모.CAGR}</span>
-                                            </div>
-                                            <div>
-                                              <span className="font-medium">아시아 태평양:</span>
-                                              <span className="ml-2">{marketData.시장_개관_규모분석.시장_규모.아시아_태평양}</span>
-                                            </div>
-                                          </>
-                                        )}
-                                      </div>
-                                    </div>
-                                  )}
-
-                                  {/* Raw Market Research Display */}
-                                  {!marketData.message && !marketData.시장_개관_규모분석 && (
-                                    <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                                      <h5 className="font-semibold text-gray-900 mb-2">시장 분석 결과</h5>
-                                      <pre className="text-sm text-gray-800 whitespace-pre-wrap">{JSON.stringify(marketData, null, 2)}</pre>
-                                    </div>
-                                  )}
-                                </>
-                              );
-                            })()}
-                          </div>
-                        ) : (
-                          <div className="bg-gray-50 p-4 rounded border text-center text-gray-600">
-                            시장 분석 데이터를 불러올 수 없습니다
-                          </div>
-                        )}
-                                           <div key={country} className="flex justify-between items-center">
-                                             <span>{country}:</span>
-                                             <Badge variant="outline" className="text-xs">{String(score)}</Badge>
-                                           </div>
-                                         ))}
-                                       </div>
-                                     </div>
-                                   )}
-                                   {(request.market_research.최종_시장_진출_권고 as any)?.성공_확률 && (
-                                     <div className="mt-2">
-                                       <span className="font-medium">성공 확률:</span>
-                                       <div className="ml-4 mt-1 space-y-1 text-xs">
-                                         {Object.entries((request.market_research.최종_시장_진출_권고 as any)?.성공_확률 || {}).map(([country, prob]) => (
-                                           <div key={country} className="flex justify-between">
-                                             <span>{country}:</span>
-                                             <span className="font-bold text-green-600">{String(prob)}</span>
-                                           </div>
-                                         ))}
-                                       </div>
-                                     </div>
-                                   )}
-                                  <div className="mt-3 p-2 bg-emerald-100 rounded">
-                                    <span className="font-medium">ROI 예측:</span>
-                                    <span className="ml-2 font-bold">{request.market_research.최종_시장_진출_권고.ROI_예측}</span>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="bg-gray-50 p-4 rounded border text-center text-gray-600">
-                            시장 분석 데이터를 불러올 수 없습니다
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Admin Comments */}
-                    {request.admin_comments && (
-                      <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                        <h5 className="font-semibold text-yellow-900 mb-2 flex items-center gap-2">
-                          💬 관리자 코멘트
-                        </h5>
-                        <p className="text-sm text-yellow-800">{request.admin_comments}</p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
-          </div>
-
-          {matchingRequests.filter(request => 
-            request.status === 'completed' && request.ai_analysis && request.market_research
-          ).length === 0 && (
-            <Card>
-              <CardContent className="text-center py-12">
-                <FileSpreadsheet className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <h4 className="text-lg font-semibold text-gray-600 mb-2">검토할 리포트가 없습니다</h4>
-                <p className="text-gray-500">완성된 분석 리포트가 생성되면 여기에 표시됩니다.</p>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-
-        {/* Report History Tab */}
-        <TabsContent value="history" className="mt-6">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h3 className="text-lg font-semibold">📋 배포된 리포트 히스토리</h3>
-              <p className="text-gray-600">배포 완료된 AI 분석 리포트들을 관리하고 수정할 수 있습니다.</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <Badge variant="outline" className="text-green-600">
-                {matchingRequests.filter(request => request.is_published).length}개 배포됨
+                {completedRequests.length}개 검토 대기
               </Badge>
             </div>
           </div>
 
           <div className="space-y-4">
-            {matchingRequests
-              .filter(request => request.is_published && request.ai_analysis && request.market_research)
-              .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
-              .map((request) => (
-                <Card key={request.id} className="border-2 border-green-200 shadow-sm bg-green-50">
-                  <CardHeader className="bg-gradient-to-r from-green-100 to-emerald-100">
+            {completedRequests.length === 0 ? (
+              <Card>
+                <CardContent className="text-center py-8">
+                  <p className="text-gray-500">검토할 리포트가 없습니다.</p>
+                </CardContent>
+              </Card>
+            ) : (
+              completedRequests.map((request) => (
+                <Card key={request.id} className="border-2 border-green-200 bg-green-50">
+                  <CardHeader>
                     <div className="flex items-center justify-between">
                       <div>
-                        <CardTitle className="flex items-center gap-2 text-xl">
-                          <Badge className="bg-green-600 text-white">PUBLISHED</Badge>
-                          <Building2 className="h-5 w-5 text-green-700" />
+                        <CardTitle className="flex items-center gap-2">
+                          <Building2 className="h-5 w-5" />
                           {request.companies?.company_name || 'Unknown Company'}
+                          <Badge className="bg-green-100 text-green-800">
+                            ✅ 분석 완료
+                          </Badge>
                         </CardTitle>
-                        <CardDescription className="text-base mt-2 text-green-800">
-                          📍 {request.companies?.industry} | {request.companies?.headquarters_country} | 
-                          📤 배포일: {request.published_at ? new Date(request.published_at).toLocaleDateString() : new Date(request.updated_at).toLocaleDateString()}
-                        </CardDescription>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="border-green-300 hover:bg-green-200"
-                          onClick={() => {
-                            setSelectedRequest(request);
-                            setAdminComments(request.admin_comments || '');
-                            setShowReportDialog(true);
-                          }}
-                        >
-                          <Edit className="h-4 w-4 mr-1" />
-                          수정
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="border-blue-300 hover:bg-blue-100"
-                          onClick={async () => {
-                            // 재배포 로직
-                            try {
-                              const { error: emailError } = await supabase.functions.invoke('send-analysis-complete-email', {
-                                body: {
-                                  companyId: request.company_id,
-                                  matchingRequestId: request.id,
-                                  reportSummary: '리포트가 재전송되었습니다.'
-                                }
-                              });
-
-                              if (emailError) {
-                                toast({
-                                  title: "재배포 실패",
-                                  description: "이메일 발송에 실패했습니다.",
-                                  variant: "destructive",
-                                });
-                              } else {
-                                toast({
-                                  title: "재배포 완료",
-                                  description: "리포트가 성공적으로 재배포되었습니다.",
-                                });
-                              }
-                            } catch (error: any) {
-                              toast({
-                                title: "재배포 실패",
-                                description: error.message,
-                                variant: "destructive",
-                              });
-                            }
-                          }}
-                        >
-                          <Mail className="h-4 w-4 mr-1" />
-                          재배포
-                        </Button>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  
-                  <CardContent className="p-6">
-                    {/* Executive Summary */}
-                    <div className="mb-4 p-4 bg-white rounded-lg border border-green-200">
-                      <h4 className="font-bold text-lg mb-3 text-green-900 flex items-center gap-2">
-                        ⭐ 리포트 요약
-                      </h4>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                        {request.ai_analysis?.투자_파트너십_권고 && (
-                          <div className="bg-green-50 p-3 rounded border">
-                            <p className="font-semibold text-green-700">투자 등급</p>
-                            <p className="text-lg font-bold text-green-800">
-                              {(request.ai_analysis as any).투자_파트너십_권고?.투자_등급 || 'N/A'}
-                            </p>
-                          </div>
-                        )}
-                        
-                        {request.ai_analysis?.재무_현황_투자가치?.밸류에이션 && (
-                          <div className="bg-blue-50 p-3 rounded border">
-                            <p className="font-semibold text-blue-700">기업 가치</p>
-                            <p className="text-sm font-bold text-blue-800">
-                              {(request.ai_analysis as any).재무_현황_투자가치?.밸류에이션}
-                            </p>
-                          </div>
-                        )}
-                        
-                        {request.market_research?.최종_시장_진출_권고?.ROI_예측 && (
-                          <div className="bg-purple-50 p-3 rounded border">
-                            <p className="font-semibold text-purple-700">ROI 예측</p>
-                            <p className="text-sm font-bold text-purple-800">
-                              {(request.market_research as any).최종_시장_진출_권고?.ROI_예측}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Quick Stats */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                      <div className="bg-white p-3 rounded border">
-                        <p className="text-gray-600">타겟 시장</p>
-                        <p className="font-semibold">{request.target_countries?.join(', ')}</p>
-                      </div>
-                      <div className="bg-white p-3 rounded border">
-                        <p className="text-gray-600">분석 완료</p>
-                        <p className="font-semibold">{new Date(request.completed_at || request.updated_at).toLocaleDateString()}</p>
-                      </div>
-                      <div className="bg-white p-3 rounded border">
-                        <p className="text-gray-600">배포 상태</p>
-                        <Badge className="bg-green-600 text-white">배포됨</Badge>
-                      </div>
-                      <div className="bg-white p-3 rounded border">
-                        <p className="text-gray-600">최종 수정</p>
-                        <p className="font-semibold">{new Date(request.updated_at).toLocaleDateString()}</p>
-                      </div>
-                    </div>
-
-                    {/* Admin Comments History */}
-                    {request.admin_comments && (
-                      <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                        <h5 className="font-semibold text-yellow-900 mb-2 flex items-center gap-2">
-                          💬 관리자 코멘트
-                        </h5>
-                        <p className="text-sm text-yellow-800">{request.admin_comments}</p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
-          </div>
-
-          {matchingRequests.filter(request => request.is_published).length === 0 && (
-            <Card>
-              <CardContent className="text-center py-12">
-                <FileSpreadsheet className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <h4 className="text-lg font-semibold text-gray-600 mb-2">배포된 리포트가 없습니다</h4>
-                <p className="text-gray-500">리포트 리뷰 탭에서 분석을 완료하고 배포하면 여기에 표시됩니다.</p>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-
-        {/* AI Prompts Tab */}
-        <TabsContent value="prompts" className="mt-6">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h3 className="text-lg font-semibold">AI 프롬프트 관리</h3>
-              <p className="text-gray-600">GPT 분석에 사용되는 프롬프트를 관리합니다.</p>
-            </div>
-            <Button 
-              onClick={() => {
-                setEditingPrompt({ prompt_type: 'custom' });
-                setShowPromptDialog(true);
-              }}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              새 프롬프트 추가
-            </Button>
-          </div>
-
-          {/* Current Active Prompts Section */}
-          <div className="mb-8">
-            <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Settings className="h-5 w-5 text-green-600" />
-              🟢 현재 활성화된 프롬프트
-            </h4>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {prompts.filter(prompt => prompt.is_active).map((prompt) => (
-                <Card key={prompt.id} className="border-2 border-green-200 bg-green-50">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <CardTitle className="flex items-center gap-2 text-green-800">
-                          <Badge className="bg-green-600 text-white">ACTIVE</Badge>
-                          {prompt.prompt_title}
-                        </CardTitle>
-                        <CardDescription className="text-green-700">
-                          타입: <span className="font-semibold">{prompt.prompt_type}</span> | 
-                          수정: {new Date(prompt.updated_at).toLocaleDateString()}
+                        <CardDescription>
+                          📧 {request.companies?.email} | 
+                          🏢 {request.companies?.industry} | 
+                          📅 완료일: {new Date(request.updated_at).toLocaleDateString()}
                         </CardDescription>
                       </div>
                       <Button
-                        variant="outline"
-                        size="sm"
-                        className="border-green-300 hover:bg-green-100"
                         onClick={() => {
-                          setEditingPrompt(prompt);
-                          setShowPromptDialog(true);
+                          setSelectedRequest(request);
+                          setShowReportDialog(true);
                         }}
+                        className="bg-blue-600 hover:bg-blue-700"
                       >
-                        <Edit className="h-4 w-4" />
+                        <FileSpreadsheet className="h-4 w-4 mr-2" />
+                        리포트 상세 검토
                       </Button>
                     </div>
                   </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="space-y-3">
-                      <div>
-                        <p className="text-sm font-medium text-green-800">시스템 프롬프트:</p>
-                        <div className="text-xs text-green-700 bg-white p-3 rounded border border-green-200 mt-1 max-h-20 overflow-y-auto">
-                          {prompt.system_prompt.substring(0, 150)}...
-                        </div>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-green-800">사용자 프롬프트 템플릿:</p>
-                        <div className="text-xs text-green-700 bg-white p-3 rounded border border-green-200 mt-1 max-h-20 overflow-y-auto">
-                          {prompt.user_prompt_template.substring(0, 150)}...
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
                 </Card>
-              ))}
-            </div>
-            {prompts.filter(prompt => prompt.is_active).length === 0 && (
-              <Card className="border-orange-200 bg-orange-50">
-                <CardContent className="text-center py-6">
-                  <div className="text-orange-600">
-                    <Settings className="h-8 w-8 mx-auto mb-2" />
-                    <p className="font-semibold">활성화된 프롬프트가 없습니다</p>
-                    <p className="text-sm">최소 하나의 프롬프트를 활성화하여 AI 분석을 진행하세요.</p>
-                  </div>
-                </CardContent>
-              </Card>
+              ))
             )}
-          </div>
-
-          {/* All Prompts Section */}
-          <div>
-            <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Brain className="h-5 w-5 text-blue-600" />
-              전체 프롬프트 목록
-            </h4>
-            <div className="space-y-4">
-              {prompts.map((prompt) => (
-                <Card key={prompt.id} className={prompt.is_active ? "opacity-75" : ""}>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <CardTitle className="flex items-center gap-2">
-                          <Brain className="h-5 w-5" />
-                          {prompt.prompt_title}
-                          {prompt.is_active && <Badge className="bg-green-600 text-white text-xs">사용중</Badge>}
-                        </CardTitle>
-                        <CardDescription>
-                          타입: {prompt.prompt_type} | 최종 수정: {new Date(prompt.updated_at).toLocaleDateString()}
-                        </CardDescription>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant={prompt.is_active ? "default" : "secondary"}>
-                          {prompt.is_active ? "활성" : "비활성"}
-                        </Badge>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setEditingPrompt(prompt);
-                            setShowPromptDialog(true);
-                          }}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <div>
-                        <p className="text-sm font-medium">시스템 프롬프트:</p>
-                        <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded mt-1">
-                          {prompt.system_prompt.substring(0, 200)}...
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">사용자 프롬프트 템플릿:</p>
-                        <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded mt-1">
-                          {prompt.user_prompt_template.substring(0, 200)}...
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </TabsContent>
-
-        {/* Perplexity Prompts Tab */}
-        <TabsContent value="perplexity" className="mt-6">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h3 className="text-lg font-semibold">퍼플렉시티 프롬프트 관리</h3>
-              <p className="text-gray-600">Perplexity 분석에 사용되는 프롬프트를 관리합니다.</p>
-            </div>
-            <Button 
-              onClick={() => {
-                setEditingPerplexityPrompt({ prompt_type: 'perplexity_custom' });
-                setShowPerplexityPromptDialog(true);
-              }}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              새 프롬프트 추가
-            </Button>
-          </div>
-
-          {/* Current Active Perplexity Prompts Section */}
-          <div className="mb-8">
-            <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Settings className="h-5 w-5 text-purple-600" />
-              🟣 현재 활성화된 퍼플렉시티 프롬프트
-            </h4>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {perplexityPrompts.filter(prompt => prompt.is_active).map((prompt) => (
-                <Card key={prompt.id} className="border-2 border-purple-200 bg-purple-50">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <CardTitle className="flex items-center gap-2 text-purple-800">
-                          <Badge className="bg-purple-600 text-white">ACTIVE</Badge>
-                          {prompt.prompt_title}
-                        </CardTitle>
-                        <CardDescription className="text-purple-700">
-                          타입: <span className="font-semibold">{prompt.prompt_type}</span> | 
-                          수정: {new Date(prompt.updated_at).toLocaleDateString()}
-                        </CardDescription>
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="border-purple-300 hover:bg-purple-100"
-                        onClick={() => {
-                          setEditingPerplexityPrompt(prompt);
-                          setShowPerplexityPromptDialog(true);
-                        }}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="space-y-3">
-                      <div>
-                        <p className="text-sm font-medium text-purple-800">시스템 프롬프트:</p>
-                        <div className="text-xs text-purple-700 bg-white p-3 rounded border border-purple-200 mt-1 max-h-20 overflow-y-auto">
-                          {prompt.system_prompt.substring(0, 150)}...
-                        </div>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-purple-800">사용자 프롬프트 템플릿:</p>
-                        <div className="text-xs text-purple-700 bg-white p-3 rounded border border-purple-200 mt-1 max-h-20 overflow-y-auto">
-                          {prompt.user_prompt_template.substring(0, 150)}...
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-            {perplexityPrompts.filter(prompt => prompt.is_active).length === 0 && (
-              <Card className="border-orange-200 bg-orange-50">
-                <CardContent className="text-center py-6">
-                  <div className="text-orange-600">
-                    <Settings className="h-8 w-8 mx-auto mb-2" />
-                    <p className="font-semibold">활성화된 퍼플렉시티 프롬프트가 없습니다</p>
-                    <p className="text-sm">최소 하나의 프롬프트를 활성화하여 시장 분석을 진행하세요.</p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-
-          {/* All Perplexity Prompts Section */}
-          <div>
-            <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Brain className="h-5 w-5 text-purple-600" />
-              전체 퍼플렉시티 프롬프트 목록
-            </h4>
-            <div className="space-y-4">
-              {perplexityPrompts.map((prompt) => (
-                <Card key={prompt.id} className={prompt.is_active ? "opacity-75" : ""}>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <CardTitle className="flex items-center gap-2">
-                          <Brain className="h-5 w-5" />
-                          {prompt.prompt_title}
-                          {prompt.is_active && <Badge className="bg-purple-600 text-white text-xs">사용중</Badge>}
-                        </CardTitle>
-                        <CardDescription>
-                          타입: {prompt.prompt_type} | 최종 수정: {new Date(prompt.updated_at).toLocaleDateString()}
-                        </CardDescription>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant={prompt.is_active ? "default" : "secondary"}>
-                          {prompt.is_active ? "활성" : "비활성"}
-                        </Badge>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setEditingPerplexityPrompt(prompt);
-                            setShowPerplexityPromptDialog(true);
-                          }}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <div>
-                        <p className="text-sm font-medium">시스템 프롬프트:</p>
-                        <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded mt-1">
-                          {prompt.system_prompt.substring(0, 200)}...
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">사용자 프롬프트 템플릿:</p>
-                        <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded mt-1">
-                          {prompt.user_prompt_template.substring(0, 200)}...
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </TabsContent>
-
-        {/* Market Data Tab */}
-        <TabsContent value="data" className="mt-6">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h3 className="text-lg font-semibold">시장 데이터 관리</h3>
-              <p className="text-gray-600">AI 분석에 참조되는 시장 데이터를 관리합니다.</p>
-            </div>
-            <div className="flex gap-2">
-              <Button 
-                variant="outline"
-                onClick={() => setShowDataDialog(true)}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                데이터 직접 추가
-              </Button>
-            </div>
-          </div>
-
-          {/* File Upload Section */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Upload className="h-5 w-5" />
-                Excel 파일 업로드
-              </CardTitle>
-              <CardDescription>
-                Excel 또는 CSV 파일로 시장 데이터를 일괄 업로드합니다.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="market-data-file">파일 선택</Label>
-                <Input
-                  id="market-data-file"
-                  type="file"
-                  accept=".xlsx,.xls,.csv"
-                  onChange={handleFileSelect}
-                  disabled={uploading}
-                />
-              </div>
-
-              {selectedFile && (
-                <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
-                  <FileSpreadsheet className="h-4 w-4 text-gray-600" />
-                  <span className="text-sm">{selectedFile.name}</span>
-                </div>
-              )}
-
-              {uploading && (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span>업로드 중...</span>
-                    <span>{uploadProgress}%</span>
-                  </div>
-                  <Progress value={uploadProgress} className="w-full" />
-                </div>
-              )}
-
-              <Button 
-                onClick={handleUploadMarketData} 
-                disabled={!selectedFile || uploading}
-              >
-                <Upload className="h-4 w-4 mr-2" />
-                {uploading ? "업로드 중..." : "업로드"}
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Market Data List */}
-          <div className="space-y-4">
-            {marketData.map((data) => (
-              <Card key={data.id}>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="flex items-center gap-2">
-                        <FileSpreadsheet className="h-5 w-5" />
-                        {data.data_category}
-                      </CardTitle>
-                      <CardDescription>
-                        {data.country && `국가: ${data.country}`}
-                        {data.industry && ` | 업종: ${data.industry}`}
-                        {data.source_file && ` | 파일: ${data.source_file}`}
-                      </CardDescription>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant={data.is_active ? "default" : "secondary"}>
-                        {data.is_active ? "활성" : "비활성"}
-                      </Badge>
-                      <Button variant="outline" size="sm">
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button variant="destructive" size="sm">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="bg-gray-50 p-3 rounded text-sm">
-                    <pre className="whitespace-pre-wrap">
-                      {JSON.stringify(data.data_content, null, 2).substring(0, 300)}...
-                    </pre>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
           </div>
         </TabsContent>
       </Tabs>
@@ -2131,20 +826,20 @@ export default function Admin() {
       <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>기업 승인 거부</DialogTitle>
+            <DialogTitle>기업 등록 거부</DialogTitle>
             <DialogDescription>
-              {selectedCompany?.company_name}의 회원가입을 거부하시겠습니까?
+              {selectedCompany?.company_name}의 등록을 거부하는 사유를 입력해주세요.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="rejection-reason">거부 사유 *</Label>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="rejection-reason">거부 사유</Label>
               <Textarea
                 id="rejection-reason"
-                placeholder="거부 사유를 입력해주세요..."
                 value={rejectionReason}
                 onChange={(e) => setRejectionReason(e.target.value)}
-                className="mt-2"
+                placeholder="거부 사유를 상세히 입력해주세요..."
+                className="min-h-[100px]"
               />
             </div>
           </div>
@@ -2153,505 +848,64 @@ export default function Admin() {
               취소
             </Button>
             <Button 
-              variant="destructive" 
-              onClick={handleReject}
+              onClick={handleReject} 
               disabled={actionLoading || !rejectionReason.trim()}
+              variant="destructive"
             >
-              <Mail className="h-4 w-4 mr-2" />
-              거부 및 이메일 발송
+              거부하기
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Prompt Edit Dialog */}
-      <Dialog open={showPromptDialog} onOpenChange={setShowPromptDialog}>
-        <DialogContent className="max-w-4xl">
-          <DialogHeader>
-            <DialogTitle>AI 프롬프트 편집</DialogTitle>
-            <DialogDescription>
-              GPT 분석에 사용될 프롬프트를 편집합니다.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="prompt-title">프롬프트 제목 *</Label>
-                <Input
-                  id="prompt-title"
-                  value={editingPrompt.prompt_title || ''}
-                  onChange={(e) => setEditingPrompt({ ...editingPrompt, prompt_title: e.target.value })}
-                  placeholder="프롬프트 제목을 입력하세요"
-                />
-              </div>
-              <div>
-                <Label htmlFor="prompt-type">프롬프트 타입 *</Label>
-                <Select 
-                  value={editingPrompt.prompt_type || ''} 
-                  onValueChange={(value) => setEditingPrompt({ ...editingPrompt, prompt_type: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="타입 선택" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="company_analysis">기업 분석</SelectItem>
-                    <SelectItem value="market_research">시장 조사</SelectItem>
-                    <SelectItem value="final_report">최종 리포트</SelectItem>
-                    <SelectItem value="custom">커스텀</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="system-prompt">시스템 프롬프트 *</Label>
-              <Textarea
-                id="system-prompt"
-                value={editingPrompt.system_prompt || ''}
-                onChange={(e) => setEditingPrompt({ ...editingPrompt, system_prompt: e.target.value })}
-                placeholder="시스템 프롬프트를 입력하세요..."
-                className="h-32"
-              />
-            </div>
-            <div>
-              <Label htmlFor="user-prompt">사용자 프롬프트 템플릿 *</Label>
-              <Textarea
-                id="user-prompt"
-                value={editingPrompt.user_prompt_template || ''}
-                onChange={(e) => setEditingPrompt({ ...editingPrompt, user_prompt_template: e.target.value })}
-                placeholder="사용자 프롬프트 템플릿을 입력하세요... (변수: {company_name}, {target_countries} 등)"
-                className="h-48"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowPromptDialog(false)}>
-              취소
-            </Button>
-            <Button onClick={handleSavePrompt} disabled={actionLoading}>
-              <Save className="h-4 w-4 mr-2" />
-              저장
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Perplexity Prompt Edit Dialog */}
-      <Dialog open={showPerplexityPromptDialog} onOpenChange={setShowPerplexityPromptDialog}>
-        <DialogContent className="max-w-4xl">
-          <DialogHeader>
-            <DialogTitle>퍼플렉시티 프롬프트 편집</DialogTitle>
-            <DialogDescription>
-              Perplexity 분석에 사용될 프롬프트를 편집합니다.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="perplexity-prompt-title">프롬프트 제목 *</Label>
-                <Input
-                  id="perplexity-prompt-title"
-                  value={editingPerplexityPrompt.prompt_title || ''}
-                  onChange={(e) => setEditingPerplexityPrompt({ ...editingPerplexityPrompt, prompt_title: e.target.value })}
-                  placeholder="프롬프트 제목을 입력하세요"
-                />
-              </div>
-              <div>
-                <Label htmlFor="perplexity-prompt-type">프롬프트 타입 *</Label>
-                <Select 
-                  value={editingPerplexityPrompt.prompt_type || ''} 
-                  onValueChange={(value) => setEditingPerplexityPrompt({ ...editingPerplexityPrompt, prompt_type: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="타입 선택" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="perplexity_market_research">퍼플렉시티 시장 조사</SelectItem>
-                    <SelectItem value="perplexity_trend_analysis">퍼플렉시티 트렌드 분석</SelectItem>
-                    <SelectItem value="perplexity_competitor_analysis">퍼플렉시티 경쟁사 분석</SelectItem>
-                    <SelectItem value="perplexity_custom">퍼플렉시티 커스텀</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="perplexity-system-prompt">시스템 프롬프트 *</Label>
-              <Textarea
-                id="perplexity-system-prompt"
-                value={editingPerplexityPrompt.system_prompt || ''}
-                onChange={(e) => setEditingPerplexityPrompt({ ...editingPerplexityPrompt, system_prompt: e.target.value })}
-                placeholder="퍼플렉시티용 시스템 프롬프트를 입력하세요..."
-                className="h-32"
-              />
-            </div>
-            <div>
-              <Label htmlFor="perplexity-user-prompt">사용자 프롬프트 템플릿 *</Label>
-              <Textarea
-                id="perplexity-user-prompt"
-                value={editingPerplexityPrompt.user_prompt_template || ''}
-                onChange={(e) => setEditingPerplexityPrompt({ ...editingPerplexityPrompt, user_prompt_template: e.target.value })}
-                placeholder="퍼플렉시티용 사용자 프롬프트 템플릿을 입력하세요... (변수: {company_name}, {target_countries} 등)"
-                className="h-48"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowPerplexityPromptDialog(false)}>
-              취소
-            </Button>
-            <Button onClick={handleSavePerplexityPrompt} disabled={actionLoading}>
-              <Save className="h-4 w-4 mr-2" />
-              저장
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Data Entry Dialog */}
-      <Dialog open={showDataDialog} onOpenChange={setShowDataDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>시장 데이터 직접 추가</DialogTitle>
-            <DialogDescription>
-              시장 데이터를 직접 입력하여 추가합니다.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <Label htmlFor="data-category">데이터 카테고리 *</Label>
-                <Select 
-                  value={newDataEntry.data_category} 
-                  onValueChange={(value) => setNewDataEntry({ ...newDataEntry, data_category: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="카테고리 선택" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="market_analysis">시장 분석</SelectItem>
-                    <SelectItem value="regulations">규제 정보</SelectItem>
-                    <SelectItem value="partners">파트너 정보</SelectItem>
-                    <SelectItem value="competitors">경쟁사 정보</SelectItem>
-                    <SelectItem value="trends">트렌드 정보</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="data-country">국가 (선택)</Label>
-                <Input
-                  id="data-country"
-                  value={newDataEntry.country}
-                  onChange={(e) => setNewDataEntry({ ...newDataEntry, country: e.target.value })}
-                  placeholder="예: 미국"
-                />
-              </div>
-              <div>
-                <Label htmlFor="data-industry">업종 (선택)</Label>
-                <Input
-                  id="data-industry"
-                  value={newDataEntry.industry}
-                  onChange={(e) => setNewDataEntry({ ...newDataEntry, industry: e.target.value })}
-                  placeholder="예: IT"
-                />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="data-content">데이터 내용 *</Label>
-              <Textarea
-                id="data-content"
-                value={newDataEntry.data_content}
-                onChange={(e) => setNewDataEntry({ ...newDataEntry, data_content: e.target.value })}
-                placeholder='JSON 형식 또는 일반 텍스트로 입력하세요. 예: {"market_size": "100억 달러", "growth_rate": "15%"}'
-                className="h-32"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDataDialog(false)}>
-              취소
-            </Button>
-            <Button onClick={handleAddDataEntry}>
-              <Plus className="h-4 w-4 mr-2" />
-              추가
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Report Review Dialog */}
+      {/* Report Detail Dialog */}
       <Dialog open={showReportDialog} onOpenChange={setShowReportDialog}>
-        <DialogContent className="max-w-7xl max-h-[95vh] overflow-hidden">
-          <DialogHeader className="pb-4 border-b">
-            <DialogTitle className="text-2xl font-bold">📊 AI 분석 리포트 상세 검토</DialogTitle>
-            <DialogDescription className="text-lg">
-              완성된 AI 분석 결과를 검토하고 최종 배포를 진행합니다.
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">
+              📊 AI 분석 리포트 상세 검토
+            </DialogTitle>
+            <DialogDescription>
+              {selectedRequest?.companies?.company_name}의 종합 분석 리포트를 검토하고 최종 승인하세요.
             </DialogDescription>
           </DialogHeader>
-          
+
           {selectedRequest && (
-            <div className="flex-1 overflow-hidden">
-              {/* Company Header */}
-              <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 rounded-lg mb-6 shadow-lg">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-2xl font-bold mb-2">{selectedRequest.companies?.company_name}</h2>
-                    <div className="flex items-center gap-6 text-blue-100">
-                      <span className="flex items-center gap-1">
-                        <Building2 className="h-4 w-4" />
-                        {selectedRequest.companies?.industry}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <MapPin className="h-4 w-4" />
-                        {selectedRequest.companies?.headquarters_country}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4" />
-                        분석완료: {new Date(selectedRequest.completed_at || selectedRequest.updated_at).toLocaleDateString()}
-                      </span>
-                    </div>
+            <div className="space-y-6">
+              {/* AI Analysis Section */}
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <h3 className="text-lg font-semibold mb-3">🤖 AI 분석 결과</h3>
+                {selectedRequest.ai_analysis ? (
+                  <div className="bg-white p-4 rounded shadow-sm">
+                    <pre className="whitespace-pre-wrap text-sm text-gray-700">
+                      {typeof selectedRequest.ai_analysis === 'string' 
+                        ? selectedRequest.ai_analysis 
+                        : JSON.stringify(selectedRequest.ai_analysis, null, 2)}
+                    </pre>
                   </div>
-                  <div className="text-right">
-                    <Badge className="bg-white text-blue-600 text-sm px-4 py-2">
-                      {selectedRequest.target_countries?.join(', ')} 진출
-                    </Badge>
+                ) : (
+                  <div className="bg-gray-100 p-4 rounded text-center text-gray-600">
+                    AI 분석 데이터를 불러올 수 없습니다
                   </div>
-                </div>
+                )}
               </div>
 
-              {/* Analysis Content */}
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 overflow-y-auto max-h-[60vh] pr-2">
-                {/* Company Analysis */}
-                <div className="space-y-4">
-                  <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-lg border-l-4 border-blue-500">
-                    <h3 className="text-xl font-bold text-blue-900 mb-4 flex items-center gap-2">
-                      🏢 기업 분석 리포트
-                    </h3>
-                    
-                    {selectedRequest.ai_analysis && typeof selectedRequest.ai_analysis === 'object' ? (
-                      <div className="space-y-4">
-                        {/* Executive Summary */}
-                        {(selectedRequest.ai_analysis as any)?.투자_파트너십_권고 && (
-                          <div className="bg-white p-4 rounded-lg shadow-sm border">
-                            <div className="flex items-center justify-between mb-3">
-                              <h4 className="font-bold text-green-800">💰 투자 등급</h4>
-                              <span className="text-2xl font-bold text-green-600">
-                                {(selectedRequest.ai_analysis as any).투자_파트너십_권고.투자_등급}
-                              </span>
-                            </div>
-                            <div className="grid grid-cols-2 gap-3 text-sm">
-                              <div>
-                                <span className="text-gray-600">성공 확률:</span>
-                                <span className="ml-2 font-semibold text-green-700">
-                                  {(selectedRequest.ai_analysis as any).투자_파트너십_권고.성공_확률}
-                                </span>
-                              </div>
-                              <div>
-                                <span className="text-gray-600">기대 수익률:</span>
-                                <span className="ml-2 font-semibold text-green-700">
-                                  {(selectedRequest.ai_analysis as any).투자_파트너십_권고.기대_수익률}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Company Overview */}
-                        {(selectedRequest.ai_analysis as any)?.회사_개요?.기본_정보 && (
-                          <div className="bg-white p-4 rounded-lg shadow-sm border">
-                            <h4 className="font-bold text-blue-800 mb-3">🏭 회사 개요</h4>
-                            <div className="space-y-2 text-sm">
-                              <div className="grid grid-cols-2 gap-2">
-                                <div>
-                                  <span className="text-gray-600">설립연도:</span>
-                                  <span className="ml-2 font-medium">{(selectedRequest.ai_analysis as any).회사_개요.기본_정보.설립연도}</span>
-                                </div>
-                                <div>
-                                  <span className="text-gray-600">사업영역:</span>
-                                  <span className="ml-2 font-medium text-xs">{(selectedRequest.ai_analysis as any).회사_개요.기본_정보.사업_영역}</span>
-                                </div>
-                              </div>
-                              <div className="bg-green-50 p-2 rounded mt-2">
-                                <span className="text-green-800 font-medium">성공 가능성:</span>
-                                <span className="ml-2 text-green-700 font-bold">
-                                  {(selectedRequest.ai_analysis as any).회사_개요.기본_정보.성공_가능성}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Financial Status */}
-                        {(selectedRequest.ai_analysis as any)?.재무_현황_투자가치 && (
-                          <div className="bg-white p-4 rounded-lg shadow-sm border">
-                            <h4 className="font-bold text-orange-800 mb-3">💼 재무 현황</h4>
-                            <div className="space-y-2 text-sm">
-                              {(selectedRequest.ai_analysis as any).재무_현황_투자가치.재무_건전성 && (
-                                <div className="grid grid-cols-1 gap-2">
-                                  <div>
-                                    <span className="text-gray-600">매출 성장률:</span>
-                                    <span className="ml-2 font-bold text-green-600">
-                                      {(selectedRequest.ai_analysis as any).재무_현황_투자가치.재무_건전성.매출_성장률}
-                                    </span>
-                                  </div>
-                                  <div>
-                                    <span className="text-gray-600">수익성:</span>
-                                    <span className="ml-2 font-medium text-xs">
-                                      {(selectedRequest.ai_analysis as any).재무_현황_투자가치.재무_건전성.수익성}
-                                    </span>
-                                  </div>
-                                </div>
-                              )}
-                              <div className="bg-orange-50 p-2 rounded mt-2">
-                                <span className="text-orange-800 font-medium">기업 가치:</span>
-                                <span className="ml-2 text-orange-700 font-bold">
-                                  {(selectedRequest.ai_analysis as any).재무_현황_투자가치.밸류에이션}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Technology */}
-                        {(selectedRequest.ai_analysis as any)?.기술_혁신_분석 && (
-                          <div className="bg-white p-4 rounded-lg shadow-sm border">
-                            <h4 className="font-bold text-purple-800 mb-3">🔬 기술 혁신</h4>
-                            <div className="space-y-2 text-sm">
-                              <div>
-                                <span className="text-gray-600">기술 경쟁력:</span>
-                                <span className="ml-2 font-bold text-purple-600">
-                                  {(selectedRequest.ai_analysis as any).기술_혁신_분석.기술_경쟁력}
-                                </span>
-                              </div>
-                              <div>
-                                <span className="text-gray-600">R&D 투자:</span>
-                                <span className="ml-2 font-medium text-purple-700">
-                                  {(selectedRequest.ai_analysis as any).기술_혁신_분석.R_D_투자}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="bg-gray-100 p-4 rounded text-center text-gray-600">
-                        기업 분석 데이터를 불러올 수 없습니다
-                      </div>
-                    )}
+              {/* Market Research Section */}
+              <div className="bg-green-50 p-4 rounded-lg">
+                <h3 className="text-lg font-semibold mb-3">🌍 시장 분석 결과</h3>
+                {selectedRequest.market_research ? (
+                  <div className="bg-white p-4 rounded shadow-sm">
+                    <pre className="whitespace-pre-wrap text-sm text-gray-700">
+                      {typeof selectedRequest.market_research === 'string' 
+                        ? selectedRequest.market_research 
+                        : JSON.stringify(selectedRequest.market_research, null, 2)}
+                    </pre>
                   </div>
-                </div>
-
-                {/* Market Research */}
-                <div className="space-y-4">
-                  <div className="bg-gradient-to-r from-green-50 to-emerald-100 p-4 rounded-lg border-l-4 border-green-500">
-                    <h3 className="text-xl font-bold text-green-900 mb-4 flex items-center gap-2">
-                      📈 시장 분석 리포트
-                    </h3>
-                    
-                    {selectedRequest.market_research && typeof selectedRequest.market_research === 'object' ? (
-                      <div className="space-y-4">
-                        {/* Market Size */}
-                        {(selectedRequest.market_research as any)?.시장_개관_규모분석?.시장_규모 && (
-                          <div className="bg-white p-4 rounded-lg shadow-sm border">
-                            <h4 className="font-bold text-teal-800 mb-3">🌍 시장 규모</h4>
-                            <div className="space-y-2 text-sm">
-                              <div>
-                                <span className="text-gray-600">글로벌 AI 시장:</span>
-                                <span className="ml-2 font-bold text-teal-600">
-                                  {(selectedRequest.market_research as any).시장_개관_규모분석.시장_규모.글로벌_AI_시장}
-                                </span>
-                              </div>
-                              <div>
-                                <span className="text-gray-600">연평균 성장률:</span>
-                                <span className="ml-2 font-bold text-green-600">
-                                  {(selectedRequest.market_research as any).시장_개관_규모분석.시장_규모.CAGR}
-                                </span>
-                              </div>
-                              <div className="text-xs text-gray-500 mt-2">
-                                {(selectedRequest.market_research as any).시장_개관_규모분석.시장_규모.아시아_태평양}
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Competition */}
-                        {(selectedRequest.market_research as any)?.경쟁_환경_심층분석 && (
-                          <div className="bg-white p-4 rounded-lg shadow-sm border">
-                            <h4 className="font-bold text-red-800 mb-3">⚔️ 경쟁 환경</h4>
-                            <div className="space-y-2 text-sm">
-                              <div className="bg-red-50 p-2 rounded">
-                                <span className="text-red-800 font-medium">경쟁 강도:</span>
-                                <span className="ml-2 text-red-700 font-bold">
-                                  {(selectedRequest.market_research as any).경쟁_환경_심층분석.경쟁_강도}
-                                </span>
-                              </div>
-                              {(selectedRequest.market_research as any).경쟁_환경_심층분석.주요_플레이어 && (
-                                <div>
-                                  <p className="font-medium text-gray-700 mb-1">주요 플레이어:</p>
-                                  <div className="space-y-1 text-xs">
-                                    {Object.entries((selectedRequest.market_research as any).경쟁_환경_심층분석.주요_플레이어).slice(0, 3).map(([company, details]) => (
-                                      <div key={company} className="bg-gray-50 p-2 rounded flex justify-between">
-                                        <span className="font-medium">{company}:</span>
-                                        <span className="text-gray-600 text-xs">{String(details).substring(0, 40)}...</span>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Market Entry */}
-                        {(selectedRequest.market_research as any)?.최종_시장_진출_권고 && (
-                          <div className="bg-white p-4 rounded-lg shadow-sm border">
-                            <h4 className="font-bold text-emerald-800 mb-3">🎯 진출 권고</h4>
-                            <div className="space-y-3 text-sm">
-                              <div className="bg-emerald-50 p-3 rounded">
-                                <span className="text-emerald-800 font-medium">ROI 예측:</span>
-                                <span className="ml-2 text-emerald-700 font-bold text-lg">
-                                  {(selectedRequest.market_research as any).최종_시장_진출_권고.ROI_예측}
-                                </span>
-                              </div>
-                              
-                              {(selectedRequest.market_research as any).최종_시장_진출_권고.시장_매력도 && (
-                                <div>
-                                  <p className="font-medium text-gray-700 mb-2">시장 매력도:</p>
-                                  <div className="grid grid-cols-1 gap-2">
-                                    {Object.entries((selectedRequest.market_research as any).최종_시장_진출_권고.시장_매력도).map(([country, score]) => (
-                                      <div key={country} className="flex justify-between items-center bg-gray-50 p-2 rounded">
-                                        <span className="font-medium">{country}</span>
-                                        <Badge variant="outline" className="text-xs font-bold">
-                                          {String(score)}
-                                        </Badge>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-
-                              {(selectedRequest.market_research as any).최종_시장_진출_권고.성공_확률 && (
-                                <div>
-                                  <p className="font-medium text-gray-700 mb-2">성공 확률:</p>
-                                  <div className="space-y-1">
-                                    {Object.entries((selectedRequest.market_research as any).최종_시장_진출_권고.성공_확률).map(([country, prob]) => (
-                                      <div key={country} className="flex justify-between text-xs">
-                                        <span>{country}:</span>
-                                        <span className="font-bold text-green-600">{String(prob)}</span>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="bg-gray-100 p-4 rounded text-center text-gray-600">
-                        시장 분석 데이터를 불러올 수 없습니다
-                      </div>
-                    )}
+                ) : (
+                  <div className="bg-gray-100 p-4 rounded text-center text-gray-600">
+                    시장 분석 데이터를 불러올 수 없습니다
                   </div>
-                </div>
+                )}
               </div>
 
               {/* Admin Comments */}
@@ -2675,7 +929,54 @@ export default function Admin() {
               취소
             </Button>
             <Button 
-              onClick={handleFinalizeReport}
+              onClick={async () => {
+                if (!selectedRequest) return;
+                
+                setActionLoading(true);
+                try {
+                  // Update request with admin comments and finalized status
+                  const { error } = await supabase
+                    .from('matching_requests')
+                    .update({ 
+                      admin_comments: adminComments,
+                      status: 'finalized',
+                      finalized_at: new Date().toISOString()
+                    })
+                    .eq('id', selectedRequest.id);
+
+                  if (error) throw error;
+
+                  // Send completion email to company
+                  const { error: emailError } = await supabase.functions.invoke('send-analysis-complete-email', {
+                    body: {
+                      matchingRequestId: selectedRequest.id,
+                      adminComments: adminComments
+                    }
+                  });
+
+                  if (emailError) {
+                    console.error('Email sending failed:', emailError);
+                  }
+
+                  toast({
+                    title: "리포트 승인 완료",
+                    description: "리포트가 최종 승인되었고 고객에게 알림이 전송되었습니다.",
+                  });
+
+                  setShowReportDialog(false);
+                  setSelectedRequest(null);
+                  setAdminComments("");
+                  fetchMatchingRequests();
+                } catch (error: any) {
+                  toast({
+                    title: "승인 실패",
+                    description: error.message,
+                    variant: "destructive",
+                  });
+                } finally {
+                  setActionLoading(false);
+                }
+              }}
               disabled={actionLoading}
               className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 px-8"
             >
