@@ -907,6 +907,38 @@ export default function Admin() {
               <Button
                 onClick={async () => {
                   try {
+                    const { data, error } = await supabase.functions.invoke('simple-test', {
+                      body: {}
+                    });
+                    
+                    if (error) {
+                      toast({
+                        title: "간단한 테스트 실패",
+                        description: error.message,
+                        variant: "destructive",
+                      });
+                    } else {
+                      toast({
+                        title: "간단한 테스트 성공",
+                        description: `환경변수 확인 완료: OpenAI 키 ${data.environment.hasOpenAIKey ? '있음' : '없음'}`,
+                      });
+                    }
+                  } catch (error: any) {
+                    toast({
+                      title: "테스트 실패",
+                      description: error.message,
+                      variant: "destructive",
+                    });
+                  }
+                }}
+                variant="outline"
+                size="sm"
+              >
+                🔧 간단한 테스트
+              </Button>
+              <Button
+                onClick={async () => {
+                  try {
                     const { data, error } = await supabase.functions.invoke('test-openai', {
                       body: {}
                     });
@@ -934,7 +966,7 @@ export default function Admin() {
                 variant="outline"
                 size="sm"
               >
-                🔧 OpenAI 연결 테스트
+                🤖 OpenAI 연결 테스트
               </Button>
               <div className="flex items-center gap-2">
                 <Badge variant="outline" className="text-orange-600">
