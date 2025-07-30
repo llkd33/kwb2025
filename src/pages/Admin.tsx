@@ -1347,97 +1347,81 @@ export default function Admin() {
                         
                         {request.ai_analysis && typeof request.ai_analysis === 'object' ? (
                           <div className="space-y-4">
-                            {/* Company Overview */}
-                            {request.ai_analysis.회사_개요?.기본_정보 && (
-                              <div className="border border-blue-200 rounded-lg p-4 bg-blue-50">
-                                <h5 className="font-semibold text-blue-900 mb-2">1. 회사 개요</h5>
-                                <div className="space-y-2 text-sm">
-                                  <div className="grid grid-cols-2 gap-2">
-                                    <span className="font-medium">기업명:</span>
-                                    <span>{request.ai_analysis.회사_개요.기본_정보.기업명}</span>
-                                    <span className="font-medium">설립연도:</span>
-                                    <span>{request.ai_analysis.회사_개요.기본_정보.설립연도}</span>
-                                    <span className="font-medium">사업영역:</span>
-                                    <span>{request.ai_analysis.회사_개요.기본_정보.사업_영역}</span>
-                                  </div>
-                                  <div className="mt-2 p-2 bg-green-100 rounded">
-                                    <span className="font-medium text-green-800">성공 가능성:</span>
-                                    <span className="text-green-700 ml-2">{request.ai_analysis.회사_개요.기본_정보.성공_가능성}</span>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-
-                            {/* Business Model */}
-                            {request.ai_analysis.사업_모델_심층분석 && (
-                              <div className="border border-green-200 rounded-lg p-4 bg-green-50">
-                                <h5 className="font-semibold text-green-900 mb-2">2. 사업 모델 분석</h5>
-                                <div className="space-y-2 text-sm">
-                                  {request.ai_analysis.사업_모델_심층분석.핵심_가치_제안 && (
-                                    <div>
-                                      <span className="font-medium">문제 해결 수준:</span>
-                                      <span className="ml-2">{request.ai_analysis.사업_모델_심층분석.핵심_가치_제안.문제_해결_수준}</span>
+                            {(() => {
+                              // Handle different ai_analysis structures
+                              let analysisData = request.ai_analysis;
+                              
+                              // If ai_analysis has an 'analysis' field with JSON string, parse it
+                              if (analysisData.analysis && typeof analysisData.analysis === 'string') {
+                                try {
+                                  analysisData = JSON.parse(analysisData.analysis);
+                                } catch {
+                                  // If parsing fails, use original data
+                                }
+                              }
+                              
+                              return (
+                                <>
+                                  {/* Simple Analysis Format */}
+                                  {analysisData.회사_개요 && (
+                                    <div className="border border-blue-200 rounded-lg p-4 bg-blue-50">
+                                      <h5 className="font-semibold text-blue-900 mb-2">회사 개요</h5>
+                                      <p className="text-sm text-blue-800">{analysisData.회사_개요}</p>
                                     </div>
                                   )}
-                                  {request.ai_analysis.사업_모델_심층분석.수익_구조_분석 && (
-                                    <div className="mt-2">
-                                      <span className="font-medium">수익 구조:</span>
-                                      <div className="ml-4 mt-1 text-xs space-y-1">
-                                        <div>SaaS: {request.ai_analysis.사업_모델_심층분석.수익_구조_분석.SaaS_구독}</div>
-                                        <div>커스터마이징: {request.ai_analysis.사업_모델_심층분석.수익_구조_분석.커스터마이징}</div>
-                                        <div>반복 수익 비중: {request.ai_analysis.사업_모델_심층분석.수익_구조_분석.반복_수익_비중}</div>
+                                  
+                                  {analysisData.강점 && (
+                                    <div className="border border-green-200 rounded-lg p-4 bg-green-50">
+                                      <h5 className="font-semibold text-green-900 mb-2">주요 강점</h5>
+                                      <p className="text-sm text-green-800">{analysisData.강점}</p>
+                                    </div>
+                                  )}
+                                  
+                                  {analysisData.시장_기회 && (
+                                    <div className="border border-purple-200 rounded-lg p-4 bg-purple-50">
+                                      <h5 className="font-semibold text-purple-900 mb-2">시장 기회</h5>
+                                      <p className="text-sm text-purple-800">{analysisData.시장_기회}</p>
+                                    </div>
+                                  )}
+                                  
+                                  {analysisData.추천사항 && (
+                                    <div className="border border-orange-200 rounded-lg p-4 bg-orange-50">
+                                      <h5 className="font-semibold text-orange-900 mb-2">추천사항</h5>
+                                      <p className="text-sm text-orange-800">{analysisData.추천사항}</p>
+                                    </div>
+                                  )}
+
+                                  {/* Complex Analysis Format (Legacy support) */}
+                                  {analysisData.회사_개요?.기본_정보 && (
+                                    <div className="border border-blue-200 rounded-lg p-4 bg-blue-50">
+                                      <h5 className="font-semibold text-blue-900 mb-2">1. 회사 개요</h5>
+                                      <div className="space-y-2 text-sm">
+                                        <div className="grid grid-cols-2 gap-2">
+                                          <span className="font-medium">기업명:</span>
+                                          <span>{analysisData.회사_개요.기본_정보.기업명}</span>
+                                          <span className="font-medium">설립연도:</span>
+                                          <span>{analysisData.회사_개요.기본_정보.설립연도}</span>
+                                          <span className="font-medium">사업영역:</span>
+                                          <span>{analysisData.회사_개요.기본_정보.사업_영역}</span>
+                                        </div>
+                                        <div className="mt-2 p-2 bg-green-100 rounded">
+                                          <span className="font-medium text-green-800">성공 가능성:</span>
+                                          <span className="text-green-700 ml-2">{analysisData.회사_개요.기본_정보.성공_가능성}</span>
+                                        </div>
                                       </div>
                                     </div>
                                   )}
-                                </div>
-                              </div>
-                            )}
 
-                            {/* Technology Innovation */}
-                            {request.ai_analysis.기술_혁신_분석 && (
-                              <div className="border border-purple-200 rounded-lg p-4 bg-purple-50">
-                                <h5 className="font-semibold text-purple-900 mb-2">3. 기술 및 혁신</h5>
-                                <div className="space-y-2 text-sm">
-                                  <div>
-                                    <span className="font-medium">기술 경쟁력:</span>
-                                    <span className="ml-2">{request.ai_analysis.기술_혁신_분석.기술_경쟁력}</span>
-                                  </div>
-                                  <div>
-                                    <span className="font-medium">IP 포트폴리오:</span>
-                                    <span className="ml-2 text-xs">{request.ai_analysis.기술_혁신_분석.IP_포트폴리오}</span>
-                                  </div>
-                                  <div>
-                                    <span className="font-medium">R&D 투자:</span>
-                                    <span className="ml-2">{request.ai_analysis.기술_혁신_분석.R_D_투자}</span>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-
-                            {/* Financial Status */}
-                            {request.ai_analysis.재무_현황_투자가치 && (
-                              <div className="border border-orange-200 rounded-lg p-4 bg-orange-50">
-                                <h5 className="font-semibold text-orange-900 mb-2">4. 재무 현황</h5>
-                                <div className="space-y-2 text-sm">
-                                  {request.ai_analysis.재무_현황_투자가치.재무_건전성 && (
-                                    <>
-                                      <div>
-                                        <span className="font-medium">매출 성장률:</span>
-                                        <span className="ml-2">{request.ai_analysis.재무_현황_투자가치.재무_건전성.매출_성장률}</span>
-                                      </div>
-                                      <div>
-                                        <span className="font-medium">수익성:</span>
-                                        <span className="ml-2 text-xs">{request.ai_analysis.재무_현황_투자가치.재무_건전성.수익성}</span>
-                                      </div>
-                                    </>
+                                  {/* Raw Analysis Display */}
+                                  {!analysisData.회사_개요 && !analysisData.회사_개요?.기본_정보 && (
+                                    <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                                      <h5 className="font-semibold text-gray-900 mb-2">분석 결과</h5>
+                                      <pre className="text-sm text-gray-800 whitespace-pre-wrap">{JSON.stringify(analysisData, null, 2)}</pre>
+                                    </div>
                                   )}
-                                  <div className="mt-2 p-2 bg-orange-100 rounded">
-                                    <span className="font-medium">밸류에이션:</span>
-                                    <span className="ml-2 font-bold">{request.ai_analysis.재무_현황_투자가치.밸류에이션}</span>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
+                                </>
+                              );
+                            })()}
                           </div>
                         ) : (
                           <div className="bg-gray-50 p-4 rounded border text-center text-gray-600">
@@ -1454,86 +1438,61 @@ export default function Admin() {
                         
                         {request.market_research && typeof request.market_research === 'object' ? (
                           <div className="space-y-4">
-                            {/* Market Overview */}
-                            {request.market_research.시장_개관_규모분석 && (
-                              <div className="border border-teal-200 rounded-lg p-4 bg-teal-50">
-                                <h5 className="font-semibold text-teal-900 mb-2">1. 시장 개관</h5>
-                                <div className="space-y-2 text-sm">
-                                  {request.market_research.시장_개관_규모분석.시장_규모 && (
-                                    <>
-                                      <div>
-                                        <span className="font-medium">글로벌 AI 시장:</span>
-                                        <span className="ml-2">{request.market_research.시장_개관_규모분석.시장_규모.글로벌_AI_시장}</span>
-                                      </div>
-                                      <div>
-                                        <span className="font-medium">연평균 성장률:</span>
-                                        <span className="ml-2 font-bold text-green-600">{request.market_research.시장_개관_규모분석.시장_규모.CAGR}</span>
-                                      </div>
-                                      <div>
-                                        <span className="font-medium">아시아 태평양:</span>
-                                        <span className="ml-2">{request.market_research.시장_개관_규모분석.시장_규모.아시아_태평양}</span>
-                                      </div>
-                                    </>
+                            {(() => {
+                              // Handle different market_research structures
+                              let marketData = request.market_research;
+                              
+                              return (
+                                <>
+                                  {/* Simple Message Format */}
+                                  {marketData.message && (
+                                    <div className="border border-teal-200 rounded-lg p-4 bg-teal-50">
+                                      <h5 className="font-semibold text-teal-900 mb-2">시장 분석 정보</h5>
+                                      <p className="text-sm text-teal-800">{marketData.message}</p>
+                                    </div>
                                   )}
-                                </div>
-                              </div>
-                            )}
 
-                            {/* Competitive Landscape */}
-                            {request.market_research.경쟁_환경_심층분석 && (
-                              <div className="border border-red-200 rounded-lg p-4 bg-red-50">
-                                <h5 className="font-semibold text-red-900 mb-2">2. 경쟁 환경</h5>
-                                <div className="space-y-2 text-sm">
-                                  {request.market_research.경쟁_환경_심층분석.주요_플레이어 && (
-                                    <div>
-                                      <span className="font-medium">주요 플레이어:</span>
-                                      <div className="ml-4 mt-1 space-y-1 text-xs">
-                                         {Object.entries((request.market_research.경쟁_환경_심층분석 as any)?.주요_플레이어 || {}).map(([company, details]) => (
-                                           <div key={company} className="flex justify-between">
-                                             <span className="font-medium">{company}:</span>
-                                             <span>{String(details)}</span>
-                                           </div>
-                                         ))}
+                                  {/* Complex Market Research Format */}
+                                  {marketData.시장_개관_규모분석 && (
+                                    <div className="border border-teal-200 rounded-lg p-4 bg-teal-50">
+                                      <h5 className="font-semibold text-teal-900 mb-2">1. 시장 개관</h5>
+                                      <div className="space-y-2 text-sm">
+                                        {marketData.시장_개관_규모분석.시장_규모 && (
+                                          <>
+                                            <div>
+                                              <span className="font-medium">글로벌 AI 시장:</span>
+                                              <span className="ml-2">{marketData.시장_개관_규모분석.시장_규모.글로벌_AI_시장}</span>
+                                            </div>
+                                            <div>
+                                              <span className="font-medium">연평균 성장률:</span>
+                                              <span className="ml-2 font-bold text-green-600">{marketData.시장_개관_규모분석.시장_규모.CAGR}</span>
+                                            </div>
+                                            <div>
+                                              <span className="font-medium">아시아 태평양:</span>
+                                              <span className="ml-2">{marketData.시장_개관_규모분석.시장_규모.아시아_태평양}</span>
+                                            </div>
+                                          </>
+                                        )}
                                       </div>
                                     </div>
                                   )}
-                                  <div className="mt-2 p-2 bg-red-100 rounded">
-                                    <span className="font-medium">경쟁 강도:</span>
-                                    <span className="ml-2">{request.market_research.경쟁_환경_심층분석.경쟁_강도}</span>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
 
-                            {/* Market Opportunities */}
-                            {request.market_research.시장_기회_성장동력 && (
-                              <div className="border border-indigo-200 rounded-lg p-4 bg-indigo-50">
-                                <h5 className="font-semibold text-indigo-900 mb-2">3. 시장 기회</h5>
-                                <div className="space-y-2 text-sm">
-                                  {request.market_research.시장_기회_성장동력.신규_기회 && (
-                                    <div>
-                                      <span className="font-medium">신규 기회:</span>
-                                      <div className="ml-4 mt-1 space-y-1 text-xs">
-                                         {Object.entries((request.market_research.시장_기회_성장동력 as any)?.신규_기회 || {}).map(([opportunity, value]) => (
-                                           <div key={opportunity}>• {opportunity}: {String(value)}</div>
-                                         ))}
-                                       </div>
-                                     </div>
-                                   )}
-                                 </div>
-                               </div>
-                             )}
-
-                             {/* Market Entry Recommendation */}
-                             {request.market_research.최종_시장_진출_권고 && (
-                               <div className="border border-emerald-200 rounded-lg p-4 bg-emerald-50">
-                                 <h5 className="font-semibold text-emerald-900 mb-2">4. 시장 진출 권고</h5>
-                                 <div className="space-y-2 text-sm">
-                                   {(request.market_research.최종_시장_진출_권고 as any)?.시장_매력도 && (
-                                     <div>
-                                       <span className="font-medium">시장 매력도:</span>
-                                       <div className="ml-4 mt-1 space-y-1 text-xs">
-                                         {Object.entries((request.market_research.최종_시장_진출_권고 as any)?.시장_매력도 || {}).map(([country, score]) => (
+                                  {/* Raw Market Research Display */}
+                                  {!marketData.message && !marketData.시장_개관_규모분석 && (
+                                    <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                                      <h5 className="font-semibold text-gray-900 mb-2">시장 분석 결과</h5>
+                                      <pre className="text-sm text-gray-800 whitespace-pre-wrap">{JSON.stringify(marketData, null, 2)}</pre>
+                                    </div>
+                                  )}
+                                </>
+                              );
+                            })()}
+                          </div>
+                        ) : (
+                          <div className="bg-gray-50 p-4 rounded border text-center text-gray-600">
+                            시장 분석 데이터를 불러올 수 없습니다
+                          </div>
+                        )}
                                            <div key={country} className="flex justify-between items-center">
                                              <span>{country}:</span>
                                              <Badge variant="outline" className="text-xs">{String(score)}</Badge>
