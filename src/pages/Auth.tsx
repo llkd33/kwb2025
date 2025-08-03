@@ -47,6 +47,43 @@ export default function Auth() {
     setIsLoading(true);
 
     try {
+      // Temporary demo login for admin and test user
+      if (loginForm.email === 'admin@example.com' && loginForm.password === 'admin123') {
+        const demoAdmin = {
+          id: 1,
+          email: 'admin@example.com',
+          company_name: 'KnowWhere Bridge Admin',
+          ceo_name: 'Admin User',
+          is_admin: true,
+          is_approved: true
+        };
+        localStorage.setItem('currentCompany', JSON.stringify(demoAdmin));
+        toast({
+          title: "로그인 성공",
+          description: `관리자님, 환영합니다!`,
+        });
+        navigate('/admin');
+        return;
+      }
+      
+      if (loginForm.email === 'user@example.com' && loginForm.password === 'user123') {
+        const demoUser = {
+          id: 2,
+          email: 'user@example.com',
+          company_name: 'Test Company Ltd.',
+          ceo_name: 'Test CEO',
+          is_admin: false,
+          is_approved: true
+        };
+        localStorage.setItem('currentCompany', JSON.stringify(demoUser));
+        toast({
+          title: "로그인 성공",
+          description: `Test Company Ltd.님, 환영합니다!`,
+        });
+        navigate('/dashboard');
+        return;
+      }
+
       // First check if company exists and is approved
       const { data: company, error: companyError } = await supabase
         .from('companies')
@@ -57,7 +94,7 @@ export default function Auth() {
       if (companyError || !company) {
         toast({
           title: "로그인 실패",
-          description: "등록되지 않은 이메일입니다.",
+          description: "등록되지 않은 이메일입니다. 데모 계정을 사용하세요: admin@example.com/admin123 또는 user@example.com/user123",
           variant: "destructive",
         });
         return;

@@ -13,8 +13,10 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   Building2, Calendar, MapPin, Users, Globe, CheckCircle, XCircle, Clock, Mail,
-  FileSpreadsheet, Brain, Upload, Edit, Trash2, Save, Plus, Settings, RefreshCw
+  FileSpreadsheet, Brain, Upload, Edit, Trash2, Save, Plus, Settings, RefreshCw,
+  Send, MessageSquare, FileEdit, Database
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface Company {
   id: number;
@@ -104,6 +106,7 @@ export default function Admin() {
     data_content: '',
   });
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   // Filter companies by status
   const pendingCompanies = companies.filter(c => c.is_approved === null);
@@ -481,6 +484,38 @@ export default function Admin() {
             <CardTitle className="text-2xl text-red-600">{rejectedCompanies.length}</CardTitle>
             <CardDescription>거부됨</CardDescription>
           </CardHeader>
+        </Card>
+      </div>
+
+      {/* Quick Access Admin Tools */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/admin/newsletter')}>
+          <CardContent className="p-4 text-center">
+            <Send className="w-8 h-8 mx-auto text-blue-600 mb-2" />
+            <h3 className="font-semibold text-sm">뉴스레터 발송</h3>
+            <p className="text-xs text-gray-500 mt-1">회원사 이메일 발송</p>
+          </CardContent>
+        </Card>
+        <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/admin/prompts')}>
+          <CardContent className="p-4 text-center">
+            <MessageSquare className="w-8 h-8 mx-auto text-purple-600 mb-2" />
+            <h3 className="font-semibold text-sm">프롬프트 관리</h3>
+            <p className="text-xs text-gray-500 mt-1">GPT/Perplexity 설정</p>
+          </CardContent>
+        </Card>
+        <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/admin/excel')}>
+          <CardContent className="p-4 text-center">
+            <Database className="w-8 h-8 mx-auto text-green-600 mb-2" />
+            <h3 className="font-semibold text-sm">데이터 관리</h3>
+            <p className="text-xs text-gray-500 mt-1">엑셀 참조 데이터</p>
+          </CardContent>
+        </Card>
+        <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+          <CardContent className="p-4 text-center">
+            <Settings className="w-8 h-8 mx-auto text-gray-600 mb-2" />
+            <h3 className="font-semibold text-sm">시스템 설정</h3>
+            <p className="text-xs text-gray-500 mt-1">시스템 관리</p>
+          </CardContent>
         </Card>
       </div>
 

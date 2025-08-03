@@ -8,6 +8,10 @@ import Index from "./pages/Index";
 import About from "./pages/About";
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
+import AdminReportEditor from "./pages/AdminReportEditor";
+import AdminExcelManager from "./pages/AdminExcelManager";
+import AdminPromptManager from "./pages/AdminPromptManager";
+import AdminNewsletter from "./pages/AdminNewsletter";
 import BusinessDocuments from "./pages/BusinessDocuments";
 import Dashboard from "./pages/Dashboard";
 import Services from "./pages/Services";
@@ -28,6 +32,10 @@ const App = () => (
             <Route path="/about" element={<About />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/admin/report/:id" element={<AdminReportEditor />} />
+            <Route path="/admin/excel" element={<AdminExcelManager />} />
+            <Route path="/admin/prompts" element={<AdminPromptManager />} />
+            <Route path="/admin/newsletter" element={<AdminNewsletter />} />
             <Route path="/business-documents" element={<BusinessDocuments />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/services" element={<Services />} />

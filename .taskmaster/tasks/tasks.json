@@ -1,0 +1,257 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": "1",
+        "title": "OpenAI API 키 설정",
+        "description": "Supabase Edge Functions에 OpenAI API 키를 설정하여 AI 분석 기능이 작동하도록 합니다",
+        "status": "pending",
+        "priority": "critical",
+        "dependencies": [],
+        "details": "1. Supabase 대시보드 접속\n2. Edge Functions → Settings로 이동\n3. OPENAI_API_KEY 환경 변수 추가\n4. test-openai 함수로 연결 테스트",
+        "testStrategy": "test-openai Edge Function을 실행하여 API 연결 확인",
+        "subtasks": []
+      },
+      {
+        "id": "2",
+        "title": "환경 변수 문서화",
+        "description": ".env.example 파일을 생성하여 필요한 환경 변수를 문서화합니다",
+        "status": "pending",
+        "priority": "high",
+        "dependencies": [],
+        "details": "VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY 등 필요한 환경 변수 목록 작성",
+        "testStrategy": "새로운 개발자가 문서만 보고 환경 설정 가능한지 확인",
+        "subtasks": []
+      },
+      {
+        "id": "3",
+        "title": "보안 취약점 수정",
+        "description": "npm audit로 발견된 7개의 취약점을 수정합니다",
+        "status": "pending",
+        "priority": "high",
+        "dependencies": [],
+        "details": "npm audit fix 실행 및 수동 업데이트가 필요한 패키지 처리",
+        "testStrategy": "npm audit 실행 시 취약점 0개 확인",
+        "subtasks": []
+      },
+      {
+        "id": "4",
+        "title": "테스트 계정 보안 처리",
+        "description": "마이그레이션 파일의 하드코딩된 테스트 계정을 제거하거나 보안 처리합니다",
+        "status": "pending",
+        "priority": "high",
+        "dependencies": [],
+        "details": "test@company.com 계정을 환경 변수로 이동하거나 제거",
+        "testStrategy": "프로덕션 데이터베이스에 테스트 계정이 없는지 확인",
+        "subtasks": []
+      },
+      {
+        "id": "5",
+        "title": "이메일 서비스 구성",
+        "description": "Supabase의 이메일 서비스를 구성하여 알림 기능이 작동하도록 합니다",
+        "status": "pending",
+        "priority": "medium",
+        "dependencies": [
+          "1"
+        ],
+        "details": "회원가입 승인 이메일, 분석 완료 알림 이메일 설정",
+        "testStrategy": "실제 이메일 발송 테스트",
+        "subtasks": []
+      },
+      {
+        "id": "6",
+        "title": "Storage 버킷 설정",
+        "description": "사업자등록증 업로드를 위한 Supabase Storage 버킷을 생성하고 정책을 설정합니다",
+        "status": "pending",
+        "priority": "medium",
+        "dependencies": [],
+        "details": "파일 크기 제한, 허용 파일 형식, 접근 권한 설정",
+        "testStrategy": "파일 업로드/다운로드 기능 테스트",
+        "subtasks": []
+      },
+      {
+        "id": "7",
+        "title": "RLS 정책 검증",
+        "description": "모든 테이블의 Row Level Security 정책이 올바르게 작동하는지 검증합니다",
+        "status": "pending",
+        "priority": "medium",
+        "dependencies": [],
+        "details": "각 사용자 유형별로 접근 권한 테스트",
+        "testStrategy": "일반 사용자와 관리자 계정으로 각각 테스트",
+        "subtasks": []
+      },
+      {
+        "id": "8",
+        "title": "회사 등록 플로우 테스트",
+        "description": "회사 등록부터 승인까지의 전체 플로우를 테스트합니다",
+        "status": "pending",
+        "priority": "medium",
+        "dependencies": [
+          "1",
+          "5",
+          "6"
+        ],
+        "details": "회원가입 → 문서 업로드 → 관리자 승인 → 이메일 알림",
+        "testStrategy": "실제 사용자 시나리오대로 전체 플로우 진행",
+        "subtasks": []
+      },
+      {
+        "id": "9",
+        "title": "AI 매칭 분석 테스트",
+        "description": "AI 기반 매칭 분석 기능이 정상적으로 작동하는지 테스트합니다",
+        "status": "pending",
+        "priority": "critical",
+        "dependencies": [
+          "1"
+        ],
+        "details": "comprehensive-analysis, minimal-analysis 함수 테스트",
+        "testStrategy": "다양한 회사 정보로 분석 요청 및 결과 검증",
+        "subtasks": []
+      },
+      {
+        "id": "10",
+        "title": "관리자 대시보드 검증",
+        "description": "관리자 대시보드의 모든 기능이 정상 작동하는지 확인합니다",
+        "status": "pending",
+        "priority": "medium",
+        "dependencies": [
+          "7"
+        ],
+        "details": "회사 승인, 매칭 요청 관리, 분석 결과 확인",
+        "testStrategy": "관리자 권한으로 모든 기능 테스트",
+        "subtasks": []
+      },
+      {
+        "id": "11",
+        "title": "다국어 지원 검증",
+        "description": "한국어/영어 전환이 모든 페이지에서 정상 작동하는지 확인합니다",
+        "status": "pending",
+        "priority": "low",
+        "dependencies": [],
+        "details": "모든 UI 텍스트가 올바르게 번역되는지 확인",
+        "testStrategy": "각 페이지별로 언어 전환 테스트",
+        "subtasks": []
+      },
+      {
+        "id": "12",
+        "title": "CORS 설정 강화",
+        "description": "프로덕션 환경을 위한 CORS 설정을 구성합니다",
+        "status": "pending",
+        "priority": "medium",
+        "dependencies": [],
+        "details": "허용 도메인 제한, 보안 헤더 설정",
+        "testStrategy": "다양한 도메인에서 API 호출 테스트",
+        "subtasks": []
+      },
+      {
+        "id": "13",
+        "title": "API 속도 제한 구현",
+        "description": "API 남용을 방지하기 위한 속도 제한을 구현합니다",
+        "status": "pending",
+        "priority": "medium",
+        "dependencies": [],
+        "details": "Edge Functions에 rate limiting 적용",
+        "testStrategy": "연속 요청 시 제한이 작동하는지 확인",
+        "subtasks": []
+      },
+      {
+        "id": "14",
+        "title": "에러 처리 개선",
+        "description": "React Error Boundaries를 구현하여 에러 처리를 개선합니다",
+        "status": "pending",
+        "priority": "low",
+        "dependencies": [],
+        "details": "전역 에러 핸들러 구현, 사용자 친화적 에러 메시지",
+        "testStrategy": "의도적 에러 발생 시 적절한 처리 확인",
+        "subtasks": []
+      },
+      {
+        "id": "15",
+        "title": "로딩 상태 개선",
+        "description": "모든 비동기 작업에 대한 로딩 인디케이터를 추가합니다",
+        "status": "pending",
+        "priority": "low",
+        "dependencies": [],
+        "details": "스켈레톤 로더, 스피너 등 UX 개선",
+        "testStrategy": "네트워크 속도 제한으로 로딩 상태 확인",
+        "subtasks": []
+      },
+      {
+        "id": "16",
+        "title": "재시도 로직 구현",
+        "description": "실패한 API 호출에 대한 자동 재시도 로직을 구현합니다",
+        "status": "pending",
+        "priority": "low",
+        "dependencies": [],
+        "details": "exponential backoff 적용, 최대 재시도 횟수 설정",
+        "testStrategy": "네트워크 오류 시뮬레이션으로 재시도 확인",
+        "subtasks": []
+      },
+      {
+        "id": "17",
+        "title": "SSL 및 도메인 설정",
+        "description": "프로덕션 도메인과 SSL 인증서를 설정합니다",
+        "status": "pending",
+        "priority": "medium",
+        "dependencies": [],
+        "details": "도메인 구매, DNS 설정, SSL 인증서 적용",
+        "testStrategy": "HTTPS로 접속 가능 확인",
+        "subtasks": []
+      },
+      {
+        "id": "18",
+        "title": "백업 전략 수립",
+        "description": "데이터베이스 백업 및 복구 전략을 수립합니다",
+        "status": "pending",
+        "priority": "medium",
+        "dependencies": [],
+        "details": "자동 백업 스케줄, 복구 절차 문서화",
+        "testStrategy": "백업 및 복구 시뮬레이션",
+        "subtasks": []
+      },
+      {
+        "id": "19",
+        "title": "모니터링 시스템 구축",
+        "description": "애플리케이션 모니터링 및 로깅 시스템을 구축합니다",
+        "status": "pending",
+        "priority": "medium",
+        "dependencies": [],
+        "details": "에러 추적, 성능 모니터링, 사용자 분석",
+        "testStrategy": "모니터링 대시보드에서 데이터 확인",
+        "subtasks": []
+      },
+      {
+        "id": "20",
+        "title": "프로덕션 배포",
+        "description": "모든 준비가 완료된 후 프로덕션 환경에 배포합니다",
+        "status": "pending",
+        "priority": "low",
+        "dependencies": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "12",
+          "13",
+          "17",
+          "18",
+          "19"
+        ],
+        "details": "최종 점검 후 프로덕션 배포",
+        "testStrategy": "프로덕션 환경에서 전체 기능 테스트",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "version": "1.0.0",
+      "created_at": "2025-08-01T10:00:00Z",
+      "updated_at": "2025-08-01T10:00:00Z"
+    }
+  }
+}

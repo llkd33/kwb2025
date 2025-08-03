@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Button Test</title>
+</head>
+<body>
+    <h1>버튼 테스트</h1>
+    
+    <p>앱이 실행 중인지 확인하세요: <a href="http://localhost:8081/" target="_blank">http://localhost:8081/</a></p>
+    
+    <h2>버튼이 작동하지 않는 경우 체크리스트:</h2>
+    <ol>
+        <li>브라우저 콘솔 (F12) 에서 에러 확인</li>
+        <li>localStorage에 'currentCompany' 값이 있는지 확인</li>
+        <li>React Router가 제대로 로드되었는지 확인</li>
+    </ol>
+    
+    <h2>테스트 순서:</h2>
+    <ol>
+        <li>홈페이지에서 "무료 분석 시작하기" 클릭 → /auth 페이지로 이동해야 함</li>
+        <li>홈페이지에서 "서비스 둘러보기" 클릭 → /services 페이지로 이동해야 함</li>
+    </ol>
+    
+    <script>
+        // 간단한 디버깅 스크립트
+        console.log('현재 localStorage:', localStorage.getItem('currentCompany'));
+    </script>
+</body>
+</html>
