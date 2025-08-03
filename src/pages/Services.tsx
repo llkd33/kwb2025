@@ -126,27 +126,47 @@ export default function Services() {
       {/* Main Content */}
       <main className="pt-16">
         {/* Hero Section */}
-        <section className="py-20 bg-gradient-to-br from-primary/5 to-primary/10">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center max-w-4xl mx-auto">
-              <Badge className="mb-6 px-4 py-2 bg-primary/10 text-primary border-primary/20">
-                <Play className="w-4 h-4 mr-2" />
-                실제 서비스 화면
+        <section className="py-24 bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 relative overflow-hidden">
+          {/* Background Elements */}
+          <div className="absolute inset-0">
+            <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-400/10 rounded-full blur-3xl"></div>
+            <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-purple-400/10 rounded-full blur-3xl"></div>
+          </div>
+          
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div className="text-center max-w-5xl mx-auto">
+              <Badge className="mb-8 px-6 py-3 bg-gradient-to-r from-blue-600/10 to-purple-600/10 text-blue-700 border border-blue-200/50 backdrop-blur-sm text-base font-semibold">
+                <Play className="w-5 h-5 mr-2" />
+                서비스 이용 가이드
               </Badge>
-              <h1 className="text-4xl md:text-6xl font-bold mb-6">
-                <span className="text-transparent bg-clip-text bg-gradient-primary">
-                  4단계로 완성하는
+              <h1 className="text-4xl md:text-6xl xl:text-7xl font-bold mb-8 leading-tight">
+                <span className="block mb-2">간단한</span>
+                <span className="block bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-600 bg-clip-text text-transparent">
+                  4단계 프로세스
                 </span>
-                <br />
-                글로벌 비즈니스 매칭
               </h1>
-              <p className="text-xl text-muted-foreground mb-8">
-                실제 서비스 화면과 함께 각 단계별 프로세스를 확인해보세요.
+              <p className="text-xl md:text-2xl text-slate-600 mb-12 leading-relaxed max-w-4xl mx-auto">
+                AI와 전문가가 함께하는 글로벌 비즈니스 매칭으로<br />
+                <span className="font-semibold text-slate-800">성공적인 해외진출을 시작하세요</span>
               </p>
-              <Button size="lg" onClick={handleStartDemo} className="bg-gradient-primary hover:opacity-90">
-                지금 시작하기
-                <ArrowRight className="ml-2 w-5 h-5" />
-              </Button>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Button 
+                  size="lg" 
+                  onClick={handleStartDemo} 
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold text-lg px-8 py-4 h-14 rounded-xl shadow-2xl hover:shadow-blue-500/25 transition-all duration-300 transform hover:scale-105"
+                >
+                  무료로 시작하기
+                  <ArrowRight className="ml-2 w-5 h-5" />
+                </Button>
+                <Button 
+                  size="lg" 
+                  variant="outline"
+                  className="border-2 border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold text-lg px-8 py-4 h-14 rounded-xl transition-all duration-300"
+                  onClick={() => window.open('https://open.kakao.com/o/sNxhm3he', '_blank')}
+                >
+                  상담 받기
+                </Button>
+              </div>
             </div>
           </div>
         </section>
@@ -190,20 +210,32 @@ export default function Services() {
               >
                 <div className="max-w-6xl mx-auto">
                   <div className="grid lg:grid-cols-2 gap-12 items-center">
-                    {/* Left: Illustration */}
+                    {/* Left: Enhanced Illustration */}
                     <div className="order-2 lg:order-1">
-                      <Card className={`overflow-hidden shadow-2xl ${step.illustration.bgColor} p-16 flex items-center justify-center`}>
-                        <div className="text-center space-y-6">
-                          <div className="text-6xl mb-4">{step.illustration.emoji}</div>
-                          {step.illustration.icon}
-                          <div className="space-y-2">
-                            <h3 className="text-2xl font-bold text-gray-800">{step.title}</h3>
-                            <p className="text-gray-600 max-w-xs mx-auto">
-                              {step.step === 1 && "간편한 가입 절차로 빠르게 시작하세요"}
-                              {step.step === 2 && "필요한 문서를 안전하게 업로드하세요"}
-                              {step.step === 3 && "AI가 최적의 매칭을 찾아드립니다"}
-                              {step.step === 4 && "맞춤형 분석 결과를 받아보세요"}
-                            </p>
+                      <Card className="overflow-hidden shadow-2xl bg-gradient-to-br from-white to-slate-50 border-0 relative">
+                        <div className="absolute inset-0 bg-gradient-to-br opacity-10" style={{
+                          background: step.step === 1 ? 'linear-gradient(135deg, #3B82F6, #1D4ED8)' :
+                                     step.step === 2 ? 'linear-gradient(135deg, #10B981, #047857)' :
+                                     step.step === 3 ? 'linear-gradient(135deg, #8B5CF6, #5B21B6)' :
+                                     'linear-gradient(135deg, #F59E0B, #D97706)'
+                        }}></div>
+                        <div className="relative p-16 flex items-center justify-center">
+                          <div className="text-center space-y-8">
+                            <div className="text-8xl mb-6 animate-bounce">{step.illustration.emoji}</div>
+                            <div className="transform hover:scale-110 transition-transform duration-300">
+                              {step.illustration.icon}
+                            </div>
+                            <div className="space-y-4">
+                              <h3 className="text-3xl font-bold bg-gradient-to-r from-slate-700 to-slate-900 bg-clip-text text-transparent">
+                                {step.title}
+                              </h3>
+                              <p className="text-lg text-slate-600 max-w-sm mx-auto leading-relaxed">
+                                {step.step === 1 && "몇 분만에 완료되는 간편한 가입 절차"}
+                                {step.step === 2 && "보안이 보장된 안전한 문서 업로드"}
+                                {step.step === 3 && "AI가 실시간으로 최적 매칭 분석"}
+                                {step.step === 4 && "전문가 검증을 거친 맞춤형 결과"}
+                              </p>
+                            </div>
                           </div>
                         </div>
                       </Card>
@@ -240,12 +272,14 @@ export default function Services() {
                         ))}
                       </div>
 
-                      {/* Features */}
+                      {/* Enhanced Features */}
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-6">
                         {step.features.map((feature, featureIndex) => (
-                          <Card key={featureIndex} className="p-4 text-center bg-muted/50">
-                            <p className="text-sm text-muted-foreground mb-1">{feature.label}</p>
-                            <p className="font-bold text-primary">{feature.value}</p>
+                          <Card key={featureIndex} className="p-5 text-center bg-gradient-to-br from-white to-slate-50 border border-slate-200 hover:shadow-lg transition-all duration-300 hover:scale-105">
+                            <p className="text-sm text-slate-600 mb-2 font-medium">{feature.label}</p>
+                            <p className="font-bold text-lg bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                              {feature.value}
+                            </p>
                           </Card>
                         ))}
                       </div>

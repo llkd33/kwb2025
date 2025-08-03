@@ -460,64 +460,158 @@ export default function Admin() {
   }
 
   return (
-    <div className="container mx-auto py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">관리자 대시보드</h1>
-        <p className="text-gray-600 mt-2">기업 승인 관리 및 AI 시스템 설정</p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/30">
+      {/* Enhanced Header */}
+      <div className="bg-white/80 backdrop-blur-sm border-b border-slate-200/60 sticky top-0 z-10">
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                관리자 대시보드
+              </h1>
+              <p className="text-slate-600 mt-2 text-lg">KnowWhere Bridge 플랫폼 통합 관리 센터</p>
+            </div>
+            <div className="flex items-center gap-4">
+              <Button
+                onClick={fetchAllData}
+                variant="outline"
+                className="border-blue-300 text-blue-700 hover:bg-blue-50"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                새로고침
+              </Button>
+              <div className="text-sm text-slate-600 text-right">
+                <div>마지막 업데이트</div>
+                <div className="font-medium">{new Date().toLocaleTimeString()}</div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <Card>
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl text-orange-600">{pendingCompanies.length}</CardTitle>
-            <CardDescription>승인 대기</CardDescription>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl text-green-600">{approvedCompanies.length}</CardTitle>
-            <CardDescription>승인 완료</CardDescription>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl text-red-600">{rejectedCompanies.length}</CardTitle>
-            <CardDescription>거부됨</CardDescription>
-          </CardHeader>
-        </Card>
-      </div>
+      <div className="container mx-auto px-4 py-8 space-y-8">
+        {/* Enhanced Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-3xl font-bold text-orange-600">{pendingCompanies.length}</div>
+                  <div className="text-slate-600 font-medium">승인 대기</div>
+                  <div className="text-xs text-slate-500 mt-1">검토 필요 기업</div>
+                </div>
+                <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-orange-600 rounded-xl flex items-center justify-center">
+                  <Clock className="w-6 h-6 text-white" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-3xl font-bold text-green-600">{approvedCompanies.length}</div>
+                  <div className="text-slate-600 font-medium">승인 완료</div>
+                  <div className="text-xs text-slate-500 mt-1">활성 회원사</div>
+                </div>
+                <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-xl flex items-center justify-center">
+                  <CheckCircle className="w-6 h-6 text-white" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-3xl font-bold text-red-600">{rejectedCompanies.length}</div>
+                  <div className="text-slate-600 font-medium">거부됨</div>
+                  <div className="text-xs text-slate-500 mt-1">승인 거부 기업</div>
+                </div>
+                <div className="w-12 h-12 bg-gradient-to-br from-red-400 to-red-600 rounded-xl flex items-center justify-center">
+                  <XCircle className="w-6 h-6 text-white" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-3xl font-bold text-blue-600">{matchingRequests.filter(r => r.status === 'completed').length}</div>
+                  <div className="text-slate-600 font-medium">완료된 분석</div>
+                  <div className="text-xs text-slate-500 mt-1">AI 분석 완료</div>
+                </div>
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center">
+                  <Brain className="w-6 h-6 text-white" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
-      {/* Quick Access Admin Tools */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/admin/newsletter')}>
-          <CardContent className="p-4 text-center">
-            <Send className="w-8 h-8 mx-auto text-blue-600 mb-2" />
-            <h3 className="font-semibold text-sm">뉴스레터 발송</h3>
-            <p className="text-xs text-gray-500 mt-1">회원사 이메일 발송</p>
+        {/* Enhanced Quick Access Tools */}
+        <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-xl font-bold text-slate-800">빠른 관리 도구</CardTitle>
+            <CardDescription className="text-slate-600">자주 사용하는 관리 기능에 빠르게 접근하세요</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Card 
+                className="group hover:shadow-lg hover:scale-105 transition-all duration-300 cursor-pointer border-0 bg-gradient-to-br from-blue-50 to-blue-100" 
+                onClick={() => navigate('/admin/newsletter')}
+              >
+                <CardContent className="p-6 text-center">
+                  <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                    <Send className="w-8 h-8 text-white" />
+                  </div>
+                  <h3 className="font-bold text-lg text-blue-800 mb-2">뉴스레터 발송</h3>
+                  <p className="text-sm text-blue-600">회원사 대상 이메일 발송</p>
+                </CardContent>
+              </Card>
+              
+              <Card 
+                className="group hover:shadow-lg hover:scale-105 transition-all duration-300 cursor-pointer border-0 bg-gradient-to-br from-purple-50 to-purple-100" 
+                onClick={() => navigate('/admin/prompts')}
+              >
+                <CardContent className="p-6 text-center">
+                  <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                    <MessageSquare className="w-8 h-8 text-white" />
+                  </div>
+                  <h3 className="font-bold text-lg text-purple-800 mb-2">프롬프트 관리</h3>
+                  <p className="text-sm text-purple-600">AI 분석 설정 관리</p>
+                </CardContent>
+              </Card>
+              
+              <Card 
+                className="group hover:shadow-lg hover:scale-105 transition-all duration-300 cursor-pointer border-0 bg-gradient-to-br from-green-50 to-green-100" 
+                onClick={() => navigate('/admin/excel')}
+              >
+                <CardContent className="p-6 text-center">
+                  <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                    <Database className="w-8 h-8 text-white" />
+                  </div>
+                  <h3 className="font-bold text-lg text-green-800 mb-2">데이터 관리</h3>
+                  <p className="text-sm text-green-600">참조 데이터 업로드</p>
+                </CardContent>
+              </Card>
+              
+              <Card className="group hover:shadow-lg hover:scale-105 transition-all duration-300 cursor-pointer border-0 bg-gradient-to-br from-slate-50 to-slate-100">
+                <CardContent className="p-6 text-center">
+                  <div className="w-16 h-16 bg-gradient-to-br from-slate-500 to-slate-600 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                    <Settings className="w-8 h-8 text-white" />
+                  </div>
+                  <h3 className="font-bold text-lg text-slate-800 mb-2">시스템 설정</h3>
+                  <p className="text-sm text-slate-600">플랫폼 환경 설정</p>
+                </CardContent>
+              </Card>
+            </div>
           </CardContent>
         </Card>
-        <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/admin/prompts')}>
-          <CardContent className="p-4 text-center">
-            <MessageSquare className="w-8 h-8 mx-auto text-purple-600 mb-2" />
-            <h3 className="font-semibold text-sm">프롬프트 관리</h3>
-            <p className="text-xs text-gray-500 mt-1">GPT/Perplexity 설정</p>
-          </CardContent>
-        </Card>
-        <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/admin/excel')}>
-          <CardContent className="p-4 text-center">
-            <Database className="w-8 h-8 mx-auto text-green-600 mb-2" />
-            <h3 className="font-semibold text-sm">데이터 관리</h3>
-            <p className="text-xs text-gray-500 mt-1">엑셀 참조 데이터</p>
-          </CardContent>
-        </Card>
-        <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-          <CardContent className="p-4 text-center">
-            <Settings className="w-8 h-8 mx-auto text-gray-600 mb-2" />
-            <h3 className="font-semibold text-sm">시스템 설정</h3>
-            <p className="text-xs text-gray-500 mt-1">시스템 관리</p>
-          </CardContent>
-        </Card>
-      </div>
 
       <Tabs defaultValue="pending" className="w-full">
         <TabsList className="grid w-full grid-cols-5">

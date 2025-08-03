@@ -269,78 +269,124 @@ export default function MatchingRequest() {
   }
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">매칭 요청</h1>
-        <p className="text-gray-600 mt-2">
-          AI 기반 해외진출 분석을 시작합니다 - {currentCompany.company_name}
-        </p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/30">
+      {/* Header */}
+      <div className="bg-white/80 backdrop-blur-sm border-b border-slate-200/60 sticky top-0 z-10">
+        <div className="container mx-auto px-4 py-6">
+          <div className="text-center">
+            <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              AI 매칭 분석 요청
+            </h1>
+            <p className="text-slate-600 mt-2 text-lg">
+              {currentCompany.company_name}의 글로벌 진출을 위한 맞춤 분석을 시작합니다
+            </p>
+          </div>
+        </div>
       </div>
 
-      {/* Progress Steps */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center">
-              <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm">
-                1
+      <div className="container mx-auto px-4 py-8 space-y-8 max-w-6xl">
+        {/* Enhanced Progress Steps */}
+        <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
+          <CardContent className="pt-8 pb-6">
+            <div className="flex items-center justify-between">
+              <div className="flex flex-col items-center text-center">
+                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-full flex items-center justify-center font-bold text-lg shadow-lg">
+                  1
+                </div>
+                <span className="mt-3 font-semibold text-blue-700">기본 정보</span>
+                <span className="text-xs text-blue-600 mt-1">현재 단계</span>
               </div>
-              <span className="ml-2 font-medium">기본 정보</span>
-            </div>
-            <div className="flex items-center">
-              <div className="w-8 h-8 bg-gray-300 text-white rounded-full flex items-center justify-center font-bold text-sm">
-                2
+              <div className="flex-1 h-0.5 bg-gradient-to-r from-blue-300 to-slate-300 mx-4"></div>
+              <div className="flex flex-col items-center text-center">
+                <div className="w-12 h-12 bg-slate-300 text-white rounded-full flex items-center justify-center font-bold text-lg">
+                  2
+                </div>
+                <span className="mt-3 text-slate-500 font-medium">AI 분석</span>
+                <span className="text-xs text-slate-400 mt-1">5-10분 소요</span>
               </div>
-              <span className="ml-2 text-gray-500">AI 분석</span>
-            </div>
-            <div className="flex items-center">
-              <div className="w-8 h-8 bg-gray-300 text-white rounded-full flex items-center justify-center font-bold text-sm">
-                3
+              <div className="flex-1 h-0.5 bg-slate-300 mx-4"></div>
+              <div className="flex flex-col items-center text-center">
+                <div className="w-12 h-12 bg-slate-300 text-white rounded-full flex items-center justify-center font-bold text-lg">
+                  3
+                </div>
+                <span className="mt-3 text-slate-500 font-medium">결과 확인</span>
+                <span className="text-xs text-slate-400 mt-1">이메일 발송</span>
               </div>
-              <span className="ml-2 text-gray-500">결과 확인</span>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      {/* Country Selection */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Globe className="h-5 w-5 mr-2" />
-            진출 희망 국가 선택
-          </CardTitle>
-          <CardDescription>
-            해외진출을 희망하는 국가를 선택해주세요. (복수 선택 가능)
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
-            {COUNTRIES.map((country) => (
-              <div key={country} className="flex items-center space-x-2">
-                <Checkbox
-                  id={country}
-                  checked={selectedCountries.includes(country)}
-                  onCheckedChange={() => handleCountryToggle(country)}
-                />
-                <Label htmlFor={country} className="text-sm cursor-pointer">
-                  {country}
-                </Label>
+        {/* Enhanced Country Selection */}
+        <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
+          <CardHeader className="pb-6">
+            <CardTitle className="flex items-center text-2xl">
+              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center mr-3">
+                <Globe className="h-6 w-6 text-white" />
               </div>
-            ))}
-          </div>
-          {selectedCountries.length > 0 && (
-            <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-              <p className="text-sm font-medium text-blue-800">
-                선택된 국가 ({selectedCountries.length}개):
-              </p>
-              <p className="text-sm text-blue-700 mt-1">
-                {selectedCountries.join(', ')}
-              </p>
+              진출 희망 국가 선택
+            </CardTitle>
+            <CardDescription className="text-lg text-slate-600">
+              AI 분석을 원하는 국가를 선택해주세요. 복수 선택이 가능하며, 더 많은 국가를 선택할수록 정확한 분석이 가능합니다.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              {/* Country Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                {COUNTRIES.map((country) => {
+                  const isSelected = selectedCountries.includes(country);
+                  return (
+                    <div 
+                      key={country} 
+                      className={`group p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 hover:scale-105 ${
+                        isSelected 
+                          ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-purple-50 shadow-lg' 
+                          : 'border-slate-200 bg-white hover:border-blue-300 hover:shadow-md'
+                      }`}
+                      onClick={() => handleCountryToggle(country)}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <Checkbox
+                          id={country}
+                          checked={isSelected}
+                          onCheckedChange={() => handleCountryToggle(country)}
+                          className="data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
+                        />
+                        <Label htmlFor={country} className="font-medium cursor-pointer group-hover:text-blue-600">
+                          {country}
+                        </Label>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Selected Countries Summary */}
+              {selectedCountries.length > 0 && (
+                <div className="mt-6 p-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-200">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-lg font-semibold text-blue-800">
+                      선택된 국가 ({selectedCountries.length}개)
+                    </p>
+                    <div className="text-sm text-blue-600 bg-blue-100 px-3 py-1 rounded-full">
+                      {selectedCountries.length >= 3 ? '최적 분석 가능' : '더 선택하시면 정확도가 향상됩니다'}
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedCountries.map((country) => (
+                      <span 
+                        key={country}
+                        className="px-3 py-1 bg-white text-blue-700 rounded-full text-sm font-medium border border-blue-200 shadow-sm"
+                      >
+                        {country}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
       {/* Company Profile Upload */}
       <Card>
@@ -464,44 +510,89 @@ export default function MatchingRequest() {
         </CardContent>
       </Card>
 
-      {/* Submit */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Brain className="h-5 w-5 mr-2" />
-            AI 분석 요청
-          </CardTitle>
-          <CardDescription>
-            모든 정보를 확인한 후 AI 분석을 시작합니다.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="bg-gray-50 p-4 rounded-lg mb-6">
-            <h4 className="font-medium mb-2">분석 내용:</h4>
-            <ul className="text-sm text-gray-600 space-y-1">
-              <li>• GPT-4 기반 종합 기업 분석</li>
-              <li>• Perplexity AI를 통한 실시간 시장 동향 분석</li>
-              <li>• 관리자 제공 시장 데이터와의 교차 분석</li>
-              <li>• 진출 전략 및 리스크 분석</li>
-              <li>• 맞춤형 파트너 및 투자자 매칭 추천</li>
-            </ul>
-          </div>
+        {/* Enhanced Submit Section */}
+        <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
+          <CardHeader className="pb-6">
+            <CardTitle className="flex items-center text-2xl">
+              <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center mr-3">
+                <Brain className="h-6 w-6 text-white" />
+              </div>
+              AI 분석 요청
+            </CardTitle>
+            <CardDescription className="text-lg text-slate-600">
+              입력하신 정보를 바탕으로 Goldman Sachs 급 AI 분석을 시작합니다.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {/* Analysis Preview */}
+            <div className="bg-gradient-to-br from-slate-50 to-blue-50 p-6 rounded-xl mb-8 border border-slate-200">
+              <h4 className="font-bold text-lg mb-4 text-slate-800">분석 내용 미리보기</h4>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <span className="text-slate-700 font-medium">GPT-4 기반 종합 기업 분석</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                    <span className="text-slate-700 font-medium">Perplexity AI 실시간 시장 동향</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span className="text-slate-700 font-medium">관리자 데이터 교차 검증</span>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                    <span className="text-slate-700 font-medium">진출 전략 및 리스크 분석</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-pink-500 rounded-full"></div>
+                    <span className="text-slate-700 font-medium">파트너 매칭 추천</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-cyan-500 rounded-full"></div>
+                    <span className="text-slate-700 font-medium">투자자 연결 기회</span>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-          <Button 
-            onClick={handleSubmitRequest}
-            disabled={submitting || selectedCountries.length === 0}
-            className="w-full"
-            size="lg"
-          >
-            <Brain className="h-5 w-5 mr-2" />
-            {submitting ? "분석 요청 중..." : "AI 분석 시작하기"}
-          </Button>
+            {/* Submit Button */}
+            <Button 
+              onClick={handleSubmitRequest}
+              disabled={submitting || selectedCountries.length === 0}
+              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold text-lg py-6 h-16 rounded-xl shadow-2xl hover:shadow-blue-500/25 transition-all duration-300 transform hover:scale-105 disabled:transform-none disabled:opacity-50"
+              size="lg"
+            >
+              {submitting ? (
+                <div className="flex items-center gap-3">
+                  <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  <span>AI 분석 요청 중...</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <Brain className="h-6 w-6" />
+                  <span>AI 분석 시작하기</span>
+                  <ArrowRight className="h-5 w-5" />
+                </div>
+              )}
+            </Button>
 
-          <p className="text-xs text-gray-500 mt-2 text-center">
-            분석 완료까지 약 5-10분 소요되며, 결과는 이메일로 발송됩니다.
-          </p>
-        </CardContent>
-      </Card>
+            {/* Info Text */}
+            <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="flex items-center justify-center gap-2 text-blue-700">
+                <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                <span className="font-medium">분석 완료까지 약 5-10분 소요됩니다</span>
+              </div>
+              <p className="text-center text-blue-600 mt-2 text-sm">
+                결과는 이메일로 발송되며, 대시보드에서도 확인하실 수 있습니다.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

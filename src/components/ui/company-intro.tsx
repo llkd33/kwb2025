@@ -27,69 +27,90 @@ export function CompanyIntro() {
   ];
 
   return (
-    <section className="py-24 bg-gradient-card">
-      <div className="container px-4 sm:px-6 lg:px-8">
-        <div className="max-w-6xl mx-auto">
-          {/* Section Header */}
-          <div className="text-center mb-16">
-            <Badge variant="outline" className="mb-4">
+    <section className="py-16 sm:py-24 bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/30 relative overflow-hidden">
+      {/* Background Elements */}
+      <div className="absolute inset-0">
+        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-400/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-purple-400/10 rounded-full blur-3xl animate-pulse [animation-delay:2s]"></div>
+      </div>
+      
+      <div className="container px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="max-w-7xl mx-auto">
+          {/* Enhanced Section Header */}
+          <div className="text-center mb-16 sm:mb-20">
+            <Badge className="mb-6 px-6 py-3 bg-gradient-to-r from-blue-600/10 to-purple-600/10 text-blue-700 border border-blue-200/50 backdrop-blur-sm text-base font-semibold">
               회사소개
             </Badge>
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">
-              전세계 AI·Fintech·IT 생태계 활성화에 기여하는
-              <br />
-              <span className="text-primary">KnowWhere Bridge</span>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold mb-8 leading-tight">
+              <span className="block mb-2">전세계 AI·Fintech·IT</span>
+              <span className="block mb-2">생태계 활성화에 기여하는</span>
+              <span className="block bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-600 bg-clip-text text-transparent">
+                KnowWhere Bridge
+              </span>
             </h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              맞춤형 비즈니스 매칭 전문기업 KnowWhere Bridge입니다.
+            <p className="text-lg sm:text-xl lg:text-2xl text-slate-600 max-w-4xl mx-auto leading-relaxed">
+              글로벌 비즈니스 매칭 전문기업으로 <br className="hidden sm:block" />
+              <span className="font-semibold text-slate-800">AI 기반 혁신 솔루션</span>을 제공합니다
             </p>
           </div>
 
-          <div className="grid lg:grid-cols-2 gap-12 mb-16">
-            {/* CEO Profile */}
-            <Card className="shadow-card">
-              <CardContent className="p-8">
-                <div className="flex items-start gap-6 mb-6">
-                  <div className="w-20 h-20 bg-gradient-primary rounded-full flex items-center justify-center">
-                    <Users className="w-10 h-10 text-white" />
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 mb-16 sm:mb-20">
+            {/* Enhanced CEO Profile */}
+            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl hover:shadow-2xl transition-all duration-300">
+              <CardContent className="p-6 sm:p-8">
+                <div className="flex flex-col sm:flex-row items-start gap-6 mb-8">
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto sm:mx-0 flex-shrink-0">
+                    <Users className="w-10 h-10 sm:w-12 sm:h-12 text-white" />
                   </div>
-                  <div>
-                    <h3 className="text-2xl font-bold mb-2">홍동표 대표이사</h3>
-                    <p className="text-muted-foreground">
-                      글로벌 AI·Fintech·IT 분야 비즈니스 협업플랫폼 기업
-                      <br />
-                      ㈜KnowWhere Bridge Founder & CEO
+                  <div className="text-center sm:text-left">
+                    <h3 className="text-2xl sm:text-3xl font-bold mb-3 bg-gradient-to-r from-slate-700 to-slate-900 bg-clip-text text-transparent">
+                      홍동표 대표이사
+                    </h3>
+                    <p className="text-slate-600 leading-relaxed">
+                      글로벌 AI·Fintech·IT 분야<br className="hidden sm:block" />
+                      비즈니스 협업플랫폼 기업<br />
+                      <span className="font-semibold text-blue-700">㈜KnowWhere Bridge Founder & CEO</span>
                     </p>
                   </div>
                 </div>
 
                 <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <Shield className="w-5 h-5 text-primary" />
-                    <span className="font-medium">한국핀테크산업협회 부회장</span>
+                  <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-xl border border-blue-100">
+                    <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <Shield className="w-5 h-5 text-white" />
+                    </div>
+                    <span className="font-semibold text-blue-800">한국핀테크산업협회 부회장</span>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <Globe className="w-5 h-5 text-primary" />
-                    <span className="font-medium">아시아 핀테크 얼라이언스 Co-Founder</span>
+                  <div className="flex items-center gap-4 p-4 bg-purple-50 rounded-xl border border-purple-100">
+                    <div className="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <Globe className="w-5 h-5 text-white" />
+                    </div>
+                    <span className="font-semibold text-purple-800">아시아 핀테크 얼라이언스 Co-Founder</span>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Key Achievements */}
-            <Card className="shadow-card">
-              <CardContent className="p-8">
-                <h3 className="text-xl font-bold mb-6 flex items-center gap-3">
-                  <Award className="w-6 h-6 text-primary" />
+            {/* Enhanced Key Achievements */}
+            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl hover:shadow-2xl transition-all duration-300">
+              <CardContent className="p-6 sm:p-8">
+                <h3 className="text-xl sm:text-2xl font-bold mb-6 sm:mb-8 flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-red-500 rounded-lg flex items-center justify-center">
+                    <Award className="w-6 h-6 text-white" />
+                  </div>
                   주요 경력
                 </h3>
-                <div className="grid gap-4">
+                <div className="space-y-4">
                   {achievements.map((item, index) => (
-                    <div key={index} className="flex items-start gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors">
-                      <item.icon className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
-                      <div>
-                        <p className="font-medium">{item.title}</p>
-                        <p className="text-sm text-muted-foreground">{item.subtitle}</p>
+                    <div key={index} className="group p-4 rounded-xl hover:bg-slate-50 hover:shadow-md transition-all duration-300 border border-slate-100">
+                      <div className="flex items-start gap-4">
+                        <div className="w-10 h-10 bg-gradient-to-br from-slate-100 to-slate-200 group-hover:from-blue-100 group-hover:to-purple-100 rounded-lg flex items-center justify-center transition-all duration-300 flex-shrink-0">
+                          <item.icon className="w-5 h-5 text-slate-600 group-hover:text-blue-600 transition-colors" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-semibold text-slate-800 mb-1">{item.title}</p>
+                          <p className="text-sm text-slate-600 leading-relaxed">{item.subtitle}</p>
+                        </div>
                       </div>
                     </div>
                   ))}
