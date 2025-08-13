@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -31,6 +32,19 @@ serve(async (req: Request) => {
     // Validate input
     if (!subject || !content || !recipients?.length) {
       throw new Error('Subject, content, and recipients are required');
+    }
+
+    // Initialize Supabase client for logging
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    // Check for Resend API key
+    const resendApiKey = Deno.env.get('RESEND_API_KEY');
+    if (!resendApiKey) {
+      console.error('RESEND_API_KEY is not configured');
+      throw new Error('Email service is not configured. Please contact the administrator.');
     }
 
     // Email template
@@ -100,6 +114,15 @@ serve(async (req: Request) => {
             color: #667eea; 
             font-weight: 600; 
         }
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 6px;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
@@ -113,6 +136,11 @@ serve(async (req: Request) => {
                 안녕하세요, <strong>${recipient.company_name}</strong> <strong>${recipient.ceo_name}</strong> 대표님!
             </div>
             <div class="message">${content}</div>
+            <center>
+                <a href="${Deno.env.get('SITE_URL') || 'https://lovable.app'}/dashboard" class="cta-button">
+                    대시보드 바로가기
+                </a>
+            </center>
         </div>
         <div class="footer">
             <p><span class="brand">© 2024 KnowWhere Bridge.</span> All rights reserved.</p>
@@ -127,51 +155,73 @@ serve(async (req: Request) => {
     // Send individual emails (BCC-style privacy)
     const emailPromises = recipients.map(async (recipient, index) => {
       try {
-        // Add small delay to avoid rate limiting
+        // Add small delay to avoid rate limiting (100ms between emails)
         await new Promise(resolve => setTimeout(resolve, index * 100));
 
         const emailHTML = getEmailHTML(recipient);
         
-        // Simulate email sending (replace with actual email service)
-        // You would integrate with services like:
-        // - Resend
-        // - SendGrid
-        // - AWS SES
-        // - Mailgun
-        
         console.log(`Sending email to ${recipient.email} (${recipient.company_name})`);
         
-        // Example with fetch to email service:
-        /*
+        // Send email using Resend API
         const emailResponse = await fetch('https://api.resend.com/emails', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${Deno.env.get('RESEND_API_KEY')}`,
+            'Authorization': `Bearer ${resendApiKey}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            from: 'KnowWhere Bridge <newsletter@knowwhere-bridge.com>',
+            from: 'KnowWhere Bridge <noreply@resend.dev>', // Use Resend's test domain for now
             to: [recipient.email],
-            subject: subject,
+            subject: `[KnowWhere Bridge] ${subject}`,
             html: emailHTML,
           }),
         });
 
         if (!emailResponse.ok) {
-          throw new Error(`Failed to send to ${recipient.email}`);
+          const errorData = await emailResponse.text();
+          console.error(`Failed to send to ${recipient.email}: ${errorData}`);
+          throw new Error(`Failed to send email: ${errorData}`);
         }
-        */
 
-        // For demo purposes, just simulate success
+        const emailResult = await emailResponse.json();
+        console.log(`Email sent successfully to ${recipient.email}:`, emailResult.id);
+
+        // Log to database
+        await supabaseClient
+          .from('mail_log')
+          .insert({
+            email_type: 'newsletter',
+            recipient_email: recipient.email,
+            subject: subject,
+            content: emailHTML,
+            delivery_status: 'sent',
+            sent_at: new Date().toISOString()
+          });
+
         return {
           email: recipient.email,
           company_name: recipient.company_name,
           status: 'sent',
-          sent_at: new Date().toISOString()
+          sent_at: new Date().toISOString(),
+          message_id: emailResult.id
         };
 
-      } catch (error) {
+      } catch (error: any) {
         console.error(`Failed to send email to ${recipient.email}:`, error);
+        
+        // Log failure to database
+        await supabaseClient
+          .from('mail_log')
+          .insert({
+            email_type: 'newsletter',
+            recipient_email: recipient.email,
+            subject: subject,
+            content: getEmailHTML(recipient),
+            delivery_status: 'failed',
+            error_message: error.message,
+            sent_at: new Date().toISOString()
+          });
+
         return {
           email: recipient.email,
           company_name: recipient.company_name,
@@ -189,6 +239,21 @@ serve(async (req: Request) => {
     const failed = results.filter(r => r.status === 'failed');
 
     console.log(`Newsletter sending completed: ${successful.length} sent, ${failed.length} failed`);
+
+    // Create newsletter summary log
+    await supabaseClient
+      .from('newsletter_logs')
+      .insert({
+        subject: subject,
+        content: content,
+        total_recipients: recipients.length,
+        sent_count: successful.length,
+        failed_count: failed.length,
+        sent_at: new Date().toISOString(),
+        details: results
+      })
+      .select()
+      .single();
 
     return new Response(JSON.stringify({
       success: true,

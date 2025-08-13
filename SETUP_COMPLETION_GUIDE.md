@@ -1,7 +1,28 @@
 # 🚀 Setup Completion Guide
 
-## ✅ Current Status
+## 🚨 Critical Issue: Edge Functions Missing API Keys
 
+**Problem**: The Admin page shows 500 errors when clicking "전체 분석" or "최소 분석" buttons because the Supabase edge functions don't have access to required API keys.
+
+## 🔧 Required Fix: Set API Keys in Supabase
+
+### Step 1: Add API Keys to Supabase
+1. Go to your [Supabase Dashboard](https://supabase.com/dashboard/project/gqcruitsupinmhrvygql/settings/vault)
+2. Navigate to **Settings** → **Vault** → **Secrets**
+3. Add these secrets:
+   - `OPENAI_API_KEY` = Your actual OpenAI API key (starts with `sk-`)
+   - `PERPLEXITY_API_KEY` = Your Perplexity API key (optional but recommended)
+
+### Step 2: Deploy Updated Functions
+```bash
+# If you have Supabase CLI access:
+npx supabase functions deploy comprehensive-analysis
+npx supabase functions deploy minimal-analysis
+```
+
+**Alternative**: If no CLI access, the functions are already deployed but need the API keys to work.
+
+## ✅ Current Status
 ### Working Components:
 - ✅ **GPT API**: Fully connected and tested
 - ✅ **Database**: Tables created and accessible
@@ -14,9 +35,7 @@
 - 🔧 **Edge Function**: Deploy process-pdf-report function
 
 ## 📋 Final Setup Steps
-
 ### 1. Run Database Migrations
-
 Go to [Supabase SQL Editor](https://supabase.com/dashboard/project/gqcruitsupinmhrvygql/sql/new) and run:
 
 ```sql
@@ -83,9 +102,7 @@ INSERT INTO public.prompt_templates (name, type, template, variables) VALUES
 )
 ON CONFLICT (name) DO NOTHING;
 ```
-
 ### 2. Deploy Edge Functions
-
 The `process-pdf-report` function exists in the codebase but needs to be deployed. Since we can't deploy via CLI, you can:
 
 **Option A: Copy Function Code**
@@ -99,7 +116,6 @@ The `process-pdf-report` function exists in the codebase but needs to be deploye
 - The PDF analysis workflow will show as "pending" until the edge function is deployed
 
 ## 🧪 Test the System Now
-
 ### Test 1: GPT API (✅ Working)
 ```bash
 curl -X POST https://gqcruitsupinmhrvygql.supabase.co/functions/v1/test-openai \
@@ -118,7 +134,6 @@ curl -X POST https://gqcruitsupinmhrvygql.supabase.co/functions/v1/test-openai \
 3. Check dashboard: http://localhost:8080/dashboard
 
 ## 📊 Expected Results
-
 ### With Migrations Complete:
 - ✅ Prompt templates available in admin panel
 - ✅ Admin can edit GPT and Perplexity prompts
@@ -142,3 +157,6 @@ The system is **95% complete**:
 - Edge function deployment is optional for testing ⚠️
 
 You can test all features except the actual PDF-to-AI analysis workflow (which requires the edge function deployment).
+
+
+

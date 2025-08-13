@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { 
   Building2, User, Mail, Phone, MapPin, Calendar, 
   FileText, CheckCircle, AlertCircle, Clock, 
-  LogOut, Edit, Globe, Users, Target
+  LogOut, Edit, Globe, Users, Target, Upload
 } from "lucide-react";
 
 interface Company {
@@ -73,20 +73,13 @@ export default function Dashboard() {
 
   const fetchDashboardData = async (companyId: number) => {
     try {
-      // Fetch business documents
-      const { data: docs, error: docsError } = await supabase
-        .from('business_registration')
-        .select('id, document_name, uploaded_at, is_verified, verification_notes')
-        .eq('company_id', companyId)
-        .order('uploaded_at', { ascending: false });
-
-      if (docsError) throw docsError;
-      setBusinessDocs(docs || []);
+      // Documents module disabled: skip fetching
+      setBusinessDocs([]);
 
       // Fetch matching requests
       const { data: requests, error: requestsError } = await supabase
         .from('matching_requests')
-        .select('id, target_countries, status, created_at, completed_at')
+        .select('id, target_countries, status, created_at, completed_at, report_token')
         .eq('company_id', companyId)
         .order('created_at', { ascending: false });
 
@@ -155,42 +148,69 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">마이페이지</h1>
-          <p className="text-gray-600 mt-1">
-            안녕하세요, {currentCompany.company_name}님! 👋
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/30">
+      {/* Enhanced Header with Navigation */}
+      <div className="bg-white/80 backdrop-blur-sm border-b border-slate-200/60 sticky top-0 z-10">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => navigate('/')}
+                className="hover:bg-blue-50"
+              >
+                <Building2 className="h-5 w-5 mr-2" />
+                홈으로
+              </Button>
+              <div className="border-l border-slate-200 h-8 mx-2"></div>
+              <div>
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  마이페이지
+                </h1>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-gray-600">
+                {currentCompany.company_name}
+              </span>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleLogout}
+                className="hover:bg-red-50 hover:text-red-600 hover:border-red-200"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                로그아웃
+              </Button>
+            </div>
+          </div>
         </div>
-        <Button variant="outline" onClick={handleLogout}>
-          <LogOut className="h-4 w-4 mr-2" />
-          로그아웃
-        </Button>
       </div>
+
+      <div className="container mx-auto px-4 py-8 space-y-6">
 
       {/* Status Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
+        <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-shadow">
           <CardHeader className="text-center pb-3">
             <CardTitle className="text-2xl text-blue-600">{getApprovalStatusBadge()}</CardTitle>
             <CardDescription>계정 승인 상태</CardDescription>
           </CardHeader>
         </Card>
-        <Card>
+        <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-shadow">
           <CardHeader className="text-center pb-3">
             <CardTitle className="text-2xl text-green-600">{businessDocs.length}</CardTitle>
             <CardDescription>업로드된 서류</CardDescription>
           </CardHeader>
         </Card>
-        <Card>
+        <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-shadow">
           <CardHeader className="text-center pb-3">
             <CardTitle className="text-2xl text-purple-600">{matchingRequests.length}</CardTitle>
             <CardDescription>매칭 요청</CardDescription>
           </CardHeader>
         </Card>
-        <Card>
+        <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-shadow">
           <CardHeader className="text-center pb-3">
             <CardTitle className="text-2xl text-orange-600">
               {matchingRequests.filter(r => r.status === 'completed').length}
@@ -202,10 +222,9 @@ export default function Dashboard() {
 
       {/* Main Content */}
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="overview">개요</TabsTrigger>
           <TabsTrigger value="company-info">회사정보</TabsTrigger>
-          <TabsTrigger value="documents">서류관리</TabsTrigger>
           <TabsTrigger value="matching">매칭요청</TabsTrigger>
         </TabsList>
 
@@ -363,59 +382,7 @@ export default function Dashboard() {
           </Card>
         </TabsContent>
 
-        {/* Documents Tab */}
-        <TabsContent value="documents" className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-semibold">서류 관리</h3>
-              <p className="text-gray-600">업로드된 사업자등록증 및 기타 서류</p>
-            </div>
-            <Button asChild>
-              <a href="/business-documents">서류 업로드</a>
-            </Button>
-          </div>
-          
-          <Card>
-            <CardContent className="pt-6">
-              {businessDocs.length === 0 ? (
-                <div className="text-center py-8">
-                  <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                  <p className="text-gray-500 mb-4">업로드된 서류가 없습니다.</p>
-                  <Button asChild>
-                    <a href="/business-documents">첫 서류 업로드하기</a>
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {businessDocs.map((doc) => (
-                    <div key={doc.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <FileText className="h-8 w-8 text-blue-600" />
-                        <div>
-                          <h4 className="font-medium">{doc.document_name}</h4>
-                          <p className="text-sm text-gray-500">
-                            {new Date(doc.uploaded_at).toLocaleDateString()} 업로드
-                          </p>
-                        </div>
-                      </div>
-                      {doc.is_verified ? (
-                        <Badge className="bg-green-100 text-green-800">
-                          <CheckCircle className="h-3 w-3 mr-1" />
-                          검증완료
-                        </Badge>
-                      ) : (
-                        <Badge variant="secondary">
-                          <AlertCircle className="h-3 w-3 mr-1" />
-                          검증대기
-                        </Badge>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+        {/* Documents Tab removed */}
 
         {/* Matching Tab */}
         <TabsContent value="matching" className="space-y-6">
@@ -469,9 +436,15 @@ export default function Dashboard() {
                             <strong>타겟 국가:</strong> {request.target_countries.join(', ')}
                           </p>
                           <p className="text-xs text-gray-500">
-                            요청일: {new Date(request.created_at).toLocaleDateString()}
+                            요청일: {(() => {
+                              const date = new Date(request.created_at);
+                              return isNaN(date.getTime()) ? '날짜 오류' : date.toLocaleDateString('ko-KR');
+                            })()}
                             {request.completed_at && (
-                              <> · 완료일: {new Date(request.completed_at).toLocaleDateString()}</>
+                              <> · 완료일: {(() => {
+                                const date = new Date(request.completed_at);
+                                return isNaN(date.getTime()) ? '날짜 오류' : date.toLocaleDateString('ko-KR');
+                              })()}</>
                             )}
                           </p>
                           
@@ -484,10 +457,36 @@ export default function Dashboard() {
                               <p className="text-sm text-green-700 mb-3">
                                 Goldman Sachs급 종합 분석 리포트가 준비되었습니다.
                               </p>
-                              <Button size="sm" className="bg-green-600 hover:bg-green-700">
-                                <FileText className="h-4 w-4 mr-1" />
-                                분석 결과 보기
-                              </Button>
+                              <div className="flex items-center gap-2">
+                                {(request as any).report_token ? (
+                                  <Button size="sm" className="bg-green-600 hover:bg-green-700" asChild>
+                                    <a href={`/report/${(request as any).report_token}`}>
+                                      <FileText className="h-4 w-4 mr-1" />
+                                      분석 결과 보기
+                                    </a>
+                                  </Button>
+                                ) : (
+                                  <p className="text-sm text-gray-500">보고서 토큰 생성 필요 (관리자 문의)</p>
+                                )}
+                                <Button size="sm" variant="outline" className="border-red-300 text-red-700 hover:bg-red-50"
+                                  onClick={async () => {
+                                    if (!confirm('이 리포트를 삭제하시겠습니까? 삭제 후 어드민에서 재발행이 가능합니다.')) return;
+                                    try {
+                                      const { error } = await supabase
+                                        .from('connection_requests')
+                                        .update({ final_report: null, ai_analysis: null, market_research: null })
+                                        .eq('id', request.id);
+                                      if (error) throw error;
+                                      toast({ title: '리포트 삭제 완료', description: `요청 #${request.id}` });
+                                      fetchDashboardData(currentCompany.id);
+                                    } catch (e: any) {
+                                      toast({ title: '삭제 실패', description: e.message, variant: 'destructive' });
+                                    }
+                                  }}
+                                >
+                                  삭제
+                                </Button>
+                              </div>
                             </div>
                           )}
                           
@@ -512,6 +511,7 @@ export default function Dashboard() {
           </Card>
         </TabsContent>
       </Tabs>
+      </div>
     </div>
   );
 }

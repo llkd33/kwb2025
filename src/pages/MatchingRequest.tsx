@@ -8,8 +8,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { createClient } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
-import { Upload, FileText, Globe, Target, Brain, CheckCircle, AlertCircle } from "lucide-react";
+import { Upload, FileText, Globe, Target, Brain, CheckCircle, AlertCircle, ArrowRight } from "lucide-react";
+// PDF-JS-DIST 임포트가 필요합니다. (예: npm install pdfjs-dist)
+import * as pdfjsLib from 'pdfjs-dist';
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.mjs`;
+
 
 const COUNTRIES = [
   // 아시아
@@ -39,6 +44,7 @@ export default function MatchingRequest() {
   const [productInfo, setProductInfo] = useState("");
   const [marketInfo, setMarketInfo] = useState("");
   const [companyProfiles, setCompanyProfiles] = useState<CompanyProfile[]>([]);
+  const [showExistingUploads, setShowExistingUploads] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [submitting, setSubmitting] = useState(false);
@@ -51,11 +57,14 @@ export default function MatchingRequest() {
     if (company) {
       const parsedCompany = JSON.parse(company);
       setCurrentCompany(parsedCompany);
-      fetchCompanyProfiles(parsedCompany.id);
+      // 기존 업로드 표시를 원치 않으면 false 유지
+      if (showExistingUploads) {
+        fetchCompanyProfiles(parsedCompany.id);
+      }
     } else {
       navigate('/auth');
     }
-  }, [navigate]);
+  }, [navigate, showExistingUploads]);
 
   const fetchCompanyProfiles = async (companyId: number) => {
     try {
@@ -81,6 +90,20 @@ export default function MatchingRequest() {
     } catch (error: any) {
       console.error('Error fetching company profiles:', error);
     }
+  };
+
+  // Helper function to extract text from a PDF file
+  // This requires pdfjs-dist library
+  const getTextFromPdf = async (file: File): Promise<string> => {
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+    let textContent = '';
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const text = await page.getTextContent();
+      textContent += text.items.map(item => item.str).join(' ');
+    }
+    return textContent;
   };
 
   const handleCountryToggle = (country: string) => {
@@ -179,7 +202,36 @@ export default function MatchingRequest() {
     setSubmitting(true);
 
     try {
-      // 1. Create matching request
+      // 1. If there's a file, upload it first.
+      let uploadedFilePath: string | null = null;
+      if (selectedFile && currentCompany) {
+        const fileExt = selectedFile.name.split('.').pop();
+        const fileName = `company-profile-${Date.now()}.${fileExt}`;
+        const filePath = `${currentCompany.id}/${fileName}`;
+        
+        console.log('Attempting file upload to:', filePath);
+        
+        // Debug: List all available buckets first
+        const { data: buckets } = await supabase.storage.listBuckets();
+        console.log('Available buckets:', buckets);
+        
+        const { error: uploadError } = await supabase.storage
+          .from('business-documents')
+          .upload(filePath, selectedFile, {
+            cacheControl: '3600',
+            upsert: false
+          });
+        
+        if (uploadError) {
+          console.error('Upload error details:', uploadError);
+          throw new Error(`파일 업로드 실패: ${uploadError.message}`);
+        }
+        
+        console.log('File upload successful!');
+        uploadedFilePath = filePath;
+      }
+      
+      // 2. Create matching request
       const { data: newRequest, error } = await supabase
         .from('matching_requests')
         .insert({
@@ -189,32 +241,59 @@ export default function MatchingRequest() {
           additional_questions: additionalQuestions,
           product_info: productInfo,
           market_info: marketInfo,
-          status: 'pending'
+          status: 'pending',
+          workflow_status: uploadedFilePath ? 'documents_uploaded' : 'pending', // Set initial status (matches check constraint)
         })
         .select()
         .single();
 
       if (error) throw error;
 
-      // 2. Start AI analysis in background
-      const analysisStarted = await supabase.functions.invoke('comprehensive-analysis', {
-        body: {
-          matchingRequestId: newRequest.id
+      // 2.1 Save uploaded file metadata to pdf_uploads table
+      if (uploadedFilePath && newRequest?.id) {
+        try {
+          await supabase
+            .from('pdf_uploads')
+            .insert({
+              matching_request_id: newRequest.id,
+              file_url: uploadedFilePath,
+              file_name: selectedFile?.name || 'uploaded.pdf',
+              file_size: selectedFile?.size || null,
+            });
+        } catch (e) {
+          console.error('Failed to record pdf_uploads metadata:', e);
         }
-      });
+      }
 
-      if (analysisStarted.error) {
-        console.error('Failed to start analysis:', analysisStarted.error);
-        // Don't throw error - the request was created successfully
-        toast({
-          title: "매칭 요청 완료",
-          description: "요청이 접수되었으나 분석 시작에 실패했습니다. 관리자에게 문의해주세요.",
-          variant: "destructive",
-        });
+      // 3. If a file was uploaded, start the summary process in the background.
+      if (selectedFile) {
+        try {
+          const pdfContent = await getTextFromPdf(selectedFile);
+          
+          // Do not wait for this to complete. It runs in the background.
+          supabase.functions.invoke('summarize-pdf', {
+            body: {
+              matchingRequestId: newRequest.id,
+              pdfContent: pdfContent,
+            }
+          });
+
+          toast({
+            title: "매칭 요청 및 PDF 요약 시작",
+            description: "요청이 접수되었으며, 첨부된 PDF의 AI 요약이 시작되었습니다. 관리자가 곧 검토할 것입니다.",
+          });
+        } catch (summaryError: any) {
+            console.error('Failed to start PDF summary:', summaryError);
+            toast({
+                title: "요청은 접수되었으나 PDF 요약 실패",
+                description: "첨부파일을 분석하는 데 실패했습니다. 관리자가 수동으로 검토할 것입니다.",
+                variant: "destructive"
+            });
+        }
       } else {
         toast({
-          title: "매칭 요청 완료",
-          description: "AI 분석이 시작되었습니다. 완료되면 이메일로 알려드리겠습니다. (약 5-10분 소요)",
+          title: "매칭 요청이 성공적으로 접수되었습니다.",
+          description: "관리자 검토 후 분석이 시작됩니다. 완료 시 이메일로 알려드리겠습니다.",
         });
       }
 
@@ -440,7 +519,7 @@ export default function MatchingRequest() {
             {uploading ? "업로드 중..." : "업로드"}
           </Button>
 
-          {companyProfiles.length > 0 && (
+          {showExistingUploads && companyProfiles.length > 0 && (
             <div className="mt-4">
               <p className="text-sm font-medium mb-2">업로드된 소개서:</p>
               <div className="space-y-2">

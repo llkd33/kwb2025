@@ -190,7 +190,7 @@ export default function Auth() {
         .insert({
           ...signupForm,
           founding_year: signupForm.founding_year ? parseInt(signupForm.founding_year) : null,
-          is_approved: false,
+          is_approved: null, // null means pending approval
           is_admin: false
         })
         .select()

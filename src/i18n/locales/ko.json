@@ -1,0 +1,453 @@
+{
+    "common": {
+        "loading": "로딩 중...",
+        "error": "오류가 발생했습니다",
+        "success": "성공",
+        "cancel": "취소",
+        "confirm": "확인",
+        "save": "저장",
+        "edit": "수정",
+        "delete": "삭제",
+        "search": "검색",
+        "filter": "필터",
+        "sort": "정렬",
+        "export": "내보내기",
+        "import": "가져오기",
+        "upload": "업로드",
+        "download": "다운로드",
+        "back": "뒤로",
+        "next": "다음",
+        "previous": "이전",
+        "close": "닫기",
+        "open": "열기",
+        "view": "보기",
+        "required": "필수",
+        "optional": "선택사항",
+        "select_placeholder": "선택해주세요",
+        "no_data": "데이터가 없습니다",
+        "refresh": "새로고침"
+    },
+    "navigation": {
+        "home": "홈",
+        "about": "회사소개",
+        "services": "서비스",
+        "dashboard": "대시보드",
+        "admin": "관리자",
+        "login": "로그인",
+        "logout": "로그아웃",
+        "signup": "회원가입",
+        "menu": "메뉴",
+        "profile": "프로필",
+        "settings": "설정",
+        "help": "도움말",
+        "contact": "문의하기"
+    },
+    "auth": {
+        "title": "KnowWhere Bridge",
+        "subtitle": "해외진출 매칭 플랫폼에 오신 것을 환영합니다",
+        "login": "로그인",
+        "signup": "회원가입",
+        "email": "이메일",
+        "password": "비밀번호",
+        "confirm_password": "비밀번호 확인",
+        "forgot_password": "비밀번호를 잊으셨나요?",
+        "remember_me": "로그인 상태 유지",
+        "login_button": "로그인",
+        "signup_button": "회원가입",
+        "login_loading": "로그인 중...",
+        "signup_loading": "가입 중...",
+        "login_success": "로그인 성공",
+        "signup_success": "회원가입 성공",
+        "login_error": "로그인에 실패했습니다",
+        "signup_error": "회원가입에 실패했습니다",
+        "invalid_credentials": "이메일 또는 비밀번호가 올바르지 않습니다",
+        "email_already_exists": "이미 존재하는 이메일입니다",
+        "password_too_short": "비밀번호는 최소 8자 이상이어야 합니다",
+        "passwords_dont_match": "비밀번호가 일치하지 않습니다",
+        "terms_agreement": "이용약관 및 개인정보처리방침에 동의합니다",
+        "social_login": "소셜 로그인",
+        "or": "또는"
+    },
+    "company": {
+        "name": "회사명",
+        "ceo": "대표자명",
+        "manager": "담당자명",
+        "position": "담당자 직책",
+        "phone": "연락처",
+        "email": "이메일",
+        "industry": "업종",
+        "country": "본사 소재 국가",
+        "city": "본사 소재 도시",
+        "year": "설립연도",
+        "employees": "직원 수",
+        "revenue": "매출 규모",
+        "website": "웹사이트",
+        "products": "주요 제품/서비스",
+        "target_market": "타겟 시장",
+        "competitive_advantage": "경쟁 우위",
+        "vision": "회사 비전",
+        "document": "사업자등록증",
+        "document_note": "PDF, JPG, PNG 파일만 업로드 가능합니다",
+        "registration_info": "회사 등록 정보",
+        "business_info": "사업 정보",
+        "contact_info": "연락처 정보",
+        "brief": {
+            "badge": "회사소개",
+            "title": "전세계 AI·Fintech·IT 생태계 활성화에 기여하는",
+            "subtitle": "맞춤형 비즈니스 매칭 전문기업으로, 자체 개발한 AI 플랫폼과 글로벌 전문가 그룹을 활용하여 여러분의 최적의 비즈니스 엠베서더 역할을 합니다.",
+            "global_network": "글로벌 네트워크",
+            "global_partners": "전 세계 AI·핀테크·IT 파트너",
+            "expert_group": "전문가 그룹",
+            "verified_experts": "검증된 글로벌 비즈니스 전문가",
+            "ai_platform": "AI 플랫폼",
+            "custom_ai": "자체 개발 AI 분석 시스템",
+            "learn_more": "회사소개 자세히 보기"
+        }
+    },
+    "industry": {
+        "manufacturing": "제조업",
+        "it": "IT/소프트웨어",
+        "bio": "바이오/헬스케어",
+        "chemical": "화학",
+        "food": "식품",
+        "fashion": "패션/뷰티",
+        "finance": "금융",
+        "education": "교육",
+        "construction": "건설",
+        "automotive": "자동차",
+        "energy": "에너지",
+        "logistics": "물류",
+        "retail": "소매",
+        "media": "미디어",
+        "tourism": "관광",
+        "other": "기타"
+    },
+    "country": {
+        "korea": "한국",
+        "japan": "일본",
+        "china": "중국",
+        "singapore": "싱가포르",
+        "taiwan": "대만",
+        "hongkong": "홍콩",
+        "philippines": "필리핀",
+        "indonesia": "인도네시아",
+        "malaysia": "말레이시아",
+        "vietnam": "베트남",
+        "thailand": "태국",
+        "india": "인도",
+        "other_asia": "기타 아시아",
+        "uae": "UAE",
+        "saudi": "사우디아라비아",
+        "other_middle": "기타 중동",
+        "usa": "미국",
+        "canada": "캐나다",
+        "mexico": "멕시코",
+        "other_north": "기타 북미",
+        "germany": "독일",
+        "uk": "영국",
+        "france": "프랑스",
+        "italy": "이탈리아",
+        "spain": "스페인",
+        "netherlands": "네덜란드",
+        "sweden": "스웨덴",
+        "norway": "노르웨이",
+        "other_europe": "기타 유럽",
+        "australia": "호주",
+        "newzealand": "뉴질랜드",
+        "brazil": "브라질",
+        "argentina": "아르헨티나",
+        "other_south": "기타 남미",
+        "south_africa": "남아프리카공화국",
+        "egypt": "이집트",
+        "other_africa": "기타 아프리카"
+    },
+    "employees": {
+        "1-10": "1-10명",
+        "11-50": "11-50명",
+        "51-100": "51-100명",
+        "101-500": "101-500명",
+        "501-1000": "501-1000명",
+        "1000+": "1000명 이상"
+    },
+    "home": {
+        "hero": {
+            "badge": "AI 기반 프리미엄 매칭 플랫폼",
+            "title": "글로벌 비즈니스\n성공의 새로운 길",
+            "subtitle": "AI와 전문가가 함께하는\n맞춤형 해외진출 솔루션",
+            "description": "Goldman Sachs 급 분석 리포트로 최적의 비즈니스 파트너를 찾아드립니다",
+            "cta_primary": "무료 분석 시작하기",
+            "cta_secondary": "서비스 둘러보기",
+            "cta_matching": "매칭 요청하기",
+            "features": {
+                "global_network": {
+                    "title": "글로벌 네트워크",
+                    "description": "전 세계 25개국 파트너 네트워크"
+                },
+                "ai_analysis": {
+                    "title": "AI 분석",
+                    "description": "GPT-4 + Perplexity 이중 분석"
+                },
+                "expert_verification": {
+                    "title": "전문가 검증",
+                    "description": "핀테크 전문가 직접 검토"
+                }
+            }
+        },
+        "company_brief": {
+            "badge": "회사소개",
+            "title": "전세계 AI·Fintech·IT 생태계 활성화에 기여하는",
+            "subtitle": "맞춤형 비즈니스 매칭 전문기업으로, 자체 개발한 AI 플랫폼과 글로벌 전문가 그룹을 활용하여 여러분의 최적의 비즈니스 엠베서더 역할을 합니다.",
+            "features": {
+                "global_network": {
+                    "title": "글로벌 네트워크",
+                    "description": "전 세계 AI·핀테크·IT 파트너"
+                },
+                "expert_group": {
+                    "title": "전문가 그룹",
+                    "description": "검증된 글로벌 비즈니스 전문가"
+                },
+                "ai_platform": {
+                    "title": "AI 플랫폼",
+                    "description": "자체 개발 AI 분석 시스템"
+                }
+            },
+            "learn_more": "회사소개 자세히 보기"
+        },
+        "features": {
+            "title": "KnowWhere Bridge만의 차별화된 AI 분석 시스템",
+            "subtitle": "KnowWhere Bridge만의 차별화된 AI 분석 시스템으로 글로벌 비즈니스 성공을 앞당기세요.",
+            "core_features": "핵심 기능",
+            "items": {
+                "document_processing": {
+                    "title": "문서 자동 처리",
+                    "description": "AI가 회사소개서를 자동으로 분석하여 핵심 정보를 추출합니다."
+                },
+                "auto_analysis": {
+                    "title": "AI 자동 분석",
+                    "description": "GPT와 Perplexity를 활용하여 핵심 비즈니스 요소를 자동으로 추출하고 분석합니다."
+                },
+                "expert_review": {
+                    "title": "전문가 검토",
+                    "description": "어드민이 AI 분석 결과를 검토하고 보완하여 정확성을 높입니다."
+                },
+                "custom_report": {
+                    "title": "맞춤형 리포트",
+                    "description": "Goldman Sachs 수준의 전문적인 시장분석 리포트를 마이페이지에서 확인할 수 있습니다."
+                },
+                "global_network": {
+                    "title": "글로벌 네트워크",
+                    "description": "전 세계 파트너사와의 네트워크를 통해 최적의 매칭을 제공합니다."
+                },
+                "security": {
+                    "title": "보안 & 신뢰성",
+                    "description": "사업자등록증 검증과 어드민 승인 시스템으로 신뢰할 수 있는 비즈니스 환경을 제공합니다."
+                }
+            }
+        },
+        "process": {
+            "title": "간단한 6단계로 완성되는",
+            "subtitle": "전문 분석 리포트",
+            "description": "복잡한 절차 없이 빠르고 정확한 해외진출 분석을 경험하세요.",
+            "steps": {
+                "signup": {
+                    "title": "회원가입",
+                    "description": "소셜 로그인 또는 이메일로 간편 가입"
+                },
+                "document_submit": {
+                    "title": "사업자등록증 제출",
+                    "description": "사업자등록증 업로드 후 어드민 승인 대기"
+                },
+                "company_info": {
+                    "title": "회사정보 제출",
+                    "description": "회사소개서 업로드 및 진출 희망 국가 선택"
+                },
+                "ai_analysis": {
+                    "title": "AI 분석",
+                    "description": "GPT/Perplexity 기반 자동 분석 수행"
+                },
+                "expert_review": {
+                    "title": "전문가 검토",
+                    "description": "어드민이 분석 결과 검토 및 보완"
+                },
+                "report_delivery": {
+                    "title": "리포트 제공",
+                    "description": "마이페이지에서 최종 분석 리포트 확인"
+                }
+            }
+        }
+    },
+    "services": {
+        "hero": {
+            "badge": "AI 기반 글로벌 비즈니스 매칭",
+            "title_highlight": "세계 최고 수준의",
+            "title_main": "AI 시장분석 서비스",
+            "subtitle": "Goldman Sachs급 시장분석 리포트로 최적의 글로벌 파트너, 투자자, 고객을 매칭합니다.",
+            "cta": "무료 분석 시작하기",
+            "consult": "상담 요청하기"
+        }
+    },
+    "dashboard": {
+        "title": "마이페이지",
+        "welcome": "환영합니다",
+        "overview": "개요",
+        "company_info": "회사정보",
+        "documents": "서류관리",
+        "matching": "매칭요청",
+        "reports": "분석리포트",
+        "settings": "설정",
+        "status": {
+            "pending": "승인 대기",
+            "approved": "승인 완료",
+            "rejected": "거부됨",
+            "in_progress": "진행중",
+            "completed": "완료"
+        },
+        "stats": {
+            "account_status": "계정 승인 상태",
+            "uploaded_documents": "업로드된 서류",
+            "matching_requests": "매칭 요청",
+            "completed_analysis": "완료된 분석"
+        },
+        "messages": {
+            "approval_pending": "관리자 승인이 완료되면 모든 서비스를 이용하실 수 있습니다. 사업자등록증 업로드를 완료하셨는지 확인해주세요.",
+            "no_documents": "업로드된 서류가 없습니다.",
+            "no_matching_requests": "매칭 요청이 없습니다.",
+            "approval_required": "계정 승인 후 매칭 요청이 가능합니다."
+        },
+        "actions": {
+            "upload_documents": "서류 업로드",
+            "request_matching": "매칭 요청하기",
+            "view_report": "분석 결과 보기",
+            "edit_info": "정보 수정"
+        }
+    },
+    "admin": {
+        "title": "관리자 대시보드",
+        "subtitle": "KnowWhere Bridge 플랫폼 통합 관리 센터",
+        "tabs": {
+            "pending": "승인 대기",
+            "approved": "승인 완료",
+            "rejected": "거부됨",
+            "matching": "매칭 요청",
+            "reports": "리포트 리뷰",
+            "prompts": "프롬프트 관리",
+            "data": "데이터 관리",
+            "newsletter": "뉴스레터"
+        },
+        "stats": {
+            "pending_approval": "승인 대기",
+            "approved_companies": "승인 완료",
+            "rejected_companies": "거부됨",
+            "completed_analysis": "완료된 분석"
+        },
+        "tools": {
+            "newsletter": {
+                "title": "뉴스레터 발송",
+                "description": "회원사 대상 이메일 발송"
+            },
+            "prompts": {
+                "title": "프롬프트 관리",
+                "description": "AI 분석 설정 관리"
+            },
+            "data": {
+                "title": "데이터 관리",
+                "description": "참조 데이터 업로드"
+            },
+            "home": {
+                "title": "홈으로 이동",
+                "description": "메인 페이지로 돌아가기"
+            }
+        },
+        "actions": {
+            "approve": "승인",
+            "reject": "거부",
+            "review": "검토",
+            "edit": "수정",
+            "delete": "삭제",
+            "send_email": "이메일 발송"
+        },
+        "messages": {
+            "no_pending": "승인 대기 중인 기업이 없습니다.",
+            "no_approved": "승인된 기업이 없습니다.",
+            "no_rejected": "거부된 기업이 없습니다.",
+            "approval_success": "승인이 완료되었고 알림 이메일이 발송되었습니다.",
+            "rejection_success": "거부가 완료되었고 알림 이메일이 발송되었습니다.",
+            "rejection_reason_required": "거부 사유를 입력해주세요."
+        },
+        "report_review": {
+            "title": "AI 분석 리포트 상세 검토",
+            "company_info": "기업 정보 요약",
+            "gpt_analysis": "GPT 종합 분석 리포트",
+            "perplexity_analysis": "Perplexity 실시간 시장 조사",
+            "citations": "실시간 참고 자료",
+            "admin_review": "관리자 검토 및 승인",
+            "additional_instructions": "추가 분석 지시사항",
+            "final_comments": "최종 검토 의견 및 승인 코멘트",
+            "quality_assessment": "리포트 품질 평가",
+            "completeness": "완성도",
+            "save_comments": "검토 의견 저장",
+            "final_approval": "최종 승인 및 고객 전송",
+            "approval_success": "리포트 최종 승인 완료",
+            "approval_description": "리포트가 최종 승인되었고 고객에게 완료 알림이 전송되었습니다."
+        }
+    },
+    "footer": {
+        "company": "KnowWhere Bridge",
+        "description": "전세계 AI·Fintech·IT 생태계 활성화에 기여하는 맞춤형 비즈니스 매칭 전문기업입니다.",
+        "contact": "연락처",
+        "privacy": "개인정보처리방침",
+        "terms": "이용약관",
+        "copyright": "Copyright 2024. Nowhere Bridge Co. All rights reserved.",
+        "business_number": "사업자등록번호",
+        "links": {
+            "about": "회사소개",
+            "services": "서비스",
+            "support": "고객지원",
+            "blog": "블로그",
+            "careers": "채용정보",
+            "quick_links": "빠른 링크"
+        },
+        "social": {
+            "facebook": "페이스북",
+            "twitter": "트위터",
+            "linkedin": "링크드인",
+            "instagram": "인스타그램",
+            "follow_us": "팔로우하기"
+        }
+    },
+    "errors": {
+        "404": {
+            "title": "페이지를 찾을 수 없습니다",
+            "description": "요청하신 페이지가 존재하지 않거나 이동되었습니다.",
+            "back_home": "홈으로 돌아가기"
+        },
+        "500": {
+            "title": "서버 오류가 발생했습니다",
+            "description": "일시적인 오류입니다. 잠시 후 다시 시도해주세요.",
+            "retry": "다시 시도"
+        },
+        "network": {
+            "title": "네트워크 오류",
+            "description": "인터넷 연결을 확인해주세요."
+        }
+    },
+    "service": {
+        "name": "KnowWhere Bridge"
+    },
+    "notifications": {
+        "success": {
+            "login": "로그인되었습니다",
+            "logout": "로그아웃되었습니다",
+            "save": "저장되었습니다",
+            "upload": "업로드가 완료되었습니다",
+            "delete": "삭제되었습니다"
+        },
+        "error": {
+            "login": "로그인에 실패했습니다",
+            "save": "저장에 실패했습니다",
+            "upload": "업로드에 실패했습니다",
+            "delete": "삭제에 실패했습니다",
+            "network": "네트워크 오류가 발생했습니다"
+        }
+    }
+}

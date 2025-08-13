@@ -114,7 +114,7 @@ Provide specific, actionable recommendations for market entry.'
 WHERE prompt_type = 'market_research';
 
 -- Insert or update Perplexity prompts with the standard format
-INSERT INTO gpt_prompts (prompt_type, prompt_title, system_prompt, user_prompt_template, is_active)
+INSERT INTO gpt_prompts (prompt_type, prompt_title, system_prompt, user_prompt_template, is_active, created_at)
 VALUES (
   'perplexity_market_research',
   'Perplexity 시장 조사',
@@ -148,7 +148,9 @@ Provide a comprehensive market analysis covering:
 - 주요 특허 출원 동향
 - 기술 표준화 움직임
 
-Use only current, verifiable information from reliable sources. Include specific data points, dates, and source references where possible.'
+Use only current, verifiable information from reliable sources. Include specific data points, dates, and source references where possible.',
+  true,
+  NOW()
 )
 ON CONFLICT (prompt_type) DO UPDATE SET
   prompt_title = EXCLUDED.prompt_title,
@@ -157,7 +159,7 @@ ON CONFLICT (prompt_type) DO UPDATE SET
   updated_at = now();
 
 -- Insert final report synthesis prompt
-INSERT INTO gpt_prompts (prompt_type, prompt_title, system_prompt, user_prompt_template, is_active)
+INSERT INTO gpt_prompts (prompt_type, prompt_title, system_prompt, user_prompt_template, is_active, created_at)
 VALUES (
   'final_report_synthesis',
   '최종 리포트 통합',
@@ -205,7 +207,9 @@ Create a unified report with the following structure:
 - 조건 및 구조 제안
 - 후속 조치 사항
 
-Ensure all recommendations are specific, actionable, and backed by data from the analyses.'
+Ensure all recommendations are specific, actionable, and backed by data from the analyses.',
+  true,
+  NOW()
 )
 ON CONFLICT (prompt_type) DO UPDATE SET
   prompt_title = EXCLUDED.prompt_title,

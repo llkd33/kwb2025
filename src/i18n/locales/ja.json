@@ -1,0 +1,437 @@
+{
+  "common": {
+    "loading": "読み込み中...",
+    "error": "エラーが発生しました",
+    "success": "成功",
+    "cancel": "キャンセル",
+    "confirm": "確認",
+    "save": "保存",
+    "edit": "編集",
+    "delete": "削除",
+    "search": "検索",
+    "filter": "フィルター",
+    "sort": "並び替え",
+    "export": "エクスポート",
+    "import": "インポート",
+    "upload": "アップロード",
+    "download": "ダウンロード",
+    "back": "戻る",
+    "next": "次へ",
+    "previous": "前へ",
+    "close": "閉じる",
+    "open": "開く",
+    "view": "表示",
+    "required": "必須",
+    "optional": "任意",
+    "select_placeholder": "選択してください",
+    "no_data": "データがありません",
+    "refresh": "更新"
+  },
+  "navigation": {
+    "home": "ホーム",
+    "about": "会社概要",
+    "services": "サービス",
+    "dashboard": "ダッシュボード",
+    "admin": "管理者",
+    "login": "ログイン",
+    "logout": "ログアウト",
+    "signup": "会員登録",
+    "menu": "メニュー",
+    "profile": "プロフィール",
+    "settings": "設定",
+    "help": "ヘルプ",
+    "contact": "お問い合わせ"
+  },
+  "auth": {
+    "title": "KnowWhere Bridge",
+    "subtitle": "グローバルビジネスマッチングプラットフォームへようこそ",
+    "login": "ログイン",
+    "signup": "会員登録",
+    "email": "メールアドレス",
+    "password": "パスワード",
+    "confirm_password": "パスワード確認",
+    "forgot_password": "パスワードをお忘れですか？",
+    "remember_me": "ログイン状態を保持",
+    "login_button": "ログイン",
+    "signup_button": "会員登録",
+    "login_loading": "ログイン中...",
+    "signup_loading": "登録中...",
+    "login_success": "ログイン成功",
+    "signup_success": "会員登録成功",
+    "login_error": "ログインに失敗しました",
+    "signup_error": "会員登録に失敗しました",
+    "invalid_credentials": "メールアドレスまたはパスワードが正しくありません",
+    "email_already_exists": "既に存在するメールアドレスです",
+    "password_too_short": "パスワードは最低8文字以上である必要があります",
+    "passwords_dont_match": "パスワードが一致しません",
+    "terms_agreement": "利用規約およびプライバシーポリシーに同意します",
+    "social_login": "ソーシャルログイン",
+    "or": "または"
+  },
+  "company": {
+    "name": "会社名",
+    "ceo": "代表者名",
+    "manager": "担当者名",
+    "position": "担当者役職",
+    "phone": "連絡先",
+    "email": "メールアドレス",
+    "industry": "業種",
+    "country": "本社所在国",
+    "city": "本社所在都市",
+    "year": "設立年度",
+    "employees": "従業員数",
+    "revenue": "売上規模",
+    "website": "ウェブサイト",
+    "products": "主要製品/サービス",
+    "target_market": "ターゲット市場",
+    "competitive_advantage": "競争優位性",
+    "vision": "会社ビジョン",
+    "document": "事業者登録証",
+    "document_note": "PDF、JPG、PNGファイルのみアップロード可能です",
+    "registration_info": "会社登録情報",
+    "business_info": "事業情報",
+    "contact_info": "連絡先情報",
+    "brief": {
+      "badge": "会社概要",
+      "title": "全世界AI・Fintech・IT生態系活性化に貢献",
+      "subtitle": "カスタムビジネスマッチング専門企業として、自社開発AIプラットフォームとグローバル専門家グループを活用して最適なビジネスアンバサダーの役割を果たします。",
+      "global_network": "グローバルネットワーク",
+      "global_partners": "全世界AI・フィンテック・ITパートナー",
+      "expert_group": "専門家グループ",
+      "verified_experts": "検証されたグローバルビジネス専門家",
+      "ai_platform": "AIプラットフォーム",
+      "custom_ai": "自社開発AI分析システム",
+      "learn_more": "会社概要詳細"
+    }
+  },
+  "industry": {
+    "manufacturing": "製造業",
+    "it": "IT/ソフトウェア",
+    "bio": "バイオ/ヘルスケア",
+    "chemical": "化学",
+    "food": "食品",
+    "fashion": "ファッション/美容",
+    "finance": "金融",
+    "education": "教育",
+    "construction": "建設",
+    "automotive": "自動車",
+    "energy": "エネルギー",
+    "logistics": "物流",
+    "retail": "小売",
+    "media": "メディア",
+    "tourism": "観光",
+    "other": "その他"
+  },
+  "country": {
+    "korea": "韓国",
+    "japan": "日本",
+    "china": "中国",
+    "singapore": "シンガポール",
+    "taiwan": "台湾",
+    "hongkong": "香港",
+    "philippines": "フィリピン",
+    "indonesia": "インドネシア",
+    "malaysia": "マレーシア",
+    "vietnam": "ベトナム",
+    "thailand": "タイ",
+    "india": "インド",
+    "other_asia": "その他アジア",
+    "uae": "UAE",
+    "saudi": "サウジアラビア",
+    "other_middle": "その他中東",
+    "usa": "アメリカ",
+    "canada": "カナダ",
+    "mexico": "メキシコ",
+    "other_north": "その他北米",
+    "germany": "ドイツ",
+    "uk": "イギリス",
+    "france": "フランス",
+    "italy": "イタリア",
+    "spain": "スペイン",
+    "netherlands": "オランダ",
+    "sweden": "スウェーデン",
+    "norway": "ノルウェー",
+    "other_europe": "その他ヨーロッパ",
+    "australia": "オーストラリア",
+    "newzealand": "ニュージーランド",
+    "brazil": "ブラジル",
+    "argentina": "アルゼンチン",
+    "other_south": "その他南米",
+    "south_africa": "南アフリカ",
+    "egypt": "エジプト",
+    "other_africa": "その他アフリカ"
+  },
+  "employees": {
+    "1-10": "1-10名",
+    "11-50": "11-50名",
+    "51-100": "51-100名",
+    "101-500": "101-500名",
+    "501-1000": "501-1000名",
+    "1000+": "1000名以上"
+  },
+  "home": {
+    "hero": {
+      "badge": "AI基盤プレミアムマッチングプラットフォーム",
+      "title": "グローバルビジネス\n成功の新しい道",
+      "subtitle": "AIと専門家が共に作る\nカスタム海外進出ソリューション",
+      "description": "Goldman Sachs級分析レポートで最適なビジネスパートナーを見つけます",
+      "cta_primary": "無料分析開始",
+      "cta_secondary": "サービス探索",
+      "cta_matching": "マッチングリクエスト",
+      "features": {
+        "global_network": {
+          "title": "グローバルネットワーク",
+          "description": "世界25カ国のパートナーネットワーク"
+        },
+        "ai_analysis": {
+          "title": "AI分析",
+          "description": "GPT-4 + Perplexity二重分析"
+        },
+        "expert_verification": {
+          "title": "専門家検証",
+          "description": "フィンテック専門家による直接レビュー"
+        }
+      }
+    },
+    "company_brief": {
+      "badge": "会社概要",
+      "title": "全世界AI・Fintech・IT生態系活性化に貢献",
+      "subtitle": "カスタムビジネスマッチング専門企業として、自社開発AIプラットフォームとグローバル専門家グループを活用して最適なビジネスアンバサダーの役割を果たします。",
+      "features": {
+        "global_network": {
+          "title": "グローバルネットワーク",
+          "description": "全世界AI・フィンテック・ITパートナー"
+        },
+        "expert_group": {
+          "title": "専門家グループ",
+          "description": "検証されたグローバルビジネス専門家"
+        },
+        "ai_platform": {
+          "title": "AIプラットフォーム",
+          "description": "自社開発AI分析システム"
+        }
+      },
+      "learn_more": "会社概要詳細"
+    },
+    "features": {
+      "title": "KnowWhere Bridgeの差別化されたAI分析システム",
+      "subtitle": "KnowWhere Bridgeの差別化されたAI分析システムでグローバルビジネス成功を加速させましょう。",
+      "core_features": "コア機能",
+      "items": {
+        "document_processing": {
+          "title": "文書自動処理",
+          "description": "AIが会社概要書を自動分析して核心情報を抽出します。"
+        },
+        "auto_analysis": {
+          "title": "AI自動分析",
+          "description": "GPTとPerplexityを活用して核心ビジネス要素を自動抽出・分析します。"
+        },
+        "expert_review": {
+          "title": "専門家レビュー",
+          "description": "管理者がAI分析結果をレビューし補完して正確性を高めます。"
+        },
+        "custom_report": {
+          "title": "カスタムレポート",
+          "description": "Goldman Sachs水準の専門的な市場分析レポートをマイページで確認できます。"
+        },
+        "global_network": {
+          "title": "グローバルネットワーク",
+          "description": "全世界パートナー企業とのネットワークを通じて最適なマッチングを提供します。"
+        },
+        "security": {
+          "title": "セキュリティ・信頼性",
+          "description": "事業者登録証検証と管理者承認システムで信頼できるビジネス環境を提供します。"
+        }
+      }
+    },
+    "process": {
+      "title": "簡単な6段階で完成する",
+      "subtitle": "専門分析レポート",
+      "description": "複雑な手続きなしに迅速で正確な海外進出分析を体験してください。",
+      "steps": {
+        "signup": {
+          "title": "会員登録",
+          "description": "ソーシャルログインまたはメールで簡単登録"
+        },
+        "document_submit": {
+          "title": "事業者登録証提出",
+          "description": "事業者登録証アップロード後管理者承認待機"
+        },
+        "company_info": {
+          "title": "会社情報提出",
+          "description": "会社概要書アップロードおよび進出希望国選択"
+        },
+        "ai_analysis": {
+          "title": "AI分析",
+          "description": "GPT/Perplexity基盤自動分析実行"
+        },
+        "expert_review": {
+          "title": "専門家検討",
+          "description": "管理者が分析結果検討および補完"
+        },
+        "report_delivery": {
+          "title": "レポート提供",
+          "description": "マイページで最終分析レポート確認"
+        }
+      }
+    }
+  },
+  "services": {
+    "hero": {
+      "badge": "AI基盤グローバルビジネスマッチング",
+      "title_highlight": "世界最高水準の",
+      "title_main": "AI市場分析サービス",
+      "subtitle": "Goldman Sachs級市場分析レポートで最適なグローバルパートナー、投資家、顧客をマッチングします。",
+      "cta": "無料分析開始",
+      "consult": "相談リクエスト"
+    }
+  },
+  "dashboard": {
+    "title": "マイページ",
+    "welcome": "ようこそ",
+    "overview": "概要",
+    "company_info": "会社情報",
+    "documents": "書類管理",
+    "matching": "マッチング",
+    "reports": "分析レポート",
+    "settings": "設定",
+    "status": {
+      "pending": "承認待機",
+      "approved": "承認完了",
+      "rejected": "拒否",
+      "in_progress": "進行中",
+      "completed": "完了"
+    },
+    "stats": {
+      "account_status": "アカウント承認状態",
+      "uploaded_documents": "アップロード済み書類",
+      "matching_requests": "マッチングリクエスト",
+      "completed_analysis": "完了した分析"
+    },
+    "messages": {
+      "approval_pending": "管理者承認が完了すればすべてのサービスをご利用いただけます。事業者登録証のアップロードが完了しているかご確認ください。",
+      "no_documents": "アップロードされた書類がありません。",
+      "no_matching_requests": "マッチングリクエストがありません。",
+      "approval_required": "アカウント承認後にマッチングリクエストが可能です。"
+    },
+    "actions": {
+      "upload_documents": "書類アップロード",
+      "request_matching": "マッチングリクエスト",
+      "view_report": "分析結果表示",
+      "edit_info": "情報編集"
+    }
+  },
+  "admin": {
+    "title": "管理者ダッシュボード",
+    "subtitle": "KnowWhere Bridgeプラットフォーム統合管理センター",
+    "tabs": {
+      "pending": "承認待機",
+      "approved": "承認完了",
+      "rejected": "拒否",
+      "matching": "マッチングリクエスト",
+      "reports": "レポートレビュー",
+      "prompts": "プロンプト管理",
+      "data": "データ管理",
+      "newsletter": "ニュースレター"
+    },
+    "stats": {
+      "pending_approval": "承認待機",
+      "approved_companies": "承認完了",
+      "rejected_companies": "拒否",
+      "completed_analysis": "完了した分析"
+    },
+    "tools": {
+      "newsletter": {
+        "title": "ニュースレター送信",
+        "description": "会員企業対象メール送信"
+      },
+      "prompts": {
+        "title": "プロンプト管理",
+        "description": "AI分析設定管理"
+      },
+      "data": {
+        "title": "データ管理",
+        "description": "参照データアップロード"
+      },
+      "home": {
+        "title": "ホームへ移動",
+        "description": "メインページに戻る"
+      }
+    },
+    "actions": {
+      "approve": "承認",
+      "reject": "拒否",
+      "review": "レビュー",
+      "edit": "編集",
+      "delete": "削除",
+      "send_email": "メール送信"
+    },
+    "messages": {
+      "no_pending": "承認待機中の企業がありません。",
+      "no_approved": "承認された企業がありません。",
+      "no_rejected": "拒否された企業がありません。",
+      "approval_success": "承認が完了し、通知メールが送信されました。",
+      "rejection_success": "拒否が完了し、通知メールが送信されました。",
+      "rejection_reason_required": "拒否理由を入力してください。"
+    }
+  },
+  "footer": {
+    "company": "KnowWhere Bridge",
+    "description": "全世界AI・Fintech・IT生態系活性化に貢献するカスタムビジネスマッチング専門企業です。",
+    "contact": "連絡先",
+    "privacy": "プライバシーポリシー",
+    "terms": "利用規約",
+    "copyright": "Copyright 2024. Nowhere Bridge Co. All rights reserved.",
+    "business_number": "事業者登録番号",
+    "links": {
+      "about": "会社概要",
+      "services": "サービス",
+      "support": "サポート",
+      "blog": "ブログ",
+      "careers": "採用情報",
+      "quick_links": "クイックリンク"
+    },
+    "social": {
+      "facebook": "Facebook",
+      "twitter": "Twitter",
+      "linkedin": "LinkedIn",
+      "instagram": "Instagram",
+      "follow_us": "フォローする"
+    }
+  },
+  "errors": {
+    "404": {
+      "title": "ページが見つかりません",
+      "description": "リクエストされたページが存在しないか移動されました。",
+      "back_home": "ホームに戻る"
+    },
+    "500": {
+      "title": "サーバーエラーが発生しました",
+      "description": "一時的なエラーです。しばらくしてから再度お試しください。",
+      "retry": "再試行"
+    },
+    "network": {
+      "title": "ネットワークエラー",
+      "description": "インターネット接続を確認してください。"
+    }
+  },
+  "service": {
+    "name": "KnowWhere Bridge"
+  },
+  "notifications": {
+    "success": {
+      "login": "ログインしました",
+      "logout": "ログアウトしました",
+      "save": "保存されました",
+      "upload": "アップロードが完了しました",
+      "delete": "削除されました"
+    },
+    "error": {
+      "login": "ログインに失敗しました",
+      "save": "保存に失敗しました",
+      "upload": "アップロードに失敗しました",
+      "delete": "削除に失敗しました",
+      "network": "ネットワークエラーが発生しました"
+    }
+  }
+}

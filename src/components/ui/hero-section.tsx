@@ -2,9 +2,11 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, BarChart3, Globe, Zap, Sparkles, TrendingUp, Shield } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export function HeroSection() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
@@ -47,28 +49,32 @@ export function HeroSection() {
           <div className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-full border border-blue-400/30 backdrop-blur-sm mb-8 animate-fade-in">
             <Sparkles className="w-5 h-5 mr-2 text-blue-400" />
             <span className="text-sm font-semibold bg-gradient-to-r from-blue-300 to-purple-300 bg-clip-text text-transparent">
-              AI 기반 프리미엄 매칭 플랫폼
+              {t('home.hero.badge')}
             </span>
           </div>
 
           {/* Main Heading with Enhanced Typography */}
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-8 leading-tight">
-            <span className="block mb-2">글로벌 비즈니스</span>
-            <span className="block bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">
-              성공의 새로운 길
-            </span>
+            {t('home.hero.title').split('\n').map((line, index) => (
+              <span key={index} className={index === 0 ? "block mb-2" : "block bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent"}>
+                {line}
+              </span>
+            ))}
           </h1>
 
           {/* Enhanced Subtitle */}
           <div className="space-y-4 mb-12">
             <p className="text-xl sm:text-2xl md:text-3xl text-blue-100/90 font-light">
-              AI와 전문가가 함께하는
-              <br />
-              <span className="font-semibold text-white">맞춤형 해외진출 솔루션</span>
+              {t('home.hero.subtitle').split('\n').map((line, index) => (
+                <span key={index} className={index === 1 ? "font-semibold text-white" : ""}>
+                  {line}
+                  {index === 0 && <br />}
+                </span>
+              ))}
             </p>
             
             <p className="text-lg sm:text-xl text-blue-200/80 max-w-3xl mx-auto leading-relaxed">
-              Goldman Sachs 급 분석 리포트로 최적의 비즈니스 파트너를 찾아드립니다
+              {t('home.hero.description')}
             </p>
           </div>
 
@@ -81,7 +87,7 @@ export function HeroSection() {
               onClick={handleStartAnalysis}
             >
               <span className="mr-2">
-                {isLoggedIn ? '매칭 요청하기' : '무료 분석 시작하기'}
+                {isLoggedIn ? t('home.hero.cta_matching') : t('home.hero.cta_primary')}
               </span>
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Button>
@@ -92,7 +98,7 @@ export function HeroSection() {
               className="border-2 border-blue-400/50 text-blue-100 hover:bg-blue-500/10 bg-transparent/10 backdrop-blur-sm font-semibold text-lg px-8 py-4 h-14 rounded-xl hover:border-blue-300 transition-all duration-300"
               onClick={handleExploreServices}
             >
-              서비스 둘러보기
+              {t('home.hero.cta_secondary')}
             </Button>
           </div>
 
@@ -100,18 +106,18 @@ export function HeroSection() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-4xl mx-auto">
             <div className="group p-6 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 hover:bg-white/10 transition-all duration-300 hover:scale-105">
               <Globe className="w-8 h-8 mx-auto mb-3 text-blue-400 group-hover:scale-110 transition-transform" />
-              <h3 className="text-lg font-semibold mb-2">글로벌 네트워크</h3>
-              <p className="text-sm text-blue-200/80">전 세계 25개국 파트너 네트워크</p>
+              <h3 className="text-lg font-semibold mb-2">{t('home.hero.features.global_network.title')}</h3>
+              <p className="text-sm text-blue-200/80">{t('home.hero.features.global_network.description')}</p>
             </div>
             <div className="group p-6 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 hover:bg-white/10 transition-all duration-300 hover:scale-105">
               <TrendingUp className="w-8 h-8 mx-auto mb-3 text-purple-400 group-hover:scale-110 transition-transform" />
-              <h3 className="text-lg font-semibold mb-2">AI 분석</h3>
-              <p className="text-sm text-blue-200/80">GPT-4 + Perplexity 이중 분석</p>
+              <h3 className="text-lg font-semibold mb-2">{t('home.hero.features.ai_analysis.title')}</h3>
+              <p className="text-sm text-blue-200/80">{t('home.hero.features.ai_analysis.description')}</p>
             </div>
             <div className="group p-6 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 hover:bg-white/10 transition-all duration-300 hover:scale-105">
               <Shield className="w-8 h-8 mx-auto mb-3 text-cyan-400 group-hover:scale-110 transition-transform" />
-              <h3 className="text-lg font-semibold mb-2">전문가 검증</h3>
-              <p className="text-sm text-blue-200/80">핀테크 전문가 직접 검토</p>
+              <h3 className="text-lg font-semibold mb-2">{t('home.hero.features.expert_verification.title')}</h3>
+              <p className="text-sm text-blue-200/80">{t('home.hero.features.expert_verification.description')}</p>
             </div>
           </div>
         </div>

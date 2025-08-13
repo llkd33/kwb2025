@@ -26,7 +26,7 @@ serve(async (req: Request) => {
     // 1. Get matching request data only
     const { data: matchingRequest, error: requestError } = await supabaseClient
       .from('matching_requests')
-      .select(`*, companies(*)`)
+      .select(`*, companies!matching_requests_company_id_fkey(*)`)
       .eq('id', matchingRequestId)
       .single();
 
@@ -38,8 +38,19 @@ serve(async (req: Request) => {
 
     // 2. Test simple OpenAI call with gpt-4o-mini (known working model)
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openaiApiKey) {
-      throw new Error('OpenAI API key not found');
+    if (!openaiApiKey || openaiApiKey === 'your_openai_api_key_here') {
+      console.error('OpenAI API key not configured properly');
+      
+      // Return a more informative error for missing API key
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'API key not configured',
+        message: 'OpenAI API key가 설정되지 않았습니다. Supabase 대시보드에서 환경 변수를 설정해주세요.',
+        instructions: 'npx supabase secrets set OPENAI_API_KEY=your_actual_api_key'
+      }), {
+        status: 503, // Service Unavailable
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     console.log('Making OpenAI API call...');
@@ -71,12 +82,13 @@ serve(async (req: Request) => {
     const data = await response.json();
     console.log('OpenAI call successful');
 
-    // 3. Update status to completed (minimal)
+    // 3. Update status but keep as pending for admin review
     await supabaseClient
       .from('matching_requests')
       .update({
-        status: 'completed',
-        completed_at: new Date().toISOString(),
+        status: 'pending',  // Keep as pending for admin review
+        workflow_status: 'ai_completed',
+        ai_completed_at: new Date().toISOString(),
         ai_analysis: { simple_analysis: data.choices[0].message.content }
       })
       .eq('id', matchingRequestId);

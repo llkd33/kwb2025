@@ -33,19 +33,20 @@ export function Navigation({ className }: NavigationProps) {
 
   // 기본 네비게이션 아이템
   const baseNavItems = [
-    { href: "/", label: t('nav.home') },
-    { href: "/about", label: t('nav.about') },
+    { href: "/", label: t('navigation.home') },
+    { href: "/about", label: t('navigation.about') },
+    { href: "/services", label: t('navigation.services') },
   ];
 
   // 로그인된 사용자용 아이템
   const userNavItems = [
-    { href: "/business-documents", label: "서류관리" },
-    { href: "/dashboard", label: t('nav.dashboard') },
+    // 문서 관리 메뉴 비활성화
+    { href: "/dashboard", label: t('navigation.dashboard') },
   ];
 
   // 관리자용 아이템
   const adminNavItems = [
-    { href: "/admin", label: "관리자" },
+    { href: "/admin", label: t('navigation.admin') },
   ];
 
   // 최종 네비게이션 아이템 구성
@@ -80,7 +81,7 @@ export function Navigation({ className }: NavigationProps) {
             <div className="fixed right-0 top-0 h-full w-80 bg-gray-900 shadow-xl" onClick={(e) => e.stopPropagation()}>
                 <div className="p-6">
                   <div className="flex items-center justify-between mb-8">
-                    <span className="text-lg font-semibold text-white">{t('nav.menu')}</span>
+                    <span className="text-lg font-semibold text-white">{t('navigation.menu')}</span>
                     <button
                       onClick={() => setMobileMenuOpen(false)}
                       className="p-2 hover:bg-gray-800 rounded-lg transition-colors text-white"
@@ -110,7 +111,7 @@ export function Navigation({ className }: NavigationProps) {
                     {isLoggedIn ? (
                       <div className="space-y-4">
                         <div className="text-sm text-gray-400">
-                          {currentCompany?.company_name}님
+                          {currentCompany?.company_name}
                         </div>
                         <Button 
                           variant="outline" 
@@ -120,19 +121,19 @@ export function Navigation({ className }: NavigationProps) {
                             window.location.href = '/';
                           }}
                         >
-                          {t('nav.logout')}
+                          {t('navigation.logout')}
                         </Button>
                       </div>
                     ) : (
                       <div className="space-y-3">
                         <Button variant="ghost" className="w-full text-white hover:bg-gray-800" asChild>
                           <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
-                            {t('nav.login')}
+                            {t('navigation.login')}
                           </Link>
                         </Button>
                         <Button className="w-full bg-gradient-primary hover:opacity-90" asChild>
                           <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
-                            {t('auth.signup')}
+                            {t('navigation.signup')}
                           </Link>
                         </Button>
                       </div>
@@ -168,7 +169,7 @@ export function Navigation({ className }: NavigationProps) {
         {isLoggedIn ? (
           <div className="flex items-center space-x-4">
             <span className="text-sm text-muted-foreground">
-              {currentCompany?.company_name}님
+              {currentCompany?.company_name}
             </span>
             <Button 
               variant="outline" 
@@ -178,16 +179,16 @@ export function Navigation({ className }: NavigationProps) {
                 window.location.href = '/';
               }}
             >
-              {t('nav.logout')}
+              {t('navigation.logout')}
             </Button>
           </div>
         ) : (
           <>
             <Button variant="ghost" size="sm" asChild>
-              <Link to="/auth">{t('nav.login')}</Link>
+              <Link to="/auth">{t('navigation.login')}</Link>
             </Button>
             <Button size="sm" className="bg-gradient-primary hover:opacity-90" asChild>
-              <Link to="/auth">{t('auth.signup')}</Link>
+              <Link to="/auth">{t('navigation.signup')}</Link>
             </Button>
           </>
         )}

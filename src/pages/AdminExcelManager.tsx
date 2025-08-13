@@ -18,6 +18,29 @@ export default function AdminExcelManager() {
   const [excelData, setExcelData] = useState<any[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [dataType, setDataType] = useState<string>("partners");
+  const exampleTemplates: Record<string, Array<{ key: string; description: string }>> = {
+    partners: [
+      { key: 'company_name', description: '파트너사 명' },
+      { key: 'country', description: '국가코드 또는 국가명 (예: KR, US)' },
+      { key: 'industry', description: '산업 카테고리' },
+      { key: 'contact', description: '연락 담당자/이메일' },
+      { key: 'strengths', description: '강점(콤마 구분 가능)' },
+    ],
+    countries: [
+      { key: 'country', description: '국가코드 또는 국가명' },
+      { key: 'market_size', description: '시장규모(숫자 또는 텍스트)' },
+      { key: 'cagr', description: '연평균성장률(%)' },
+      { key: 'key_regulations', description: '핵심 규제(요약)' },
+      { key: 'certifications', description: '필요 인증' },
+    ],
+    industries: [
+      { key: 'industry', description: '산업명' },
+      { key: 'sub_sectors', description: '세부 섹터(콤마 구분)' },
+      { key: 'key_players', description: '주요 기업(콤마 구분)' },
+      { key: 'avg_margin', description: '평균 마진(%)' },
+      { key: 'trends', description: '주요 트렌드 요약' },
+    ],
+  };
 
   useEffect(() => {
     fetchExcelData();
@@ -223,6 +246,35 @@ export default function AdminExcelManager() {
         </TabsList>
 
         <div className="mt-6 space-y-6">
+          {/* Example Template Guidance */}
+          <Card>
+            <CardHeader>
+              <CardTitle>예시 템플릿 가이드</CardTitle>
+              <CardDescription>
+                선택한 탭에 맞춰 Excel 시트에 다음 컬럼을 포함하는 것을 권장합니다.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="whitespace-nowrap">컬럼 키</TableHead>
+                      <TableHead className="whitespace-nowrap">설명</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {(exampleTemplates[dataType] || []).map((row) => (
+                      <TableRow key={row.key}>
+                        <TableCell className="font-mono text-xs whitespace-nowrap">{row.key}</TableCell>
+                        <TableCell className="whitespace-pre-wrap">{row.description}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
           {/* Upload Section */}
           <Card>
             <CardHeader>

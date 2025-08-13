@@ -1,7 +1,7 @@
 -- Create gpt_prompts table for managing GPT prompts
 CREATE TABLE public.gpt_prompts (
   id SERIAL PRIMARY KEY,
-  prompt_type TEXT NOT NULL, -- 'company_analysis', 'market_research', 'final_report'
+  prompt_type TEXT NOT NULL UNIQUE, -- 'company_analysis', 'market_research', 'final_report'
   prompt_title TEXT NOT NULL,
   system_prompt TEXT NOT NULL,
   user_prompt_template TEXT NOT NULL,

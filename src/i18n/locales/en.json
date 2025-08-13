@@ -1,0 +1,437 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "success": "Success",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "export": "Export",
+    "import": "Import",
+    "upload": "Upload",
+    "download": "Download",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "close": "Close",
+    "open": "Open",
+    "view": "View",
+    "required": "Required",
+    "optional": "Optional",
+    "select_placeholder": "Please select",
+    "no_data": "No data available",
+    "refresh": "Refresh"
+  },
+  "navigation": {
+    "home": "Home",
+    "about": "About",
+    "services": "Services",
+    "dashboard": "Dashboard",
+    "admin": "Admin",
+    "login": "Login",
+    "logout": "Logout",
+    "signup": "Sign Up",
+    "menu": "Menu",
+    "profile": "Profile",
+    "settings": "Settings",
+    "help": "Help",
+    "contact": "Contact"
+  },
+  "auth": {
+    "title": "KnowWhere Bridge",
+    "subtitle": "Welcome to the Global Business Matching Platform",
+    "login": "Login",
+    "signup": "Sign Up",
+    "email": "Email",
+    "password": "Password",
+    "confirm_password": "Confirm Password",
+    "forgot_password": "Forgot your password?",
+    "remember_me": "Remember me",
+    "login_button": "Login",
+    "signup_button": "Sign Up",
+    "login_loading": "Logging in...",
+    "signup_loading": "Signing up...",
+    "login_success": "Login successful",
+    "signup_success": "Sign up successful",
+    "login_error": "Login failed",
+    "signup_error": "Sign up failed",
+    "invalid_credentials": "Invalid email or password",
+    "email_already_exists": "Email already exists",
+    "password_too_short": "Password must be at least 8 characters",
+    "passwords_dont_match": "Passwords don't match",
+    "terms_agreement": "I agree to the Terms of Service and Privacy Policy",
+    "social_login": "Social Login",
+    "or": "or"
+  },
+  "company": {
+    "name": "Company Name",
+    "ceo": "CEO Name",
+    "manager": "Manager Name",
+    "position": "Manager Position",
+    "phone": "Phone Number",
+    "email": "Email",
+    "industry": "Industry",
+    "country": "Headquarters Country",
+    "city": "Headquarters City",
+    "year": "Founding Year",
+    "employees": "Number of Employees",
+    "revenue": "Revenue Scale",
+    "website": "Website",
+    "products": "Main Products/Services",
+    "target_market": "Target Market",
+    "competitive_advantage": "Competitive Advantage",
+    "vision": "Company Vision",
+    "document": "Business Registration",
+    "document_note": "Only PDF, JPG, PNG files can be uploaded",
+    "registration_info": "Company Registration Information",
+    "business_info": "Business Information",
+    "contact_info": "Contact Information",
+    "brief": {
+      "badge": "About Us",
+      "title": "Contributing to the activation of global AI·Fintech·IT ecosystems",
+      "subtitle": "A specialized business matching company that serves as your optimal business ambassador using our proprietary AI platform and global expert group.",
+      "global_network": "Global Network",
+      "global_partners": "Worldwide AI·Fintech·IT Partners",
+      "expert_group": "Expert Group",
+      "verified_experts": "Verified Global Business Experts",
+      "ai_platform": "AI Platform",
+      "custom_ai": "Proprietary AI Analysis System",
+      "learn_more": "Learn More About Us"
+    }
+  },
+  "industry": {
+    "manufacturing": "Manufacturing",
+    "it": "IT/Software",
+    "bio": "Bio/Healthcare",
+    "chemical": "Chemical",
+    "food": "Food",
+    "fashion": "Fashion/Beauty",
+    "finance": "Finance",
+    "education": "Education",
+    "construction": "Construction",
+    "automotive": "Automotive",
+    "energy": "Energy",
+    "logistics": "Logistics",
+    "retail": "Retail",
+    "media": "Media",
+    "tourism": "Tourism",
+    "other": "Other"
+  },
+  "country": {
+    "korea": "Korea",
+    "japan": "Japan",
+    "china": "China",
+    "singapore": "Singapore",
+    "taiwan": "Taiwan",
+    "hongkong": "Hong Kong",
+    "philippines": "Philippines",
+    "indonesia": "Indonesia",
+    "malaysia": "Malaysia",
+    "vietnam": "Vietnam",
+    "thailand": "Thailand",
+    "india": "India",
+    "other_asia": "Other Asia",
+    "uae": "UAE",
+    "saudi": "Saudi Arabia",
+    "other_middle": "Other Middle East",
+    "usa": "USA",
+    "canada": "Canada",
+    "mexico": "Mexico",
+    "other_north": "Other North America",
+    "germany": "Germany",
+    "uk": "UK",
+    "france": "France",
+    "italy": "Italy",
+    "spain": "Spain",
+    "netherlands": "Netherlands",
+    "sweden": "Sweden",
+    "norway": "Norway",
+    "other_europe": "Other Europe",
+    "australia": "Australia",
+    "newzealand": "New Zealand",
+    "brazil": "Brazil",
+    "argentina": "Argentina",
+    "other_south": "Other South America",
+    "south_africa": "South Africa",
+    "egypt": "Egypt",
+    "other_africa": "Other Africa"
+  },
+  "employees": {
+    "1-10": "1-10 employees",
+    "11-50": "11-50 employees",
+    "51-100": "51-100 employees",
+    "101-500": "101-500 employees",
+    "501-1000": "501-1000 employees",
+    "1000+": "1000+ employees"
+  },
+  "home": {
+    "hero": {
+      "badge": "AI-Powered Premium Matching Platform",
+      "title": "Global Business\nSuccess Redefined",
+      "subtitle": "Customized overseas expansion solutions\nwith AI and expert collaboration",
+      "description": "Find optimal business partners with Goldman Sachs-level analysis reports",
+      "cta_primary": "Start Free Analysis",
+      "cta_secondary": "Explore Services",
+      "cta_matching": "Request Matching",
+      "features": {
+        "global_network": {
+          "title": "Global Network",
+          "description": "Partner network across 25 countries worldwide"
+        },
+        "ai_analysis": {
+          "title": "AI Analysis",
+          "description": "Dual analysis with GPT-4 + Perplexity"
+        },
+        "expert_verification": {
+          "title": "Expert Verification",
+          "description": "Direct review by fintech experts"
+        }
+      }
+    },
+    "company_brief": {
+      "badge": "About Us",
+      "title": "Contributing to the activation of global AI·Fintech·IT ecosystems",
+      "subtitle": "A specialized business matching company that serves as your optimal business ambassador using our proprietary AI platform and global expert group.",
+      "features": {
+        "global_network": {
+          "title": "Global Network",
+          "description": "Worldwide AI·Fintech·IT Partners"
+        },
+        "expert_group": {
+          "title": "Expert Group",
+          "description": "Verified Global Business Experts"
+        },
+        "ai_platform": {
+          "title": "AI Platform",
+          "description": "Proprietary AI Analysis System"
+        }
+      },
+      "learn_more": "Learn More About Us"
+    },
+    "features": {
+      "title": "KnowWhere Bridge's Differentiated AI Analysis System",
+      "subtitle": "Accelerate your global business success with KnowWhere Bridge's differentiated AI analysis system.",
+      "core_features": "Core Features",
+      "items": {
+        "document_processing": {
+          "title": "Automated Document Processing",
+          "description": "AI automatically analyzes company profiles to extract key information."
+        },
+        "auto_analysis": {
+          "title": "AI Auto Analysis",
+          "description": "Automatically extract and analyze key business elements using GPT and Perplexity."
+        },
+        "expert_review": {
+          "title": "Expert Review",
+          "description": "Admins review and enhance AI analysis results to improve accuracy."
+        },
+        "custom_report": {
+          "title": "Custom Report",
+          "description": "Access professional market analysis reports at Goldman Sachs level on your dashboard."
+        },
+        "global_network": {
+          "title": "Global Network",
+          "description": "Provide optimal matching through our network with partners worldwide."
+        },
+        "security": {
+          "title": "Security & Reliability",
+          "description": "Provide a trustworthy business environment with business registration verification and admin approval system."
+        }
+      }
+    },
+    "process": {
+      "title": "Professional Analysis Report Completed in",
+      "subtitle": "6 Simple Steps",
+      "description": "Experience fast and accurate overseas expansion analysis without complex procedures.",
+      "steps": {
+        "signup": {
+          "title": "Sign Up",
+          "description": "Easy registration with social login or email"
+        },
+        "document_submit": {
+          "title": "Submit Business Registration",
+          "description": "Upload business registration and wait for admin approval"
+        },
+        "company_info": {
+          "title": "Submit Company Info",
+          "description": "Upload company profile and select target countries"
+        },
+        "ai_analysis": {
+          "title": "AI Analysis",
+          "description": "Perform automated analysis based on GPT/Perplexity"
+        },
+        "expert_review": {
+          "title": "Expert Review",
+          "description": "Admin reviews and enhances analysis results"
+        },
+        "report_delivery": {
+          "title": "Report Delivery",
+          "description": "Check final analysis report on your dashboard"
+        }
+      }
+    }
+  },
+  "services": {
+    "hero": {
+      "badge": "AI-Powered Global Business Matching",
+      "title_highlight": "World-Class",
+      "title_main": "AI Market Analysis Service",
+      "subtitle": "Match optimal global partners, investors, and customers with Goldman Sachs-level market analysis reports.",
+      "cta": "Start Free Analysis",
+      "consult": "Request Consultation"
+    }
+  },
+  "dashboard": {
+    "title": "My Dashboard",
+    "welcome": "Welcome",
+    "overview": "Overview",
+    "company_info": "Company Info",
+    "documents": "Documents",
+    "matching": "Matching",
+    "reports": "Reports",
+    "settings": "Settings",
+    "status": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "in_progress": "In Progress",
+      "completed": "Completed"
+    },
+    "stats": {
+      "account_status": "Account Approval Status",
+      "uploaded_documents": "Uploaded Documents",
+      "matching_requests": "Matching Requests",
+      "completed_analysis": "Completed Analysis"
+    },
+    "messages": {
+      "approval_pending": "You can use all services once admin approval is completed. Please check if you have completed uploading your business registration.",
+      "no_documents": "No documents uploaded.",
+      "no_matching_requests": "No matching requests.",
+      "approval_required": "Matching requests are available after account approval."
+    },
+    "actions": {
+      "upload_documents": "Upload Documents",
+      "request_matching": "Request Matching",
+      "view_report": "View Analysis Results",
+      "edit_info": "Edit Information"
+    }
+  },
+  "admin": {
+    "title": "Admin Dashboard",
+    "subtitle": "KnowWhere Bridge Platform Integrated Management Center",
+    "tabs": {
+      "pending": "Pending Approval",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "matching": "Matching Requests",
+      "reports": "Report Review",
+      "prompts": "Prompt Management",
+      "data": "Data Management",
+      "newsletter": "Newsletter"
+    },
+    "stats": {
+      "pending_approval": "Pending Approval",
+      "approved_companies": "Approved",
+      "rejected_companies": "Rejected",
+      "completed_analysis": "Completed Analysis"
+    },
+    "tools": {
+      "newsletter": {
+        "title": "Newsletter Sending",
+        "description": "Send emails to member companies"
+      },
+      "prompts": {
+        "title": "Prompt Management",
+        "description": "Manage AI analysis settings"
+      },
+      "data": {
+        "title": "Data Management",
+        "description": "Upload reference data"
+      },
+      "home": {
+        "title": "Go to Home",
+        "description": "Return to main page"
+      }
+    },
+    "actions": {
+      "approve": "Approve",
+      "reject": "Reject",
+      "review": "Review",
+      "edit": "Edit",
+      "delete": "Delete",
+      "send_email": "Send Email"
+    },
+    "messages": {
+      "no_pending": "No companies pending approval.",
+      "no_approved": "No approved companies.",
+      "no_rejected": "No rejected companies.",
+      "approval_success": "Approval completed and notification email sent.",
+      "rejection_success": "Rejection completed and notification email sent.",
+      "rejection_reason_required": "Please enter a rejection reason."
+    }
+  },
+  "footer": {
+    "company": "KnowWhere Bridge",
+    "description": "A specialized business matching company contributing to the activation of global AI, Fintech, and IT ecosystems.",
+    "contact": "Contact",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "copyright": "Copyright 2024. Nowhere Bridge Co. All rights reserved.",
+    "business_number": "Business Registration",
+    "links": {
+      "about": "About",
+      "services": "Services",
+      "support": "Support",
+      "blog": "Blog",
+      "careers": "Careers",
+      "quick_links": "Quick Links"
+    },
+    "social": {
+      "facebook": "Facebook",
+      "twitter": "Twitter",
+      "linkedin": "LinkedIn",
+      "instagram": "Instagram",
+      "follow_us": "Follow Us"
+    }
+  },
+  "errors": {
+    "404": {
+      "title": "Page Not Found",
+      "description": "The page you requested does not exist or has been moved.",
+      "back_home": "Back to Home"
+    },
+    "500": {
+      "title": "Server Error Occurred",
+      "description": "This is a temporary error. Please try again later.",
+      "retry": "Retry"
+    },
+    "network": {
+      "title": "Network Error",
+      "description": "Please check your internet connection."
+    }
+  },
+  "service": {
+    "name": "KnowWhere Bridge"
+  },
+  "notifications": {
+    "success": {
+      "login": "Logged in successfully",
+      "logout": "Logged out successfully",
+      "save": "Saved successfully",
+      "upload": "Upload completed",
+      "delete": "Deleted successfully"
+    },
+    "error": {
+      "login": "Login failed",
+      "save": "Save failed",
+      "upload": "Upload failed",
+      "delete": "Delete failed",
+      "network": "Network error occurred"
+    }
+  }
+}

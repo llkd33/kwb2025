@@ -20,6 +20,7 @@ import {
   Brain,
   Search
 } from "lucide-react";
+import { MarketResearchDisplay } from "@/components/ui/market-research-display";
 
 export default function AdminReportEditor() {
   const { id } = useParams();
@@ -347,27 +348,42 @@ export default function AdminReportEditor() {
           </Card>
         </TabsContent>
 
-        {/* Market Research Tab */}
+        {/* Market Research Tab - Beautiful Display */}
         <TabsContent value="market" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>실시간 시장 조사 결과</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Textarea
-                value={JSON.stringify(marketResearch, null, 2)}
-                onChange={(e) => {
-                  try {
-                    setMarketResearch(JSON.parse(e.target.value));
-                  } catch (error) {
-                    // Handle JSON parse error
-                  }
-                }}
-                rows={20}
-                className="font-mono text-sm"
-              />
-            </CardContent>
-          </Card>
+          <div className="space-y-6">
+            {/* Beautiful Display View */}
+            <MarketResearchDisplay 
+              data={marketResearch}
+              citations={marketResearch?.citations}
+            />
+            
+            {/* Raw JSON Editor (Collapsible) */}
+            <details className="group">
+              <summary className="cursor-pointer text-sm font-medium text-gray-600 hover:text-gray-900 flex items-center gap-2">
+                <Database className="w-4 h-4" />
+                원본 데이터 편집 (고급)
+              </summary>
+              <Card className="mt-4">
+                <CardHeader>
+                  <CardTitle className="text-base">JSON 데이터 편집기</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Textarea
+                    value={JSON.stringify(marketResearch, null, 2)}
+                    onChange={(e) => {
+                      try {
+                        setMarketResearch(JSON.parse(e.target.value));
+                      } catch (error) {
+                        // Handle JSON parse error
+                      }
+                    }}
+                    rows={15}
+                    className="font-mono text-sm"
+                  />
+                </CardContent>
+              </Card>
+            </details>
+          </div>
         </TabsContent>
 
         {/* Prompts Tab */}
