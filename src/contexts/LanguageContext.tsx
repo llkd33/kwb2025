@@ -7,7 +7,7 @@ export type Language = 'ko' | 'en' | 'ja';
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
-  t: (key: string, options?: any) => string;
+  t: (key: string, options?: Record<string, unknown>) => string;
   isLoading: boolean;
 }
 
@@ -31,14 +31,13 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
   const language = (i18nInstance.language || 'ko') as Language;
   const isLoading = !i18nInstance.isInitialized;
 
-  const setLanguage = (lang: Language) => {
+  const setLanguage = React.useCallback((lang: Language) => {
     i18nInstance.changeLanguage(lang);
     localStorage.setItem('language', lang);
-    
     // Update document language and direction
     document.documentElement.lang = lang;
     document.documentElement.dir = 'ltr'; // All supported languages are LTR
-  };
+  }, [i18nInstance]);
 
   useEffect(() => {
     // Initialize language from localStorage or browser preference
@@ -46,7 +45,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
     if (savedLanguage && ['ko', 'en', 'ja'].includes(savedLanguage)) {
       setLanguage(savedLanguage);
     }
-  }, []);
+  }, [setLanguage]);
 
   return (
     <LanguageContext.Provider value={{ language, setLanguage, t, isLoading }}>

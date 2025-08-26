@@ -41,12 +41,11 @@ export default function AdminReportEditor() {
 
   const fetchData = async () => {
     try {
-      // Fetch matching request with company info
+      // Fetch matching request without embedding to avoid ambiguous relationship error
       const { data: request, error: requestError } = await supabase
         .from('matching_requests')
         .select(`
           *,
-          companies(*),
           pdf_uploads(*)
         `)
         .eq('id', id)
@@ -54,7 +53,24 @@ export default function AdminReportEditor() {
 
       if (requestError) throw requestError;
 
-      setMatchingRequest(request);
+      // Fetch company data separately if company_id exists
+      let companyData = null;
+      if (request.company_id) {
+        const { data: company } = await supabase
+          .from('companies')
+          .select('*')
+          .eq('id', request.company_id)
+          .single();
+        companyData = company;
+      }
+
+      // Merge company data into request
+      const requestWithCompany = {
+        ...request,
+        companies: companyData
+      };
+
+      setMatchingRequest(requestWithCompany);
       setAiAnalysis(request.ai_analysis || {});
       setMarketResearch(request.market_research || {});
       setAdminComments(request.admin_comments || "");

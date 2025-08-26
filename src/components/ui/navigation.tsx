@@ -6,6 +6,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { LanguageSelector } from "@/components/ui/language-selector";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Menu, X } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 interface NavigationProps {
   className?: string;
@@ -15,21 +17,27 @@ export function Navigation({ className }: NavigationProps) {
   const location = useLocation();
   const { t } = useLanguage();
   const isMobile = useIsMobile();
-  const [currentCompany, setCurrentCompany] = useState<any>(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { session, user, signOut } = useAuth();
+  const [currentCompany, setCurrentCompany] = useState<{ company_name?: string; is_admin?: boolean } | null>(null);
+  const isLoggedIn = !!session && !!user;
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Load company profile when authenticated or route changes
   useEffect(() => {
-    const company = localStorage.getItem('currentCompany');
-    if (company) {
-      const parsedCompany = JSON.parse(company);
-      setCurrentCompany(parsedCompany);
-      setIsLoggedIn(true);
-    } else {
-      setCurrentCompany(null);
-      setIsLoggedIn(false);
-    }
-  }, [location.pathname]); // location이 변경될 때마다 체크
+    const loadCompany = async () => {
+      if (!user?.email) {
+        setCurrentCompany(null);
+        return;
+      }
+      const { data } = await supabase
+        .from('companies')
+        .select('company_name, is_admin, email')
+        .eq('email', user.email)
+        .single();
+      setCurrentCompany(data || null);
+    };
+    loadCompany();
+  }, [user?.email, location.pathname]);
 
   // 기본 네비게이션 아이템
   const baseNavItems = [
@@ -116,8 +124,8 @@ export function Navigation({ className }: NavigationProps) {
                         <Button 
                           variant="outline" 
                           className="w-full border-gray-600 text-white hover:bg-gray-800"
-                          onClick={() => {
-                            localStorage.removeItem('currentCompany');
+                          onClick={async () => {
+                            await signOut();
                             window.location.href = '/';
                           }}
                         >
@@ -174,8 +182,8 @@ export function Navigation({ className }: NavigationProps) {
             <Button 
               variant="outline" 
               size="sm"
-              onClick={() => {
-                localStorage.removeItem('currentCompany');
+              onClick={async () => {
+                await signOut();
                 window.location.href = '/';
               }}
             >

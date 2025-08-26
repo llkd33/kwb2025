@@ -11,52 +11,58 @@ import {
   XCircle, Mail, ArrowRight
 } from 'lucide-react';
 
+type Citation = { url?: string; title?: string; snippet?: string; source?: string };
 interface MarketResearchDisplayProps {
-  data: any;
-  citations?: any[];
+  data: unknown;
+  citations?: Citation[];
 }
 
 export function MarketResearchDisplay({ data, citations }: MarketResearchDisplayProps) {
   // Parse and organize the market research data
-  const parseMarketData = (rawData: any) => {
+  const parseMarketData = (rawData: unknown) => {
+    // Basic guard
+    if (!rawData) return {} as Record<string, unknown>;
+    // Cast for object access
+    const obj = rawData as Record<string, unknown>;
+    const rec = obj as Record<string, unknown>;
     // Handle nested structure from Perplexity API
     if (rawData && typeof rawData === 'object') {
       // First check if the data already has the expected keys (flat structure)
-      const hasDirectKeys = rawData.market_size || rawData.positioning || rawData.recent_deals || 
-                           rawData.top_companies || rawData.country_markets;
+      const hasDirectKeys = 'market_size' in rec || 'positioning' in rec || 'recent_deals' in rec || 
+                           'top_companies' in rec || 'country_markets' in rec;
       
       if (hasDirectKeys) {
         // Map the flat keys to expected structure
-        const mapped: any = {};
+        const mapped: Record<string, unknown> = {};
         
         // Market Analysis mappings
-        if (rawData.country_markets) mapped.market_country_markets = rawData.country_markets;
-        if (rawData.market_size) mapped.market_market_size = rawData.market_size;
-        if (rawData.recent_changes) mapped.market_recent_changes = rawData.recent_changes;
+        if ('country_markets' in rec) mapped.market_country_markets = rec['country_markets'];
+        if ('market_size' in rec) mapped.market_market_size = rec['market_size'];
+        if ('recent_changes' in rec) mapped.market_recent_changes = rec['recent_changes'];
         
         // Competitors mappings
-        if (rawData.top_companies) mapped.competitors_top_companies = rawData.top_companies;
-        if (rawData.positioning) mapped.competitors_positioning = rawData.positioning;
-        if (rawData.recent_performance) mapped.competitors_recent_performance = rawData.recent_performance;
+        if ('top_companies' in rec) mapped.competitors_top_companies = rec['top_companies'];
+        if ('positioning' in rec) mapped.competitors_positioning = rec['positioning'];
+        if ('recent_performance' in rec) mapped.competitors_recent_performance = rec['recent_performance'];
         
         // Partnerships mappings
-        if (rawData.recent_deals) mapped.partnerships_recent_deals = rawData.recent_deals;
-        if (rawData.success_cases) mapped.partnerships_success_cases = rawData.success_cases;
-        if (rawData.failure_analysis) mapped.partnerships_failure_analysis = rawData.failure_analysis;
+        if ('recent_deals' in rec) mapped.partnerships_recent_deals = rec['recent_deals'];
+        if ('success_cases' in rec) mapped.partnerships_success_cases = rec['success_cases'];
+        if ('failure_analysis' in rec) mapped.partnerships_failure_analysis = rec['failure_analysis'];
         
         // Additional mappings for any other keys
-        Object.keys(rawData).forEach(key => {
+        Object.keys(rec).forEach(key => {
           if (!mapped[`market_${key}`] && !mapped[`competitors_${key}`] && !mapped[`partnerships_${key}`]) {
             // Try to categorize based on key name
             if (key.includes('market') || key.includes('size') || key.includes('country')) {
-              mapped[`market_${key}`] = rawData[key];
+              mapped[`market_${key}`] = rec[key];
             } else if (key.includes('company') || key.includes('position') || key.includes('performance')) {
-              mapped[`competitors_${key}`] = rawData[key];
+              mapped[`competitors_${key}`] = rec[key];
             } else if (key.includes('deal') || key.includes('success') || key.includes('failure')) {
-              mapped[`partnerships_${key}`] = rawData[key];
+              mapped[`partnerships_${key}`] = rec[key];
             } else {
               // Default mapping
-              mapped[key] = rawData[key];
+              mapped[key] = rec[key];
             }
           }
         });
@@ -65,40 +71,46 @@ export function MarketResearchDisplay({ data, citations }: MarketResearchDisplay
       }
       
       // Check for nested data structure (original logic)
-      const flattened: any = {};
+      const flattened: Record<string, unknown> = {};
       
-      if (rawData.market_analysis) {
-        Object.entries(rawData.market_analysis).forEach(([key, value]) => {
+      const market_analysis = rec['market_analysis'] as Record<string, unknown> | undefined;
+      if (market_analysis && typeof market_analysis === 'object') {
+        Object.entries(market_analysis).forEach(([key, value]) => {
           flattened[`market_${key}`] = value;
         });
       }
       
-      if (rawData.competitors) {
-        Object.entries(rawData.competitors).forEach(([key, value]) => {
+      const competitors = rec['competitors'] as Record<string, unknown> | undefined;
+      if (competitors && typeof competitors === 'object') {
+        Object.entries(competitors).forEach(([key, value]) => {
           flattened[`competitors_${key}`] = value;
         });
       }
       
-      if (rawData.partnerships) {
-        Object.entries(rawData.partnerships).forEach(([key, value]) => {
+      const partnerships = rec['partnerships'] as Record<string, unknown> | undefined;
+      if (partnerships && typeof partnerships === 'object') {
+        Object.entries(partnerships).forEach(([key, value]) => {
           flattened[`partnerships_${key}`] = value;
         });
       }
       
-      if (rawData.potential_partners) {
-        Object.entries(rawData.potential_partners).forEach(([key, value]) => {
+      const potential_partners = rec['potential_partners'] as Record<string, unknown> | undefined;
+      if (potential_partners && typeof potential_partners === 'object') {
+        Object.entries(potential_partners).forEach(([key, value]) => {
           flattened[`partners_${key}`] = value;
         });
       }
       
-      if (rawData.risks) {
-        Object.entries(rawData.risks).forEach(([key, value]) => {
+      const risks = rec['risks'] as Record<string, unknown> | undefined;
+      if (risks && typeof risks === 'object') {
+        Object.entries(risks).forEach(([key, value]) => {
           flattened[`risks_${key}`] = value;
         });
       }
       
-      if (rawData.summary) {
-        Object.entries(rawData.summary).forEach(([key, value]) => {
+      const summary = rec['summary'] as Record<string, unknown> | undefined;
+      if (summary && typeof summary === 'object') {
+        Object.entries(summary).forEach(([key, value]) => {
           flattened[`summary_${key}`] = value;
         });
       }
@@ -114,19 +126,19 @@ export function MarketResearchDisplay({ data, citations }: MarketResearchDisplay
     
     if (typeof rawData === 'string') {
       // If it's a string, try to extract key sections
-      const sections: any = {};
+      const sections: Record<string, string> = {};
       const lines = rawData.split('\n');
       let currentSection = 'overview';
       let currentContent: string[] = [];
 
       lines.forEach(line => {
         // Check if line is a section header (starts with number or bullet)
-        if (/^[#\d]+[\.\)]\s+|^[•\-\*]\s+/.test(line)) {
+        if (/^[#\d]+[.)]\s+|^[•\-*]\s+/.test(line)) {
           if (currentContent.length > 0) {
             sections[currentSection] = currentContent.join('\n').trim();
           }
           // Extract section name from the line
-          const sectionMatch = line.match(/^[#\d]+[\.\)]\s+(.+)|^[•\-\*]\s+(.+)/);
+          const sectionMatch = line.match(/^[#\d]+[.)]\s+(.+)|^[•\-*]\s+(.+)/);
           if (sectionMatch) {
             currentSection = (sectionMatch[1] || sectionMatch[2]).toLowerCase().replace(/[^a-z0-9]/g, '_');
             currentContent = [];
@@ -147,7 +159,10 @@ export function MarketResearchDisplay({ data, citations }: MarketResearchDisplay
     return {};
   };
 
-  const marketData = parseMarketData(data?.data || data);
+  const source = (typeof data === 'object' && data !== null && 'data' in (data as Record<string, unknown>))
+    ? (data as Record<string, unknown>).data
+    : data;
+  const marketData = parseMarketData(source);
   
   // Debug logging
   console.log('Market Research Display - Raw data:', data);
@@ -208,14 +223,14 @@ export function MarketResearchDisplay({ data, citations }: MarketResearchDisplay
            `bg-${color}-100 text-${color}-800`,
   });
 
-  const formatContent = (content: any) => {
+  const formatContent = (content: unknown) => {
     if (typeof content === 'string') {
       // Split by bullet points or numbered lists
       const normalized = content
         .replace(/\t/g, '    ') // tabs -> spaces
         .replace(/\s+$/gm, '')  // trim trailing spaces each line
         .replace(/\r\n?/g, '\n'); // normalize newlines
-      const items = normalized.split(/(?:^|\n)(?:[•\-\*]|\d+[\.\)])\s+/);
+      const items = normalized.split(/(?:^|\n)(?:[•\-*]|\d+[.)])\s+/);
       
       if (items.length > 1) {
         return (
@@ -409,7 +424,7 @@ export function MarketResearchDisplay({ data, citations }: MarketResearchDisplay
                     참고 자료 및 출처
                   </h3>
                   <div className="grid gap-4">
-                    {citations.map((citation: any, index: number) => (
+                    {citations.map((citation: Citation, index: number) => (
                       <Card key={index} className="hover:shadow-md transition-shadow">
                         <CardContent className="p-4">
                           <div className="flex items-start gap-3">

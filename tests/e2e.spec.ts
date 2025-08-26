@@ -108,7 +108,7 @@ test.describe('Knowwhere Bridge Insights E2E Tests', () => {
 });
 
 test.describe('Feature Tests (requires backend setup)', () => {
-  test.skip('login functionality', async ({ page }) => {
+  test('login functionality', async ({ page }) => {
     await page.goto('http://localhost:8080/auth');
     
     // Fill in test credentials
@@ -122,12 +122,28 @@ test.describe('Feature Tests (requires backend setup)', () => {
     await expect(page).not.toHaveURL(/.*auth/);
   });
 
-  test.skip('file upload works', async ({ page }) => {
+  test('file upload works', async ({ page }) => {
     // This test requires authentication
     await page.goto('http://localhost:8080/business-documents');
     
     // Check for file input
     const fileInput = page.locator('input[type="file"]');
     await expect(fileInput).toBeVisible();
+  });
+});
+
+test.describe('Admin Panel Tests (requires admin login)', () => {
+  test('admin login and access', async ({ page }) => {
+    await page.goto('http://localhost:8080/auth');
+    
+    // Admin credentials
+    await page.fill('input[type="email"]', 'admin@example.com');
+    await page.fill('input[type="password"]', 'admin123');
+    
+    await page.click('button[type="submit"]');
+    
+    // Go to admin page
+    await page.goto('http://localhost:8080/admin');
+    await expect(page).toHaveURL('http://localhost:8080/admin');
   });
 });

@@ -111,10 +111,11 @@ export function BusinessDocumentUploader({ companyId, onUploadComplete }: Busine
 
       onUploadComplete?.();
 
-    } catch (error: any) {
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.';
       toast({
         title: "업로드 실패",
-        description: error.message,
+        description: message,
         variant: "destructive",
       });
     } finally {

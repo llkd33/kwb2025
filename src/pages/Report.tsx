@@ -41,9 +41,16 @@ export default function Report() {
           .from('matching_requests')
           .select('*')
           .eq('report_token', token)
+          .neq('workflow_status', 'deleted')
+          .is('is_deleted', null)
           .single();
 
         if (error) throw error;
+        
+        // Check if report is deleted
+        if (data.workflow_status === 'deleted' || data.is_deleted) {
+          throw new Error('보고서가 삭제되었습니다. 더 이상 접근할 수 없습니다.');
+        }
         // Optional client-side expiry check
         if ((data as any)?.report_token_expires_at) {
           const exp = new Date((data as any).report_token_expires_at);

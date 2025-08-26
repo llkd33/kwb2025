@@ -18,7 +18,9 @@ export function PDFDocumentUploader({ matchingRequestId, onUploadComplete }: PDF
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [documentType, setDocumentType] = useState<string>("company_profile");
+  const [documentType, setDocumentType] = useState<
+    'company_profile' | 'product_catalog' | 'business_plan' | 'financial_report' | 'other'
+  >('company_profile');
   const { toast } = useToast();
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -142,10 +144,11 @@ export function PDFDocumentUploader({ matchingRequestId, onUploadComplete }: PDF
 
       onUploadComplete?.();
 
-    } catch (error: any) {
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.';
       toast({
         title: "업로드 실패",
-        description: error.message,
+        description: message,
         variant: "destructive",
       });
     } finally {

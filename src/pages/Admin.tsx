@@ -211,9 +211,15 @@ export default function Admin() {
 
 
   // Filter companies by status
-  const pendingCompanies = companies.filter(c => c.is_approved === null);
-  const approvedCompanies = companies.filter(c => c.is_approved === true);
-  const rejectedCompanies = companies.filter(c => c.is_approved === false);
+  // is_approved가 false이거나 null인 경우를 승인 대기로 처리 (관리자 계정 제외)
+  const pendingCompanies = companies.filter(c => (c.is_approved === false || c.is_approved === null) && !c.is_admin);
+  const approvedCompanies = companies.filter(c => c.is_approved === true && !c.is_admin);
+  const rejectedCompanies = companies.filter(c => c.is_approved === false && c.rejection_reason);
+  
+  console.log('Filtered results:');
+  console.log('Pending companies:', pendingCompanies);
+  console.log('Approved companies:', approvedCompanies);
+  console.log('Rejected companies:', rejectedCompanies);
 
   // Filter completed requests for report review - now including those with AI analysis done but still pending admin review
   const completedRequests = matchingRequests.filter(request => 
@@ -222,17 +228,23 @@ export default function Admin() {
   );
 
   useEffect(() => {
+    console.log('Admin page mounted, fetching all data...');
     fetchAllData();
   }, []);
 
   const fetchAllData = async () => {
-    await Promise.all([
-      fetchCompanies(),
-      fetchPrompts(),
-      fetchPerplexityPrompts(),
-      fetchMarketData(),
-      fetchMatchingRequests()
-    ]);
+    setLoading(true);
+    try {
+      await Promise.all([
+        fetchCompanies(),
+        fetchPrompts(),
+        fetchPerplexityPrompts(),
+        fetchMarketData(),
+        fetchMatchingRequests()
+      ]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const fetchCompanies = async () => {
@@ -243,6 +255,12 @@ export default function Admin() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
+      
+      console.log('Fetched companies:', data);
+      console.log('Companies with is_approved false:', data?.filter(c => c.is_approved === false));
+      console.log('Companies with is_approved null:', data?.filter(c => c.is_approved === null));
+      console.log('Admin companies:', data?.filter(c => c.is_admin === true));
+      
       setCompanies(data || []);
     } catch (error: any) {
       toast({
@@ -250,8 +268,6 @@ export default function Admin() {
         description: error.message,
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -465,7 +481,8 @@ export default function Admin() {
               <Building2 className="h-5 w-5" />
               {company.company_name}
               {company.is_approved === true && <Badge className="bg-green-100 text-green-800">승인됨</Badge>}
-              {company.is_approved === false && <Badge variant="destructive">거부됨</Badge>}
+              {company.is_approved === false && company.rejection_reason && <Badge variant="destructive">거부됨</Badge>}
+              {(company.is_approved === false || company.is_approved === null) && !company.rejection_reason && <Badge variant="secondary">승인 대기</Badge>}
             </CardTitle>
             <CardDescription>
               CEO: {company.ceo_name} | 담당자: {company.manager_name} ({company.manager_position})
@@ -536,7 +553,7 @@ export default function Admin() {
           </div>
         )}
 
-        {showActions && company.is_approved === null && (
+        {showActions && (company.is_approved === null || (company.is_approved === false && !company.rejection_reason)) && (
           <div className="flex gap-2 mt-4">
             <Button 
               onClick={() => handleApprove(company)}
@@ -593,8 +610,13 @@ export default function Admin() {
 
   if (loading) {
     return (
-      <div className="container mx-auto py-8">
-        <div className="text-center">로딩 중...</div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/30">
+        <div className="container mx-auto py-8">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">데이터를 불러오는 중...</p>
+          </div>
+        </div>
       </div>
     );
   }
@@ -1260,6 +1282,50 @@ export default function Admin() {
               </div>
                <div className="flex items-center gap-3">
                 <Button 
+                  variant="destructive" 
+                  onClick={async () => {
+                    if (!selectedRequest || !confirm('이 보고서를 삭제하시겠습니까? 삭제된 보고서는 사용자가 볼 수 없게 됩니다.')) return;
+                    
+                    setActionLoading(true);
+                    try {
+                      const { error } = await supabase
+                        .from('matching_requests')
+                        .update({ 
+                          ai_analysis: null,
+                          market_research: null,
+                          final_report: null,
+                          report_token: null,
+                          is_deleted: true,
+                          deleted_at: new Date().toISOString(),
+                          workflow_status: 'deleted'
+                        })
+                        .eq('id', selectedRequest.id);
+
+                      if (error) throw error;
+
+                      toast({
+                        title: "보고서 삭제 완료",
+                        description: "보고서가 삭제되었습니다. 사용자는 더 이상 이 보고서에 접근할 수 없습니다.",
+                      });
+
+                      setShowReportDialog(false);
+                      fetchMatchingRequests();
+                    } catch (error: any) {
+                      toast({
+                        title: "삭제 실패",
+                        description: error.message,
+                        variant: "destructive"
+                      });
+                    } finally {
+                      setActionLoading(false);
+                    }
+                  }}
+                  disabled={actionLoading}
+                  className="px-6"
+                >
+                  🗑️ 보고서 삭제
+                </Button>
+                <Button 
                   variant="outline" 
                   onClick={() => setShowReportDialog(false)} 
                   className="px-6"
@@ -1656,3 +1722,10 @@ export default function Admin() {
     </div>
   );
 }
+/*
+  NOTE: Legacy Admin page.
+  This file is no longer routed directly; the Admin area has been migrated
+  to structured routes under /admin with a reusable layout. To reduce noise
+  while keeping this file for reference, we disable the explicit-any rule here.
+*/
+/* eslint-disable @typescript-eslint/no-explicit-any */

@@ -76,11 +76,13 @@ export default function Dashboard() {
       // Documents module disabled: skip fetching
       setBusinessDocs([]);
 
-      // Fetch matching requests
+      // Fetch matching requests (exclude deleted reports)
       const { data: requests, error: requestsError } = await supabase
         .from('matching_requests')
         .select('id, target_countries, status, created_at, completed_at, report_token')
         .eq('company_id', companyId)
+        .neq('workflow_status', 'deleted')
+        .is('is_deleted', null)
         .order('created_at', { ascending: false });
 
       if (requestsError) throw requestsError;

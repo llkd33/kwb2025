@@ -1,4 +1,6 @@
-import { useState, useEffect } from "react";
+
+import { useState, useEffect, useCallback } from "react";
+import { useDropzone } from 'react-dropzone';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -26,8 +28,8 @@ export default function PDFReportSubmission() {
     }
   }, [navigate]);
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    const file = acceptedFiles[0];
     if (!file) return;
 
     // Validate file type - only PDF
@@ -51,7 +53,9 @@ export default function PDFReportSubmission() {
     }
 
     setSelectedFile(file);
-  };
+  }, [toast]);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop });
 
   const handleSubmitPDFReport = async () => {
     if (!selectedFile || !currentCompany) {
@@ -244,26 +248,15 @@ export default function PDFReportSubmission() {
           </CardHeader>
           <CardContent className="space-y-6">
             {/* File Upload Area */}
-            <div className="border-2 border-dashed border-slate-300 rounded-xl p-8 text-center hover:border-blue-400 transition-colors">
-              <input
-                type="file"
-                id="pdf-upload"
-                accept="application/pdf"
-                onChange={handleFileSelect}
-                className="hidden"
-              />
-              <label
-                htmlFor="pdf-upload"
-                className="cursor-pointer"
-              >
-                <Upload className="h-12 w-12 mx-auto mb-4 text-slate-400" />
-                <p className="text-lg font-medium text-slate-700 mb-2">
-                  PDF 파일을 선택하거나 드래그하세요
-                </p>
-                <p className="text-sm text-slate-500">
-                  최대 50MB, PDF 형식만 지원
-                </p>
-              </label>
+            <div {...getRootProps()} className={`border-2 border-dashed border-slate-300 rounded-xl p-8 text-center cursor-pointer transition-colors ${isDragActive ? 'border-blue-400 bg-blue-50' : 'hover:border-blue-400'}`}>
+              <input {...getInputProps()} />
+              <Upload className="h-12 w-12 mx-auto mb-4 text-slate-400" />
+              {isDragActive ? (
+                <p className="text-lg font-medium text-blue-700 mb-2">여기에 파일을 드롭하세요</p>
+              ) : (
+                <p className="text-lg font-medium text-slate-700 mb-2">PDF 파일을 선택하거나 드래그하세요</p>
+              )}
+              <p className="text-sm text-slate-500">최대 50MB, PDF 형식만 지원</p>
             </div>
 
             {/* Selected File Display */}

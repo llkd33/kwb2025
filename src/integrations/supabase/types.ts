@@ -138,6 +138,7 @@ export type Database = {
         Row: {
           approved_at: string | null
           approved_by: number | null
+          approval_status: 'pending' | 'approved' | 'rejected'
           awards: string[] | null
           business_number: string | null
           business_registration_name: string | null
@@ -174,6 +175,7 @@ export type Database = {
         Insert: {
           approved_at?: string | null
           approved_by?: number | null
+          approval_status?: 'pending' | 'approved' | 'rejected'
           awards?: string[] | null
           business_number?: string | null
           business_registration_name?: string | null
@@ -210,6 +212,7 @@ export type Database = {
         Update: {
           approved_at?: string | null
           approved_by?: number | null
+          approval_status?: 'pending' | 'approved' | 'rejected'
           awards?: string[] | null
           business_number?: string | null
           business_registration_name?: string | null

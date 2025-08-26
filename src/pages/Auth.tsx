@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,19 +9,26 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { Eye, EyeOff, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function Auth() {
   const [isLoading, setIsLoading] = useState(false);
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
   const [businessDocument, setBusinessDocument] = useState<File | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showSignupPassword, setShowSignupPassword] = useState(false);
   const { t } = useLanguage();
+  const { signIn, signUp, user, session } = useAuth();
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
   const [signupForm, setSignupForm] = useState({
     email: "",
     password: "",
     company_name: "",
+    business_number: "",
     ceo_name: "",
     manager_name: "",
     manager_position: "",
@@ -41,96 +48,60 @@ export default function Auth() {
   
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from?.pathname || "/dashboard";
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (session && user) {
+      navigate(from, { replace: true });
+    }
+  }, [session, user, navigate, from]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      // Temporary demo login for admin and test user
-      if (loginForm.email === 'admin@example.com' && loginForm.password === 'admin123') {
-        const demoAdmin = {
-          id: 1,
-          email: 'admin@example.com',
-          company_name: 'KnowWhere Bridge Admin',
-          ceo_name: 'Admin User',
-          is_admin: true,
-          is_approved: true
-        };
-        localStorage.setItem('currentCompany', JSON.stringify(demoAdmin));
-        toast({
-          title: "로그인 성공",
-          description: `관리자님, 환영합니다!`,
-        });
-        navigate('/admin');
-        return;
-      }
+      await signIn(loginForm.email, loginForm.password);
       
-      if (loginForm.email === 'user@example.com' && loginForm.password === 'user123') {
-        const demoUser = {
-          id: 2,
-          email: 'user@example.com',
-          company_name: 'Test Company Ltd.',
-          ceo_name: 'Test CEO',
-          is_admin: false,
-          is_approved: true
-        };
-        localStorage.setItem('currentCompany', JSON.stringify(demoUser));
-        toast({
-          title: "로그인 성공",
-          description: `Test Company Ltd.님, 환영합니다!`,
-        });
-        navigate('/dashboard');
-        return;
-      }
-
-      // First check if company exists and is approved
-      const { data: company, error: companyError } = await supabase
+      // Check if user has admin role
+      const { data: company } = await supabase
         .from('companies')
         .select('*')
         .eq('email', loginForm.email)
         .single();
 
-      if (companyError || !company) {
-        toast({
-          title: "로그인 실패",
-          description: "등록되지 않은 이메일입니다. 데모 계정을 사용하세요: admin@example.com/admin123 또는 user@example.com/user123",
-          variant: "destructive",
-        });
+      if (company?.is_admin) {
+        navigate('/admin');
         return;
       }
 
+      // Use is_approved field instead of approval_status until migration is applied
       if (!company.is_approved) {
         toast({
-          title: "승인 대기 중",
-          description: "아직 관리자 승인이 완료되지 않았습니다. 승인 완료 후 이메일로 알려드리겠습니다.",
+          title: t('auth.errors.pending_approval'),
+          description: t('auth.errors.pending_approval_desc'),
           variant: "destructive",
         });
         return;
       }
 
-      // Check password (in production, this should be hashed)
-      if (company.password !== loginForm.password) {
-        toast({
-          title: "로그인 실패",
-          description: "비밀번호가 올바르지 않습니다.",
-          variant: "destructive",
-        });
-        return;
-      }
+      // Password is already verified by Supabase Auth
+      // No need to check it again here
 
       // Store company session (temporary solution)
       localStorage.setItem('currentCompany', JSON.stringify(company));
       
       toast({
-        title: "로그인 성공",
-        description: `${company.company_name}님, 환영합니다!`,
+        title: t('auth.errors.login_success'),
+        description: `${company.company_name}${t('auth.errors.welcome')}`,
       });
 
       navigate('/dashboard');
     } catch (error: any) {
       toast({
-        title: "로그인 오류",
+        title: t('auth.errors.login_error'),
         description: error.message,
         variant: "destructive",
       });
@@ -158,8 +129,8 @@ export default function Auth() {
     
     if (!businessDocument) {
       toast({
-        title: "사업자등록증 필요",
-        description: "사업자등록증을 업로드해주세요.",
+        title: t('auth.errors.document_required'),
+        description: t('auth.errors.document_required_desc'),
         variant: "destructive",
       });
       return;
@@ -168,7 +139,10 @@ export default function Auth() {
     setIsLoading(true);
 
     try {
-      // Check if email already exists
+      // First, create Supabase Auth user
+      await signUp(signupForm.email, signupForm.password);
+
+      // Check if email already exists in companies table
       const { data: existingCompany } = await supabase
         .from('companies')
         .select('email')
@@ -177,8 +151,8 @@ export default function Auth() {
 
       if (existingCompany) {
         toast({
-          title: "회원가입 실패",
-          description: "이미 사용 중인 이메일입니다.",
+          title: t('auth.errors.signup_failed'),
+          description: t('auth.errors.email_exists'),
           variant: "destructive",
         });
         return;
@@ -188,9 +162,25 @@ export default function Auth() {
       const { data: newCompany, error } = await supabase
         .from('companies')
         .insert({
-          ...signupForm,
+          email: signupForm.email,
+          company_name: signupForm.company_name,
+          business_number: signupForm.business_number,
+          ceo_name: signupForm.ceo_name,
+          manager_name: signupForm.manager_name,
+          manager_position: signupForm.manager_position,
+          phone_number: signupForm.phone_number,
+          industry: signupForm.industry,
+          headquarters_country: signupForm.headquarters_country,
+          headquarters_city: signupForm.headquarters_city,
           founding_year: signupForm.founding_year ? parseInt(signupForm.founding_year) : null,
-          is_approved: null, // null means pending approval
+          employee_count: signupForm.employee_count,
+          revenue_scale: signupForm.revenue_scale,
+          main_products: signupForm.main_products,
+          target_market: signupForm.target_market,
+          competitive_advantage: signupForm.competitive_advantage,
+          company_vision: signupForm.company_vision,
+          website: signupForm.website,
+          is_approved: false, // Use is_approved field instead of approval_status
           is_admin: false
         })
         .select()
@@ -218,6 +208,7 @@ export default function Auth() {
         email: "",
         password: "",
         company_name: "",
+        business_number: "",
         ceo_name: "",
         manager_name: "",
         manager_position: "",
@@ -241,7 +232,7 @@ export default function Auth() {
 
     } catch (error: any) {
       toast({
-        title: "회원가입 오류",
+        title: t('auth.errors.signup_error'),
         description: error.message,
         variant: "destructive",
       });
@@ -283,16 +274,26 @@ export default function Auth() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="login-password">{t('auth.password')}</Label>
-                  <Input
-                    id="login-password"
-                    type="password"
-                    value={loginForm.password}
-                    onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
-                    required
-                  />
+                  <div className="relative">
+                    <Input
+                      id="login-password"
+                      type={showPassword ? "text" : "password"}
+                      value={loginForm.password}
+                      onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
+                      className="pr-10"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? t('auth.login.loading') : t('auth.login.button')}
+                  {isLoading ? t('auth.loginForm.loading') : t('auth.loginForm.button')}
                 </Button>
               </form>
             </TabsContent>
@@ -301,7 +302,7 @@ export default function Auth() {
               <form onSubmit={handleSignup} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="email">{t('auth.email')} {t('required')}</Label>
+                    <Label htmlFor="email">{t('auth.email')} <span className="text-red-500">*</span></Label>
                     <Input
                       id="email"
                       type="email"
@@ -311,17 +312,27 @@ export default function Auth() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="password">{t('auth.password')} {t('required')}</Label>
-                    <Input
-                      id="password"
-                      type="password"
-                      value={signupForm.password}
-                      onChange={(e) => setSignupForm({ ...signupForm, password: e.target.value })}
-                      required
-                    />
+                    <Label htmlFor="password">{t('auth.password')} <span className="text-red-500">*</span></Label>
+                    <div className="relative">
+                      <Input
+                        id="password"
+                        type={showSignupPassword ? "text" : "password"}
+                        value={signupForm.password}
+                        onChange={(e) => setSignupForm({ ...signupForm, password: e.target.value })}
+                        className="pr-10"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowSignupPassword(!showSignupPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      >
+                        {showSignupPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="company_name">{t('company.name')} {t('required')}</Label>
+                    <Label htmlFor="company_name">{t('company.name')} <span className="text-red-500">*</span></Label>
                     <Input
                       id="company_name"
                       value={signupForm.company_name}
@@ -330,7 +341,17 @@ export default function Auth() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="ceo_name">{t('company.ceo')} {t('required')}</Label>
+                    <Label htmlFor="business_number">사업자등록번호 <span className="text-red-500">*</span></Label>
+                    <Input
+                      id="business_number"
+                      value={signupForm.business_number}
+                      onChange={(e) => setSignupForm({ ...signupForm, business_number: e.target.value })}
+                      placeholder="123-45-67890"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="ceo_name">{t('company.ceo')} <span className="text-red-500">*</span></Label>
                     <Input
                       id="ceo_name"
                       value={signupForm.ceo_name}
@@ -339,7 +360,7 @@ export default function Auth() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="manager_name">{t('company.manager')} {t('required')}</Label>
+                    <Label htmlFor="manager_name">{t('company.manager')} <span className="text-red-500">*</span></Label>
                     <Input
                       id="manager_name"
                       value={signupForm.manager_name}
@@ -348,7 +369,7 @@ export default function Auth() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="manager_position">{t('company.position')} {t('required')}</Label>
+                    <Label htmlFor="manager_position">{t('company.position')} <span className="text-red-500">*</span></Label>
                     <Input
                       id="manager_position"
                       value={signupForm.manager_position}
@@ -357,7 +378,7 @@ export default function Auth() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="phone_number">{t('company.phone')} {t('required')}</Label>
+                    <Label htmlFor="phone_number">{t('company.phone')} <span className="text-red-500">*</span></Label>
                     <Input
                       id="phone_number"
                       value={signupForm.phone_number}
@@ -366,7 +387,7 @@ export default function Auth() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="industry">{t('company.industry')} {t('required')}</Label>
+                    <Label htmlFor="industry">{t('company.industry')} <span className="text-red-500">*</span></Label>
                     <Select value={signupForm.industry} onValueChange={(value) => setSignupForm({ ...signupForm, industry: value })}>
                       <SelectTrigger>
                         <SelectValue placeholder={t('select.placeholder')} />
@@ -383,7 +404,7 @@ export default function Auth() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="headquarters_country">{t('company.country')} {t('required')}</Label>
+                    <Label htmlFor="headquarters_country">{t('company.country')} <span className="text-red-500">*</span></Label>
                     <Select value={signupForm.headquarters_country} onValueChange={(value) => setSignupForm({ ...signupForm, headquarters_country: value })}>
                       <SelectTrigger>
                         <SelectValue placeholder={t('select.placeholder')} />
@@ -487,7 +508,7 @@ export default function Auth() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="business_document">{t('company.document')} {t('required')}</Label>
+                  <Label htmlFor="business_document">{t('company.document')} <span className="text-red-500">*</span></Label>
                   <Input
                     id="business_document"
                     type="file"
@@ -496,12 +517,12 @@ export default function Auth() {
                     required
                   />
                   <p className="text-sm text-muted-foreground">
-                    {t('company.document.note')}
+                    {t('company.documentNote')}
                   </p>
                 </div>
                 
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? t('auth.signup.loading') : t('auth.signup.button')}
+                  {isLoading ? t('auth.signupForm.loading') : t('auth.signupForm.button')}
                 </Button>
               </form>
             </TabsContent>
@@ -512,14 +533,14 @@ export default function Auth() {
       <Dialog open={showApprovalDialog} onOpenChange={setShowApprovalDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t('auth.signup.complete')}</DialogTitle>
+            <DialogTitle>{t('auth.signupForm.complete')}</DialogTitle>
             <DialogDescription>
-              {t('auth.signup.complete.message')}
+              {t('auth.signupForm.completeMessage')}
             </DialogDescription>
           </DialogHeader>
           <Button onClick={() => {
             setShowApprovalDialog(false);
-            navigate('/');
+            navigate('/dashboard');
           }}>
             {t('auth.confirm')}
           </Button>

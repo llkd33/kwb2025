@@ -6,6 +6,8 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { BusinessDocumentUploader } from "@/components/ui/business-document-uploader";
 import { FileText, Calendar, CheckCircle, AlertCircle, Download, Trash2 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { Loader2 } from "lucide-react";
 
 interface BusinessRegistration {
   id: number;
@@ -17,27 +19,38 @@ interface BusinessRegistration {
   verification_notes?: string;
 }
 
+type CompanyMin = { id: number; company_name: string };
+
 export default function BusinessDocuments() {
   const [documents, setDocuments] = useState<BusinessRegistration[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentCompany, setCurrentCompany] = useState<any>(null);
+  const [company, setCompany] = useState<CompanyMin | null>(null);
   const { toast } = useToast();
+  const { user, session } = useAuth();
 
   useEffect(() => {
-    // Get current company from localStorage (임시 방법)
-    const company = localStorage.getItem('currentCompany');
-    if (company) {
-      const parsedCompany = JSON.parse(company);
-      setCurrentCompany(parsedCompany);
-      fetchDocuments(parsedCompany.id);
-    } else {
-      toast({
-        title: "로그인 필요",
-        description: "로그인 후 이용해주세요.",
-        variant: "destructive",
-      });
-    }
-  }, []);
+    const loadCompany = async () => {
+      if (!session || !user?.email) {
+        setCompany(null);
+        setLoading(false);
+        return;
+      }
+      const { data, error } = await supabase
+        .from('companies')
+        .select('id, company_name, email')
+        .eq('email', user.email)
+        .single();
+      if (error) {
+        toast({ title: '회사 정보 로드 실패', description: error.message, variant: 'destructive' });
+        setLoading(false);
+        return;
+      }
+      setCompany({ id: data.id, company_name: data.company_name });
+      await fetchDocuments(data.id);
+    };
+    loadCompany();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session, user?.email]);
 
   const fetchDocuments = async (companyId: number) => {
     try {
@@ -86,7 +99,7 @@ export default function BusinessDocuments() {
         description: "문서가 삭제되었습니다.",
       });
 
-      fetchDocuments(currentCompany.id);
+      if (company) await fetchDocuments(company.id);
     } catch (error: any) {
       toast({
         title: "삭제 실패",
@@ -131,25 +144,22 @@ export default function BusinessDocuments() {
     }
   };
 
-  if (!currentCompany) {
+  if (loading) {
     return (
-      <div className="container mx-auto py-8">
-        <Card>
-          <CardContent className="text-center py-8">
-            <p>로그인이 필요합니다.</p>
-            <Button asChild className="mt-4">
-              <a href="/auth">로그인</a>
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="container mx-auto py-10 flex items-center justify-center text-muted-foreground">
+        <Loader2 className="h-5 w-5 animate-spin mr-2" /> 로딩 중...
       </div>
     );
   }
 
-  if (loading) {
+  if (!company) {
     return (
-      <div className="container mx-auto py-8">
-        <div className="text-center">로딩 중...</div>
+      <div className="container mx-auto py-10">
+        <Card>
+          <CardContent className="text-center py-10">
+            <p>회사 정보를 찾을 수 없습니다.</p>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -158,13 +168,13 @@ export default function BusinessDocuments() {
     <div className="container mx-auto py-8 space-y-6">
       <div>
         <h1 className="text-3xl font-bold">사업자등록증 관리</h1>
-        <p className="text-gray-600 mt-2">{currentCompany.company_name}</p>
+        <p className="text-gray-600 mt-2">{company.company_name}</p>
       </div>
 
       {/* Upload Section */}
       <BusinessDocumentUploader 
-        companyId={currentCompany.id}
-        onUploadComplete={() => fetchDocuments(currentCompany.id)}
+        companyId={company.id}
+        onUploadComplete={() => fetchDocuments(company.id)}
       />
 
       {/* Documents List */}

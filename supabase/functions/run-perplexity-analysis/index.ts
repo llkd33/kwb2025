@@ -8,6 +8,39 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
+// Language configuration for Perplexity analysis
+const LANGUAGE_CONFIG = {
+  ko: {
+    systemPrompt: '당신은 실시간 웹 데이터에 접근할 수 있는 시장 조사 전문가입니다. 중요 형식 규칙: 1) 응답은 반드시 유효한 JSON만 작성 - 마크다운, 백틱, 설명, 추가 텍스트 금지. 2) {로 시작해서 }로 끝나야 함. 3) 모든 문자열에 쌍따옴표 사용. 4) 문자열 내 따옴표는 \\"로 이스케이프. 5) 후행 쉼표 금지. 6) 콘텐츠 값은 한국어 텍스트 사용. 7) 최근 6개월간의 트렌드, 뉴스, 데이터에 집중. 8) 완전한 데이터를 제공할 수 없다면 "정보 확인 필요"를 플레이스홀더로 사용.',
+    userPrompt: `당신은 골드만삭스 리서치 수준의 실시간 마켓 애널리스트입니다. 웹 최신 정보를 교차 확인하여 시장조사를 수행해주세요.\n\n대상 기업: {{company_name}}\n업종: {{industry}}\n타겟 국가: {{target_countries}}\n\n관리자 추가 지시사항:\n{{admin_prompt}}\n\n다음 JSON 구조로만 응답하세요 (다른 텍스트나 마크다운 없이): { "market_analysis": {"country_markets": "", "market_size": "", "recent_changes": ""}, "competitors": {"top_companies": "", "positioning": "", "recent_performance": ""}, "partnerships": {"recent_deals": "", "success_cases": "", "failure_analysis": ""}, "potential_partners": {"priority_companies": "", "approach_strategy": "", "contact_methods": ""}, "risks": {"regulatory_risks": "", "cultural_risks": "", "competitive_risks": "", "mitigation_strategies": ""}, "summary": {"key_points": "", "recommendations": "", "next_steps": ""} }`
+  },
+  ja: {
+    systemPrompt: 'あなたはリアルタイムWebデータにアクセスできる市場調査アナリストです。重要な形式ルール: 1) 回答は有効なJSONのみ - マークダウン、バッククォート、説明、追加テキスト禁止。 2) {で始まり}で終わる。 3) すべての文字列に二重引用符使用。 4) 文字列内の引用符は\\"でエスケープ。 5) 末尾カンマ禁止。 6) コンテンツ値は日本語テキスト使用。 7) 直近6ヶ月のトレンド、ニュース、データに注目。 8) 完全なデータを提供できない場合は「情報確認必要」をプレースホルダーとして使用。',
+    userPrompt: `あなたはゴールドマンサックス リサーチ水準のリアルタイム マーケットアナリストです。Web最新情報をクロスチェックして市場調査を実施してください。\n\n対象企業: {{company_name}}\n業種: {{industry}}\nターゲット国: {{target_countries}}\n\n管理者追加指示:\n{{admin_prompt}}\n\n以下のJSON構造でのみ回答してください (他のテキストやマークダウンなし): { "market_analysis": {"country_markets": "", "market_size": "", "recent_changes": ""}, "competitors": {"top_companies": "", "positioning": "", "recent_performance": ""}, "partnerships": {"recent_deals": "", "success_cases": "", "failure_analysis": ""}, "potential_partners": {"priority_companies": "", "approach_strategy": "", "contact_methods": ""}, "risks": {"regulatory_risks": "", "cultural_risks": "", "competitive_risks": "", "mitigation_strategies": ""}, "summary": {"key_points": "", "recommendations": "", "next_steps": ""} }`
+  },
+  en: {
+    systemPrompt: 'You are a market research analyst with access to real-time web data. CRITICAL FORMATTING RULES: 1) Response must be ONLY valid JSON - no markdown, backticks, explanations, or additional text. 2) Start with { and end with }. 3) Use double quotes for all strings. 4) Escape quotes inside strings with \\". 5) No trailing commas. 6) Use English text for content values. 7) Focus on recent trends, news, and data from the last 6 months. 8) If you cannot provide complete data, use "Information verification needed" as placeholder text.',
+    userPrompt: `You are a Goldman Sachs Research-quality real-time market analyst. Please cross-verify the latest web information to conduct market research.\n\nTarget Company: {{company_name}}\nIndustry: {{industry}}\nTarget Countries: {{target_countries}}\n\nAdditional Administrator Instructions:\n{{admin_prompt}}\n\nRespond ONLY with the following JSON structure (no other text or markdown): { "market_analysis": {"country_markets": "", "market_size": "", "recent_changes": ""}, "competitors": {"top_companies": "", "positioning": "", "recent_performance": ""}, "partnerships": {"recent_deals": "", "success_cases": "", "failure_analysis": ""}, "potential_partners": {"priority_companies": "", "approach_strategy": "", "contact_methods": ""}, "risks": {"regulatory_risks": "", "cultural_risks": "", "competitive_risks": "", "mitigation_strategies": ""}, "summary": {"key_points": "", "recommendations": "", "next_steps": ""} }`
+  }
+};
+
+// Function to determine language from user preferences or browser settings
+function determineLanguage(headers: Headers, userPreference?: string): 'ko' | 'ja' | 'en' {
+  if (userPreference && ['ko', 'ja', 'en'].includes(userPreference)) {
+    return userPreference as 'ko' | 'ja' | 'en';
+  }
+  
+  const acceptLanguage = headers.get('accept-language') || '';
+  
+  if (acceptLanguage.includes('ko') || acceptLanguage.includes('kr')) {
+    return 'ko';
+  } else if (acceptLanguage.includes('ja') || acceptLanguage.includes('jp')) {
+    return 'ja';
+  } else {
+    return 'en';
+  }
+}
+
 async function retryableApiCall<T>(
   apiCall: () => Promise<T>,
   maxRetries = 3,
@@ -49,8 +82,12 @@ serve(async (req: Request) => {
     );
 
     const requestBody = await req.json();
-    const { matchingRequestId, adminPrompt } = requestBody;
+    const { matchingRequestId, adminPrompt, language: requestLanguage } = requestBody;
     if (!matchingRequestId) throw new Error('matchingRequestId is required');
+
+    // Determine the language for the analysis
+    const language = determineLanguage(req.headers, requestLanguage);
+    console.log(`Perplexity analysis language determined: ${language}`);
 
     const { data: matchingRequest, error: requestError } = await supabaseClient
       .from('matching_requests')
@@ -70,8 +107,10 @@ serve(async (req: Request) => {
         .replaceAll('{{admin_prompt}}', adminPrompt || '');
     };
 
-    let systemPrompt = 'You are a market research analyst with access to real-time web data. CRITICAL FORMATTING RULES: 1) Response must be ONLY valid JSON - no markdown, backticks, explanations, or additional text. 2) Start with { and end with }. 3) Use double quotes for all strings. 4) Escape quotes inside strings with \\". 5) No trailing commas. 6) Use Korean text for content values. 7) Focus on recent trends, news, and data from the last 6 months. 8) If you cannot provide complete data, use "정보 확인 필요" as placeholder text.';
-    let userPrompt = `너는 골드만삭스 리서치 퀄리티의 실시간 마켓 애널리스트다. 웹 최신 정보를 교차 확인하여 시장조사를 수행하라.\n\n대상 기업: {{company_name}}\n업종: {{industry}}\n타겟 국가: {{target_countries}}\n\n관리자 추가 지시사항:\n{{admin_prompt}}\n\n다음 JSON 구조로만 응답하라 (다른 텍스트나 마크다운 없이): { "market_analysis": {"country_markets": "", "market_size": "", "recent_changes": ""}, "competitors": {"top_companies": "", "positioning": "", "recent_performance": ""}, "partnerships": {"recent_deals": "", "success_cases": "", "failure_analysis": ""}, "potential_partners": {"priority_companies": "", "approach_strategy": "", "contact_methods": ""}, "risks": {"regulatory_risks": "", "cultural_risks": "", "competitive_risks": "", "mitigation_strategies": ""}, "summary": {"key_points": "", "recommendations": "", "next_steps": ""} }`;
+    // Get language-specific prompts
+    const langConfig = LANGUAGE_CONFIG[language];
+    let systemPrompt = langConfig.systemPrompt;
+    let userPrompt = langConfig.userPrompt;
     try {
       const { data: dbPrompt } = await supabaseClient
         .from('gpt_prompts')
@@ -320,11 +359,12 @@ serve(async (req: Request) => {
       console.log('Citations count:', citations.length);
       marketResearchData = {
         status: 'completed',
-        data: perplexityAnalysis,
+        data: { ...perplexityAnalysis, analysis_language: language },
         citations,
         prompt_used: marketResearchPrompt,
         provider: 'Perplexity',
-        generated_at: new Date().toISOString()
+        generated_at: new Date().toISOString(),
+        analysis_language: language
       };
     } else {
       // Soft-fail path - still update with error info
@@ -337,7 +377,8 @@ serve(async (req: Request) => {
         status_text: perplexityCall?.statusText,
         prompt_used: marketResearchPrompt,
         provider: 'Perplexity',
-        generated_at: new Date().toISOString()
+        generated_at: new Date().toISOString(),
+        analysis_language: language
       };
     }
     
@@ -360,8 +401,9 @@ serve(async (req: Request) => {
     console.log('=== PERPLEXITY ANALYSIS COMPLETED SUCCESSFULLY ===');
     return new Response(JSON.stringify({
       success: true,
-      message: 'Perplexity 분석이 성공적으로 완료되었습니다.',
-      analysisId: matchingRequestId
+      message: `Perplexity 분석이 ${language} 언어로 성공적으로 완료되었습니다.`,
+      analysisId: matchingRequestId,
+      language: language
     }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
