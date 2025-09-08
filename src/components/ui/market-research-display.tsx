@@ -324,7 +324,24 @@ export function MarketResearchDisplay({ data, citations, title, description, sho
           {content.map((item, idx) => (
             <li key={idx} className="flex items-start gap-3">
               <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-              <span className="text-gray-700 leading-relaxed">{String(item)}</span>
+              {typeof item === 'object' && item !== null ? (
+                // Pretty-print common object shapes instead of [object Object]
+                <div className="text-gray-700 leading-relaxed">
+                  {(() => {
+                    const obj = item as Record<string, unknown>;
+                    const preferredKeys = ['name', 'title', 'label', 'value', 'country', 'company_name'];
+                    const key = preferredKeys.find(k => k in obj && typeof obj[k] === 'string');
+                    if (key) return String(obj[key]);
+                    // Fallback: join first 2 key-value pairs
+                    const entries = Object.entries(obj).filter(([, v]) => v != null);
+                    if (entries.length === 0) return String(item);
+                    const preview = entries.slice(0, 2).map(([k, v]) => `${k}: ${typeof v === 'string' ? v : JSON.stringify(v)}`).join(', ');
+                    return preview;
+                  })()}
+                </div>
+              ) : (
+                <span className="text-gray-700 leading-relaxed">{String(item)}</span>
+              )}
             </li>
           ))}
         </ul>
