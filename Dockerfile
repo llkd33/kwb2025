@@ -20,6 +20,7 @@ RUN npm i -g serve@14
 
 # Copy built assets only
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/serve.json ./serve.json
 
 ENV NODE_ENV=production
 ENV PORT=4173
@@ -27,4 +28,3 @@ EXPOSE 4173
 
 # Bind to 0.0.0.0 and use platform $PORT
 CMD ["sh", "-c", "serve -s dist -l tcp://0.0.0.0:${PORT}"]
-
