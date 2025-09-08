@@ -4,7 +4,6 @@
       "command": "bash",
       "args": ["-c", "cd /Users/startuperdaniel/dev/knowwhere-bridge-insights/zen-mcp-server && source .zen_venv/bin/activate && python server.py"],
       "env": {
-        "GEMINI_API_KEY": "AIzaSyCtI6eXjiKCvGMm5dpG_Zy9rxMIr5VGfVg",
         "DEFAULT_MODEL": "auto"
       }
     }
