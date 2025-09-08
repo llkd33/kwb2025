@@ -11,5 +11,5 @@ echo '{
   "success": true,
   "message": "OpenAI API test successful",
   "response": "안녕하세요",
-  "model": "gpt-4o-mini"
+  "model": "gpt-5"
 }'

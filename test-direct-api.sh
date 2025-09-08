@@ -16,7 +16,7 @@ response=$(curl -s -X POST https://api.openai.com/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $api_key" \
   -d '{
-    "model": "gpt-4o-mini",
+    "model": "gpt-5",
     "messages": [{"role": "user", "content": "Say hello"}],
     "max_tokens": 10
   }')

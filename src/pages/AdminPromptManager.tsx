@@ -165,7 +165,7 @@ export default function AdminPromptManager() {
               <div>
                 <CardTitle className="flex items-center gap-2">
                   GPT 분석 프롬프트
-                  <Badge variant="default">GPT-4o-mini</Badge>
+                  <Badge variant="default">GPT-5</Badge>
                   <Badge variant="outline">활성</Badge>
                 </CardTitle>
                 <CardDescription>
