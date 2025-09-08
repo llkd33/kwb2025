@@ -129,10 +129,10 @@ serve(async (req: Request) => {
     }
     const marketResearchPrompt = replacePlaceholders(userPrompt);
 
-    // Use allowed status value while processing
+    // Set provider-specific processing status
     await supabaseClient
       .from('matching_requests')
-      .update({ workflow_status: 'ai_processing' })
+      .update({ workflow_status: 'perplexity_processing' })
       .eq('id', matchingRequestId);
 
     const perplexityApiKey = Deno.env.get('PERPLEXITY_API_KEY');
@@ -440,7 +440,7 @@ serve(async (req: Request) => {
       error: error.message,
       success: false,
     }), {
-      status: 200,
+      status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }

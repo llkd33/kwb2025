@@ -41,6 +41,8 @@ interface Company {
   is_approved: boolean;
   created_at: string;
   rejection_reason: string;
+  // present in DB; used to filter out admin accounts from company lists
+  is_admin?: boolean;
 }
 
 interface GPTPrompt {
@@ -98,6 +100,9 @@ export default function Admin() {
   const [rejectionReason, setRejectionReason] = useState("");
   const [adminComments, setAdminComments] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
+  const [showDocDialog, setShowDocDialog] = useState(false);
+  const [docCompany, setDocCompany] = useState<Company | null>(null);
+  const [companyDocs, setCompanyDocs] = useState<Array<{ id: number; document_name: string; path: string; size: number; uploaded_at: string; signedUrl?: string }>>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -210,11 +215,16 @@ export default function Admin() {
   };
 
 
-  // Filter companies by status
-  // is_approved가 false이거나 null인 경우를 승인 대기로 처리 (관리자 계정 제외)
-  const pendingCompanies = companies.filter(c => (c.is_approved === false || c.is_approved === null) && !c.is_admin);
-  const approvedCompanies = companies.filter(c => c.is_approved === true && !c.is_admin);
-  const rejectedCompanies = companies.filter(c => c.is_approved === false && c.rejection_reason);
+  // Derive status preferring non-pending approval_status; fallback to is_approved
+  const deriveStatus = (c: any): 'pending' | 'approved' | 'rejected' => {
+    if (c && typeof c === 'object' && c.approval_status && c.approval_status !== 'pending') return c.approval_status;
+    if (c?.is_approved === true) return 'approved';
+    if (c?.rejection_reason) return 'rejected';
+    return 'pending';
+  };
+  const pendingCompanies = companies.filter(c => deriveStatus(c) === 'pending' && !c.is_admin);
+  const approvedCompanies = companies.filter(c => deriveStatus(c) === 'approved' && !c.is_admin);
+  const rejectedCompanies = companies.filter(c => deriveStatus(c) === 'rejected' && !c.is_admin);
   
   console.log('Filtered results:');
   console.log('Pending companies:', pendingCompanies);
@@ -326,12 +336,52 @@ export default function Admin() {
     }
   };
 
+  const openDocumentDialog = async (company: Company) => {
+    try {
+      setDocCompany(company);
+      setShowDocDialog(true);
+      // Get business registration records
+      const { data, error } = await supabase
+        .from('business_registration')
+        .select('id, document_url, document_name, file_size, created_at')
+        .eq('company_id', company.id)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+
+      // Create signed URLs for each file (bucket: business-documents)
+      const docs: Array<{ id: number; document_name: string; path: string; size: number; uploaded_at: string; signedUrl?: string }>= [];
+      for (const row of (data || [])) {
+        const rawPath = (row.document_url || '').toString();
+        const path = rawPath.replace(/^\/?business-documents\//, '').replace(/^\//, '');
+        let signedUrl: string | undefined;
+        try {
+          const { data: signed } = await supabase.storage
+            .from('business-documents')
+            .createSignedUrl(path, 60 * 60); // 1 hour
+          signedUrl = signed?.signedUrl;
+        } catch (_) {}
+        docs.push({
+          id: row.id,
+          document_name: row.document_name,
+          path,
+          size: row.file_size,
+          uploaded_at: row.created_at,
+          signedUrl,
+        });
+      }
+      setCompanyDocs(docs);
+    } catch (e: any) {
+      toast({ title: '서류 로드 실패', description: e.message, variant: 'destructive' });
+    }
+  };
+
   const fetchMatchingRequests = async () => {
     try {
       // 1) Fetch requests only (avoid ambiguous PostgREST embeds causing 400)
       const { data: requests, error } = await supabase
         .from('matching_requests')
         .select(`*, pdf_summary, ai_analysis, market_research, report_token`)
+        .is('is_deleted', null)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -364,16 +414,27 @@ export default function Admin() {
     setActionLoading(true);
     try {
       // Update company approval status
-      const { error: updateError } = await supabase
+      let { error: updateError } = await supabase
         .from('companies')
         .update({ 
-          is_approved: true, 
+          is_approved: true,
+          approval_status: 'approved' as any,
           approved_at: new Date().toISOString(),
           rejection_reason: null 
-        })
+        } as any)
         .eq('id', company.id);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        const { error: legacyErr } = await supabase
+          .from('companies')
+          .update({ 
+            is_approved: true,
+            approved_at: new Date().toISOString(),
+            rejection_reason: null 
+          } as any)
+          .eq('id', company.id);
+        if (legacyErr) throw legacyErr;
+      }
 
       // Send approval email
       const { error: emailError } = await supabase.functions.invoke('send-approval-email', {
@@ -422,15 +483,25 @@ export default function Admin() {
     setActionLoading(true);
     try {
       // Update company with rejection
-      const { error: updateError } = await supabase
+      let { error: updateError } = await supabase
         .from('companies')
         .update({ 
           is_approved: false,
+          approval_status: 'rejected' as any,
           rejection_reason: rejectionReason
-        })
+        } as any)
         .eq('id', selectedCompany.id);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        const { error: legacyErr } = await supabase
+          .from('companies')
+          .update({ 
+            is_approved: false,
+            rejection_reason: rejectionReason
+          } as any)
+          .eq('id', selectedCompany.id);
+        if (legacyErr) throw legacyErr;
+      }
 
       // Send rejection email
       const { error: emailError } = await supabase.functions.invoke('send-approval-email', {
@@ -480,9 +551,9 @@ export default function Admin() {
             <CardTitle className="flex items-center gap-2">
               <Building2 className="h-5 w-5" />
               {company.company_name}
-              {company.is_approved === true && <Badge className="bg-green-100 text-green-800">승인됨</Badge>}
-              {company.is_approved === false && company.rejection_reason && <Badge variant="destructive">거부됨</Badge>}
-              {(company.is_approved === false || company.is_approved === null) && !company.rejection_reason && <Badge variant="secondary">승인 대기</Badge>}
+              {deriveStatus(company) === 'approved' && <Badge className="bg-green-100 text-green-800">승인됨</Badge>}
+              {deriveStatus(company) === 'rejected' && <Badge variant="destructive">거부됨</Badge>}
+              {deriveStatus(company) === 'pending' && <Badge variant="secondary">승인 대기</Badge>}
             </CardTitle>
             <CardDescription>
               CEO: {company.ceo_name} | 담당자: {company.manager_name} ({company.manager_position})
@@ -553,8 +624,14 @@ export default function Admin() {
           </div>
         )}
 
-        {showActions && (company.is_approved === null || (company.is_approved === false && !company.rejection_reason)) && (
+        {showActions && deriveStatus(company) === 'pending' && (
           <div className="flex gap-2 mt-4">
+            <Button 
+              variant="outline"
+              onClick={() => openDocumentDialog(company)}
+            >
+              📄 서류 확인
+            </Button>
             <Button 
               onClick={() => handleApprove(company)}
               disabled={actionLoading}
@@ -579,7 +656,7 @@ export default function Admin() {
         )}
 
         {/* Rejected company actions: re-approve or edit rejection reason */}
-        {company.is_approved === false && (
+        {deriveStatus(company) === 'rejected' && (
           <div className="flex gap-2 mt-4">
             <Button 
               onClick={() => handleApprove(company)}
@@ -660,6 +737,57 @@ export default function Admin() {
       </div>
 
       <div className="container mx-auto px-4 py-8 space-y-8">
+        {/* Document Review Dialog */}
+        <Dialog open={showDocDialog} onOpenChange={setShowDocDialog}>
+          <DialogContent className="max-w-xl">
+            <DialogHeader>
+              <DialogTitle>서류 확인 - {docCompany?.company_name}</DialogTitle>
+              <DialogDescription>업로드된 사업자등록증 목록을 확인하고 검증 처리하세요.</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3">
+              {companyDocs.length === 0 && (
+                <div className="text-sm text-gray-500">업로드된 서류가 없습니다.</div>
+              )}
+              {companyDocs.map((d) => {
+                const isImage = /\.(png|jpe?g|gif|webp|svg)$/i.test(d.document_name || d.path);
+                return (
+                  <div key={d.id} className="p-3 border rounded-md space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="font-medium break-all">{d.document_name}</div>
+                        <div className="text-xs text-gray-500">업로드: {new Date(d.uploaded_at).toLocaleString('ko-KR')}</div>
+                        <div className="text-xs text-gray-500 break-all">경로: {d.path}</div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {d.signedUrl && (
+                          <a href={d.signedUrl} target="_blank" rel="noreferrer" className="px-3 py-1 bg-blue-600 text-white rounded-md text-sm">새 창으로 보기</a>
+                        )}
+                        <Button
+                          onClick={() => { if (docCompany) handleApprove(docCompany); setShowDocDialog(false); }}
+                          className="bg-blue-600 hover:bg-blue-700"
+                        >
+                          검증완료로 표시
+                        </Button>
+                      </div>
+                    </div>
+                    {d.signedUrl && isImage && (
+                      <div className="w-full">
+                        <img
+                          src={d.signedUrl}
+                          alt={d.document_name}
+                          className="max-h-64 w-full object-contain rounded border"
+                        />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowDocDialog(false)}>닫기</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
         {/* Enhanced Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
@@ -711,7 +839,7 @@ export default function Admin() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-3xl font-bold text-blue-600">{matchingRequests.filter(r => r.status === 'completed').length}</div>
+                  <div className="text-3xl font-bold text-blue-600">{matchingRequests.filter(r => ['gpt_completed','perplexity_completed','admin_approved','completed'].includes(r.workflow_status)).length}</div>
                   <div className="text-slate-600 font-medium">완료된 분석</div>
                   <div className="text-xs text-slate-500 mt-1">AI 분석 완료</div>
                 </div>
@@ -846,13 +974,13 @@ export default function Admin() {
             </div>
             <div className="flex items-center gap-2">
               <Badge variant="outline" className="text-orange-600">
-                {matchingRequests.filter(r => r.status === 'pending').length}개 대기 중
+                {matchingRequests.filter(r => !r.workflow_status || ['pending','documents_uploaded'].includes(r.workflow_status)).length}개 대기 중
               </Badge>
               <Badge variant="outline" className="text-blue-600">
-                {matchingRequests.filter(r => r.status === 'processing').length}개 처리 중
+                {matchingRequests.filter(r => ['ai_processing','gpt_processing','perplexity_processing'].includes(r.workflow_status)).length}개 처리 중
               </Badge>
               <Badge variant="outline" className="text-green-600">
-                {matchingRequests.filter(r => r.status === 'completed').length}개 완료
+                {matchingRequests.filter(r => ['gpt_completed','perplexity_completed','admin_approved','completed'].includes(r.workflow_status)).length}개 완료
               </Badge>
             </div>
           </div>
@@ -1139,7 +1267,7 @@ export default function Admin() {
               📊 AI 분석 리포트 상세 검토
             </DialogTitle>
             <DialogDescription className="text-base">
-              {selectedRequest?.companies?.company_name}의 종합 분석 리포트를 검토하고 최종 승인하세요.
+              {selectedRequest?.company?.company_name}의 종합 분석 리포트를 검토하고 최종 승인하세요.
             </DialogDescription>
             <div className="flex items-center justify-between mt-2">
               <Badge variant="outline">
@@ -1167,11 +1295,11 @@ export default function Admin() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                   <div>
                     <span className="font-medium text-gray-600">회사명:</span>
-                    <p className="font-semibold">{selectedRequest.companies?.company_name}</p>
+                    <p className="font-semibold">{selectedRequest.company?.company_name}</p>
                   </div>
                   <div>
                     <span className="font-medium text-gray-600">업종:</span>
-                    <p>{selectedRequest.companies?.industry}</p>
+                    <p>{selectedRequest.company?.industry}</p>
                   </div>
                   <div>
                     <span className="font-medium text-gray-600">타겟 국가:</span>
@@ -1297,7 +1425,7 @@ export default function Admin() {
                           report_token: null,
                           is_deleted: true,
                           deleted_at: new Date().toISOString(),
-                          workflow_status: 'deleted'
+                          workflow_status: 'rejected'
                         })
                         .eq('id', selectedRequest.id);
 
@@ -1352,7 +1480,7 @@ export default function Admin() {
                         .from('matching_requests')
                         .update({ 
                           admin_comments: adminComments,
-                          workflow_status: 'admin_review_pending'
+                          workflow_status: 'admin_review'
                         })
                         .eq('id', selectedRequest.id);
 

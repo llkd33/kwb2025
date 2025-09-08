@@ -18,7 +18,9 @@ import {
   Edit3,
   Database,
   Brain,
-  Search
+  Search,
+  RefreshCw,
+  Loader2
 } from "lucide-react";
 import { MarketResearchDisplay } from "@/components/ui/market-research-display";
 
@@ -34,6 +36,9 @@ export default function AdminReportEditor() {
   const [gptPrompt, setGptPrompt] = useState("");
   const [perplexityPrompt, setPerplexityPrompt] = useState("");
   const [promptTemplates, setPromptTemplates] = useState<any[]>([]);
+  const [reReviewing, setReReviewing] = useState(false);
+  const [regenGPTLoading, setRegenGPTLoading] = useState(false);
+  const [regenPPLXLoading, setRegenPPLXLoading] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -71,7 +76,7 @@ export default function AdminReportEditor() {
       };
 
       setMatchingRequest(requestWithCompany);
-      setAiAnalysis(request.ai_analysis || {});
+      setAiAnalysis(request.ai_analysis || request.gpt_analysis || {});
       setMarketResearch(request.market_research || {});
       setAdminComments(request.admin_comments || "");
       setGptPrompt(request.gpt_prompt_used || "");
@@ -130,6 +135,32 @@ export default function AdminReportEditor() {
     }
   };
 
+  const handleReReview = async () => {
+    if (!id) return;
+    setReReviewing(true);
+    try {
+      const { error } = await supabase
+        .from('matching_requests')
+        .update({
+          workflow_status: 'admin_review',
+          admin_comments: `${new Date().toISOString()} 재검토 지정\n${adminComments || ''}`,
+        })
+        .eq('id', id);
+      if (error) throw error;
+
+      toast({
+        title: '재검토로 전환',
+        description: '리포트가 재검토 상태로 전환되었습니다.',
+      });
+      // Refresh local state
+      await fetchData();
+    } catch (e) {
+      toast({ title: '재검토 실패', description: (e as Error).message, variant: 'destructive' });
+    } finally {
+      setReReviewing(false);
+    }
+  };
+
   const handleApprove = async () => {
     if (!window.confirm('이 보고서를 승인하시겠습니까? 승인 후 고객에게 이메일이 발송됩니다.')) {
       return;
@@ -163,6 +194,14 @@ export default function AdminReportEditor() {
         .eq('id', id);
 
       if (updateError) throw updateError;
+
+      // Generate a public report token for viewing
+      try {
+        await supabase.rpc('generate_report_token', { p_id: Number(id) });
+      } catch (tokenErr) {
+        console.warn('Report token generation failed:', tokenErr);
+        // Continue; email will still be sent and admin can retry token later
+      }
 
       // Send notification email
       await supabase.functions.invoke('send-analysis-complete-email', {
@@ -261,6 +300,53 @@ export default function AdminReportEditor() {
             <Save className="w-4 h-4 mr-2" />
             저장
           </Button>
+          <Button 
+            onClick={async () => {
+              if (!id) return;
+              setRegenGPTLoading(true);
+              try {
+                await supabase.functions.invoke('run-gpt-analysis', {
+                  body: { matchingRequestId: Number(id), adminPrompt: adminComments }
+                });
+                toast({ title: 'GPT 재생성 시작', description: '분석이 다시 실행됩니다. 잠시 후 새로고침하세요.' });
+                // Immediately refetch to pick up updates when ready
+                await fetchData();
+              } catch (e) {
+                toast({ title: 'GPT 재생성 실패', description: (e as Error).message, variant: 'destructive' });
+              } finally {
+                setRegenGPTLoading(false);
+              }
+            }}
+            variant="outline"
+            disabled={regenGPTLoading}
+          >
+            {regenGPTLoading ? (<><Loader2 className="w-4 h-4 mr-2 animate-spin"/>재생성…</>) : (<><RefreshCw className="w-4 h-4 mr-2"/>GPT 재생성</>)}
+          </Button>
+          <Button 
+            onClick={async () => {
+              if (!id) return;
+              setRegenPPLXLoading(true);
+              try {
+                await supabase.functions.invoke('run-perplexity-analysis', {
+                  body: { matchingRequestId: Number(id), adminPrompt: adminComments }
+                });
+                toast({ title: 'Perplexity 재조사 시작', description: '시장 조사가 다시 실행됩니다.' });
+                await fetchData();
+              } catch (e) {
+                toast({ title: 'Perplexity 재조사 실패', description: (e as Error).message, variant: 'destructive' });
+              } finally {
+                setRegenPPLXLoading(false);
+              }
+            }}
+            variant="outline"
+            disabled={regenPPLXLoading}
+          >
+            {regenPPLXLoading ? (<><Loader2 className="w-4 h-4 mr-2 animate-spin"/>재조사…</>) : (<><RefreshCw className="w-4 h-4 mr-2"/>Perplexity 재조사</>)}
+          </Button>
+          <Button onClick={handleReReview} disabled={reReviewing} variant="outline">
+            <Edit3 className="w-4 h-4 mr-2" />
+            재검토
+          </Button>
           <Button onClick={handleReject} disabled={saving} variant="destructive">
             <XCircle className="w-4 h-4 mr-2" />
             반려
@@ -269,19 +355,37 @@ export default function AdminReportEditor() {
             <CheckCircle className="w-4 h-4 mr-2" />
             승인 및 발송
           </Button>
+          <Button 
+            onClick={async () => {
+              try {
+                await supabase.rpc('generate_report_token', { p_id: Number(id) });
+                toast({ title: '링크 재발급 완료', description: '새 보고서 링크가 생성되었습니다.' });
+              } catch (e) {
+                toast({ title: '재발급 실패', description: '토큰 생성 중 오류가 발생했습니다.', variant: 'destructive' });
+              }
+            }} 
+            variant="outline"
+            disabled={saving}
+          >
+            링크 재발급
+          </Button>
         </div>
       </div>
 
       {/* Main Content */}
       <Tabs defaultValue="analysis" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="analysis">
             <Brain className="w-4 h-4 mr-2" />
-            AI 분석 결과
+            GPT 분석
           </TabsTrigger>
           <TabsTrigger value="market">
             <Search className="w-4 h-4 mr-2" />
-            시장 조사
+            Perplexity 시장분석
+          </TabsTrigger>
+          <TabsTrigger value="comments">
+            <Edit3 className="w-4 h-4 mr-2" />
+            코멘트
           </TabsTrigger>
           <TabsTrigger value="prompts">
             <Edit3 className="w-4 h-4 mr-2" />
@@ -289,117 +393,65 @@ export default function AdminReportEditor() {
           </TabsTrigger>
           <TabsTrigger value="data">
             <Database className="w-4 h-4 mr-2" />
-            참조 데이터
+            참고 데이터
           </TabsTrigger>
         </TabsList>
 
         {/* AI Analysis Tab */}
         <TabsContent value="analysis" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>경영진 요약 (Executive Summary)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Textarea
-                value={aiAnalysis.executive_summary || aiAnalysis['경영진_요약'] || ''}
-                onChange={(e) => updateAnalysisSection('executive_summary', e.target.value)}
-                rows={6}
-                className="font-mono text-sm"
-              />
-            </CardContent>
-          </Card>
+          {/* GPT Analysis pretty display with fallback to market_research.gpt.data */}
+          <MarketResearchDisplay 
+            data={aiAnalysis || {}}
+            title="GPT 종합 분석"
+            description="GPT 기반 종합 분석 리포트"
+            showLiveBadge={false}
+          />
+          {/* Removed raw JSON editors to keep Perplexity-like UI only */}
 
-          <Card>
-            <CardHeader>
-              <CardTitle>회사 분석 (Company Analysis)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Textarea
-                value={JSON.stringify(aiAnalysis.company_analysis || aiAnalysis['회사_분석'] || {}, null, 2)}
-                onChange={(e) => {
-                  try {
-                    updateAnalysisSection('company_analysis', JSON.parse(e.target.value));
-                  } catch (error) {
-                    // Handle JSON parse error
-                  }
-                }}
-                rows={10}
-                className="font-mono text-sm"
-              />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>매칭 추천 (Partner Recommendations)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Textarea
-                value={JSON.stringify(aiAnalysis.partner_recommendations || aiAnalysis['매칭_추천'] || [], null, 2)}
-                onChange={(e) => {
-                  try {
-                    updateAnalysisSection('partner_recommendations', JSON.parse(e.target.value));
-                  } catch (error) {
-                    // Handle JSON parse error
-                  }
-                }}
-                rows={10}
-                className="font-mono text-sm"
-              />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>관리자 의견</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Textarea
-                value={adminComments}
-                onChange={(e) => setAdminComments(e.target.value)}
-                rows={4}
-                placeholder="고객에게 전달할 추가 의견을 작성하세요..."
-              />
-            </CardContent>
-          </Card>
         </TabsContent>
 
         {/* Market Research Tab - Beautiful Display */}
         <TabsContent value="market" className="space-y-6">
           <div className="space-y-6">
-            {/* Beautiful Display View */}
-            <MarketResearchDisplay 
-              data={marketResearch}
-              citations={marketResearch?.citations}
-            />
-            
-            {/* Raw JSON Editor (Collapsible) */}
-            <details className="group">
-              <summary className="cursor-pointer text-sm font-medium text-gray-600 hover:text-gray-900 flex items-center gap-2">
-                <Database className="w-4 h-4" />
-                원본 데이터 편집 (고급)
-              </summary>
-              <Card className="mt-4">
-                <CardHeader>
-                  <CardTitle className="text-base">JSON 데이터 편집기</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Textarea
-                    value={JSON.stringify(marketResearch, null, 2)}
-                    onChange={(e) => {
-                      try {
-                        setMarketResearch(JSON.parse(e.target.value));
-                      } catch (error) {
-                        // Handle JSON parse error
-                      }
-                    }}
-                    rows={15}
-                    className="font-mono text-sm"
-                  />
-                </CardContent>
-              </Card>
-            </details>
+            {/* Perplexity-first display; fallback to GPT market if needed */}
+            {(() => {
+              const hasTopLevelData = marketResearch && (marketResearch as any).data;
+              const displayObj = hasTopLevelData ? marketResearch : ((marketResearch as any)?.gpt ? (marketResearch as any).gpt : marketResearch);
+              const cits = (displayObj as any)?.citations || (displayObj as any)?.data?.citations;
+              return (
+                <MarketResearchDisplay 
+                  data={displayObj}
+                  citations={cits}
+                  title="실시간 시장 조사 결과"
+                  description="Perplexity AI 기반 최신 시장 분석 리포트"
+                  showLiveBadge={true}
+                />
+              );
+            })()}
+            {/* Removed raw JSON editor (Perplexity-style only) */}
           </div>
+        </TabsContent>
+
+        {/* Comments Tab */}
+        <TabsContent value="comments" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>관리자 코멘트</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Textarea
+                value={adminComments}
+                onChange={(e) => setAdminComments(e.target.value)}
+                rows={8}
+                placeholder="내부 코멘트 또는 고객 전달 메시지를 작성하세요."
+              />
+              <div className="flex gap-2">
+                <Button onClick={handleSave} disabled={saving} variant="outline">
+                  <Save className="w-4 h-4 mr-2" /> 저장
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Prompts Tab */}

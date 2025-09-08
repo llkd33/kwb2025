@@ -15,16 +15,37 @@ type Citation = { url?: string; title?: string; snippet?: string; source?: strin
 interface MarketResearchDisplayProps {
   data: unknown;
   citations?: Citation[];
+  title?: string;
+  description?: string;
+  showLiveBadge?: boolean;
 }
 
-export function MarketResearchDisplay({ data, citations }: MarketResearchDisplayProps) {
+export function MarketResearchDisplay({ data, citations, title, description, showLiveBadge = true }: MarketResearchDisplayProps) {
   // Parse and organize the market research data
   const parseMarketData = (rawData: unknown) => {
     // Basic guard
     if (!rawData) return {} as Record<string, unknown>;
     // Cast for object access
     const obj = rawData as Record<string, unknown>;
-    const rec = obj as Record<string, unknown>;
+
+    // Normalize keys: convert camelCase to snake_case recursively
+    const toSnake = (s: string) => s
+      .replace(/([a-z0-9])([A-Z])/g, '$1_$2')
+      .replace(/[-\s]+/g, '_')
+      .toLowerCase();
+    const normalize = (input: any): any => {
+      if (Array.isArray(input)) return input.map(normalize);
+      if (input && typeof input === 'object') {
+        const out: any = {};
+        for (const [k, v] of Object.entries(input)) {
+          out[toSnake(k)] = normalize(v);
+        }
+        return out;
+      }
+      return input;
+    };
+
+    const rec = normalize(obj) as Record<string, unknown>;
     // Handle nested structure from Perplexity API
     if (rawData && typeof rawData === 'object') {
       // First check if the data already has the expected keys (flat structure)
@@ -106,6 +127,26 @@ export function MarketResearchDisplay({ data, citations }: MarketResearchDisplay
         Object.entries(risks).forEach(([key, value]) => {
           flattened[`risks_${key}`] = value;
         });
+      }
+
+      // Company analysis (GPT analysis)
+      let company_analysis = rec['company_analysis'] as unknown;
+      if (typeof company_analysis === 'string') {
+        // Try to parse stringified JSON
+        try { company_analysis = JSON.parse(company_analysis); } catch { /* ignore */ }
+      }
+      if (company_analysis && typeof company_analysis === 'object') {
+        Object.entries(company_analysis as Record<string, unknown>).forEach(([key, value]) => {
+          flattened[`company_${key}`] = value;
+        });
+        // Full object fallback to ensure content renders even if keys are unknown
+        flattened['company_raw'] = company_analysis as Record<string, unknown>;
+      }
+
+      // Executive summary
+      const executive_summary = (rec['executive_summary'] as unknown) || (rec['summary'] as any)?.['executive_summary'];
+      if (executive_summary) {
+        flattened['executive_summary'] = executive_summary as unknown;
       }
       
       const summary = rec['summary'] as Record<string, unknown> | undefined;
@@ -208,6 +249,13 @@ export function MarketResearchDisplay({ data, citations }: MarketResearchDisplay
     시장_개요: { icon: Globe, color: 'blue', title: '시장 개요' },
     market_size: { icon: BarChart3, color: 'green', title: '시장 규모' },
     시장_규모: { icon: BarChart3, color: 'green', title: '시장 규모' },
+
+    // Company Analysis sections (for GPT analysis)
+    company_strengths: { icon: CheckCircle2, color: 'green', title: '회사 강점' },
+    company_weaknesses: { icon: XCircle, color: 'red', title: '회사 약점' },
+    company_opportunities: { icon: TrendingUp, color: 'purple', title: '기회 요인' },
+    company_threats: { icon: Shield, color: 'orange', title: '위협 요인' },
+    company_raw: { icon: Info, color: 'gray', title: '회사 분석(상세)' },
   };
 
   const getColorClasses = (color: string) => ({
@@ -225,6 +273,14 @@ export function MarketResearchDisplay({ data, citations }: MarketResearchDisplay
 
   const formatContent = (content: unknown) => {
     if (typeof content === 'string') {
+      const trimmed = content.trim();
+      // Attempt JSON auto-parse if it looks like JSON
+      if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))){
+        try {
+          const parsed = JSON.parse(trimmed);
+          return formatContent(parsed);
+        } catch { /* fall through */ }
+      }
       // Split by bullet points or numbered lists
       const normalized = content
         .replace(/\t/g, '    ') // tabs -> spaces
@@ -300,7 +356,8 @@ export function MarketResearchDisplay({ data, citations }: MarketResearchDisplay
     partnerships: ['partnerships_recent_deals', 'partnerships_success_cases', 'partnerships_failure_analysis'],
     partners: ['partners_priority_companies', 'partners_approach_strategy', 'partners_contact_methods'],
     risks: ['risks_regulatory_risks', 'risks_cultural_risks', 'risks_competitive_risks', 'risks_mitigation_strategies'],
-    summary: ['summary_key_points', 'summary_recommendations', 'summary_next_steps'],
+    summary: ['executive_summary', 'summary_key_points', 'summary_recommendations', 'summary_next_steps'],
+    company: ['company_raw', 'company_strengths', 'company_weaknesses', 'company_opportunities', 'company_threats'],
   };
 
   const getSectionsForCategory = (category: string) => {
@@ -318,150 +375,169 @@ export function MarketResearchDisplay({ data, citations }: MarketResearchDisplay
           <div className="space-y-1">
             <CardTitle className="text-2xl font-bold flex items-center gap-2">
               <Globe className="w-6 h-6 text-purple-600" />
-              실시간 시장 조사 결과
+              {title || '실시간 시장 조사 결과'}
             </CardTitle>
             <CardDescription className="text-base">
-              Perplexity AI 기반 최신 시장 분석 리포트
+              {description || 'Perplexity AI 기반 최신 시장 분석 리포트'}
             </CardDescription>
           </div>
-          <Badge variant="secondary" className="bg-purple-100 text-purple-800">
-            <Zap className="w-3 h-3 mr-1" />
-            실시간 데이터
-          </Badge>
+          {showLiveBadge && (
+            <Badge variant="secondary" className="bg-purple-100 text-purple-800">
+              <Zap className="w-3 h-3 mr-1" />
+              실시간 데이터
+            </Badge>
+          )}
         </div>
       </CardHeader>
 
       <CardContent className="p-0">
-        <Tabs defaultValue="market" className="w-full">
-          <TabsList className="w-full justify-start rounded-none border-b px-6 h-auto py-0 bg-gray-50">
-            {hasContent('market') && (
-              <TabsTrigger value="market" className="data-[state=active]:border-b-2 data-[state=active]:border-purple-600">
-                <BarChart3 className="w-4 h-4 mr-2" />
-                시장 분석
-              </TabsTrigger>
-            )}
-            {hasContent('competition') && (
-              <TabsTrigger value="competition" className="data-[state=active]:border-b-2 data-[state=active]:border-purple-600">
-                <Target className="w-4 h-4 mr-2" />
-                경쟁사 분석
-              </TabsTrigger>
-            )}
-            {hasContent('partnerships') && (
-              <TabsTrigger value="partnerships" className="data-[state=active]:border-b-2 data-[state=active]:border-purple-600">
-                <Users className="w-4 h-4 mr-2" />
-                파트너십
-              </TabsTrigger>
-            )}
-            {hasContent('partners') && (
-              <TabsTrigger value="partners" className="data-[state=active]:border-b-2 data-[state=active]:border-purple-600">
-                <Building2 className="w-4 h-4 mr-2" />
-                잠재 파트너
-              </TabsTrigger>
-            )}
-            {hasContent('risks') && (
-              <TabsTrigger value="risks" className="data-[state=active]:border-b-2 data-[state=active]:border-purple-600">
-                <Shield className="w-4 h-4 mr-2" />
-                리스크 분석
-              </TabsTrigger>
-            )}
-            {hasContent('summary') && (
-              <TabsTrigger value="summary" className="data-[state=active]:border-b-2 data-[state=active]:border-purple-600">
-                <Lightbulb className="w-4 h-4 mr-2" />
-                요약 & 추천
-              </TabsTrigger>
-            )}
-            {citations && citations.length > 0 && (
-              <TabsTrigger value="sources" className="data-[state=active]:border-b-2 data-[state=active]:border-purple-600">
-                <BookOpen className="w-4 h-4 mr-2" />
-                참고자료
-              </TabsTrigger>
-            )}
-          </TabsList>
+        {/** Default to showing GPT company analysis when available */}
+        {(() => {
+          const firstFilledCategory = (Object.keys(categorizedSections) as Array<keyof typeof categorizedSections>)
+            .find((cat) => hasContent(cat as string));
+          const initialTab = hasContent('company')
+            ? 'company'
+            : (hasContent('market') ? 'market' : (firstFilledCategory || (citations && citations.length > 0 ? 'sources' : 'market')));
+          return (
+            <Tabs defaultValue={initialTab as string} className="w-full">
+              <TabsList className="w-full justify-start rounded-none border-b px-6 h-auto py-0 bg-gray-50">
+                {hasContent('market') && (
+                  <TabsTrigger value="market" className="data-[state=active]:border-b-2 data-[state=active]:border-purple-600">
+                    <BarChart3 className="w-4 h-4 mr-2" />
+                    시장 분석
+                  </TabsTrigger>
+                )}
+                {hasContent('company') && (
+                  <TabsTrigger value="company" className="data-[state=active]:border-b-2 data-[state=active]:border-purple-600">
+                    <Building2 className="w-4 h-4 mr-2" />
+                    회사 분석
+                  </TabsTrigger>
+                )}
+                {hasContent('competition') && (
+                  <TabsTrigger value="competition" className="data-[state=active]:border-b-2 data-[state=active]:border-purple-600">
+                    <Target className="w-4 h-4 mr-2" />
+                    경쟁사 분석
+                  </TabsTrigger>
+                )}
+                {hasContent('partnerships') && (
+                  <TabsTrigger value="partnerships" className="data-[state=active]:border-b-2 data-[state=active]:border-purple-600">
+                    <Users className="w-4 h-4 mr-2" />
+                    파트너십
+                  </TabsTrigger>
+                )}
+                {hasContent('partners') && (
+                  <TabsTrigger value="partners" className="data-[state=active]:border-b-2 data-[state=active]:border-purple-600">
+                    <Building2 className="w-4 h-4 mr-2" />
+                    잠재 파트너
+                  </TabsTrigger>
+                )}
+                {hasContent('risks') && (
+                  <TabsTrigger value="risks" className="data-[state=active]:border-b-2 data-[state=active]:border-purple-600">
+                    <Shield className="w-4 h-4 mr-2" />
+                    리스크 분석
+                  </TabsTrigger>
+                )}
+                {hasContent('summary') && (
+                  <TabsTrigger value="summary" className="data-[state=active]:border-b-2 data-[state=active]:border-purple-600">
+                    <Lightbulb className="w-4 h-4 mr-2" />
+                    요약 & 추천
+                  </TabsTrigger>
+                )}
+                {citations && citations.length > 0 && (
+                  <TabsTrigger value="sources" className="data-[state=active]:border-b-2 data-[state=active]:border-purple-600">
+                    <BookOpen className="w-4 h-4 mr-2" />
+                    참고자료
+                  </TabsTrigger>
+                )}
+              </TabsList>
 
-          <ScrollArea className="h-[600px]">
-            {Object.keys(categorizedSections).map(category => (
-              hasContent(category) && (
-                <TabsContent key={category} value={category} className="p-6 space-y-6">
-                  {getSectionsForCategory(category).map(sectionKey => {
-                    const sectionData = marketData[sectionKey];
-                    if (!sectionData) return null;
+              <ScrollArea className="h-[600px]">
+                {Object.keys(categorizedSections).map(category => (
+                  hasContent(category) && (
+                    <TabsContent key={category} value={category} className="p-6 space-y-6">
+                      {getSectionsForCategory(category).map(sectionKey => {
+                        const sectionData = marketData[sectionKey];
+                        if (!sectionData) return null;
 
-                    const config = sectionConfigs[sectionKey] || {
-                      icon: Info,
-                      color: 'gray',
-                      title: sectionKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
-                    };
-                    const Icon = config.icon;
-                    const colors = getColorClasses(config.color);
+                        const config = sectionConfigs[sectionKey] || {
+                          icon: Info,
+                          color: 'gray',
+                          title: sectionKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+                        };
+                        const Icon = config.icon;
+                        const colors = getColorClasses(config.color);
 
-                    return (
-                      <div key={sectionKey} className={`rounded-lg border ${colors.border} ${colors.bg} p-6`}>
-                        <div className="flex items-start gap-4">
-                          <div className={`p-3 rounded-lg ${colors.badge}`}>
-                            <Icon className="w-6 h-6" />
-                          </div>
-                          <div className="flex-1 space-y-4">
-                            <h3 className={`text-xl font-semibold ${colors.text}`}>
-                              {config.title}
-                            </h3>
-                            <div className="bg-white rounded-lg p-4 shadow-sm">
-                              {formatContent(sectionData)}
+                        return (
+                          <div key={sectionKey} className={`rounded-lg border ${colors.border} ${colors.bg} p-6`}>
+                            <div className="flex items-start gap-4">
+                              <div className={`p-3 rounded-lg ${colors.badge}`}>
+                                <Icon className="w-6 h-6" />
+                              </div>
+                              <div className="flex-1 space-y-4">
+                                <h3 className={`text-xl font-semibold ${colors.text}`}>
+                                  {config.title}
+                                </h3>
+                                <div className="bg-white rounded-lg p-4 shadow-sm">
+                                  {formatContent(sectionData)}
+                                </div>
+                              </div>
                             </div>
                           </div>
-                        </div>
+                        );
+                      })}
+                    </TabsContent>
+                  )
+                ))}
+
+                {citations && citations.length > 0 && (
+                  <TabsContent value="sources" className="p-6">
+                    <div className="space-y-4">
+                      <h3 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                        <BookOpen className="w-5 h-5 text-purple-600" />
+                        참고 자료 및 출처
+                      </h3>
+                      <div className="grid gap-4">
+                        {citations.map((citation: Citation, index: number) => (
+                          <Card key={index} className="hover:shadow-md transition-shadow">
+                            <CardContent className="p-4">
+                              <div className="flex items-start gap-3">
+                                <div className="p-2 bg-purple-100 rounded-lg">
+                                  <ExternalLink className="w-4 h-4 text-purple-600" />
+                                </div>
+                                <div className="flex-1 space-y-2">
+                                  <a
+                                    href={citation.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="font-medium text-purple-700 hover:text-purple-900 hover:underline flex items-center gap-1"
+                                  >
+                                    {citation.title || citation.url}
+                                    <ChevronRight className="w-4 h-4" />
+                                  </a>
+                                  {citation.snippet && (
+                                    <p className="text-sm text-gray-600 leading-relaxed">
+                                      {citation.snippet}
+                                    </p>
+                                  )}
+                                  {citation.source && (
+                                    <Badge variant="outline" className="text-xs">
+                                      {citation.source}
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
                       </div>
-                    );
-                  })}
-                </TabsContent>
-              )
-            ))}
-
-            {citations && citations.length > 0 && (
-              <TabsContent value="sources" className="p-6">
-                <div className="space-y-4">
-                  <h3 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-                    <BookOpen className="w-5 h-5 text-purple-600" />
-                    참고 자료 및 출처
-                  </h3>
-                  <div className="grid gap-4">
-                    {citations.map((citation: Citation, index: number) => (
-                      <Card key={index} className="hover:shadow-md transition-shadow">
-                        <CardContent className="p-4">
-                          <div className="flex items-start gap-3">
-                            <div className="p-2 bg-purple-100 rounded-lg">
-                              <ExternalLink className="w-4 h-4 text-purple-600" />
-                            </div>
-                            <div className="flex-1 space-y-2">
-                              <a
-                                href={citation.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="font-medium text-purple-700 hover:text-purple-900 hover:underline flex items-center gap-1"
-                              >
-                                {citation.title || citation.url}
-                                <ChevronRight className="w-4 h-4" />
-                              </a>
-                              {citation.snippet && (
-                                <p className="text-sm text-gray-600 leading-relaxed">
-                                  {citation.snippet}
-                                </p>
-                              )}
-                              {citation.source && (
-                                <Badge variant="outline" className="text-xs">
-                                  {citation.source}
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
-              </TabsContent>
-            )}
-          </ScrollArea>
-        </Tabs>
+                    </div>
+                  </TabsContent>
+                )}
+              </ScrollArea>
+            </Tabs>
+          );
+        })()}
+        
       </CardContent>
     </Card>
   );

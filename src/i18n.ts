@@ -14,6 +14,7 @@ const resources = {
         login: '로그인',
         signup: '회원가입',
         dashboard: '대시보드',
+        admin: '관리자',
         logout: '로그아웃',
         help: '도움말',
         menu: '메뉴'
@@ -246,6 +247,7 @@ const resources = {
         login: 'Login',
         signup: 'Sign Up',
         dashboard: 'Dashboard',
+        admin: 'Admin',
         logout: 'Logout',
         help: 'Help',
         menu: 'Menu'
@@ -478,6 +480,7 @@ const resources = {
         login: 'ログイン',
         signup: '新規登録',
         dashboard: 'ダッシュボード',
+        admin: '管理者',
         logout: 'ログアウト',
         help: 'ヘルプ',
         menu: 'メニュー'

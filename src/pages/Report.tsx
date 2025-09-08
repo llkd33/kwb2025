@@ -29,35 +29,12 @@ export default function Report() {
   useEffect(() => {
     const run = async () => {
       try {
-        const currentCompanyRaw = localStorage.getItem('currentCompany');
-        if (!currentCompanyRaw) {
-          navigate('/auth');
-          return;
-        }
-        const currentCompany = JSON.parse(currentCompanyRaw);
         if (!token) throw new Error('유효하지 않은 토큰');
 
-        const { data, error } = await supabase
-          .from('matching_requests')
-          .select('*')
-          .eq('report_token', token)
-          .neq('workflow_status', 'deleted')
-          .is('is_deleted', null)
-          .single();
-
+        const { data, error } = await supabase.rpc('get_public_report_by_token', { p_token: token });
         if (error) throw error;
-        
-        // Check if report is deleted
-        if (data.workflow_status === 'deleted' || data.is_deleted) {
-          throw new Error('보고서가 삭제되었습니다. 더 이상 접근할 수 없습니다.');
-        }
-        // Optional client-side expiry check
-        if ((data as any)?.report_token_expires_at) {
-          const exp = new Date((data as any).report_token_expires_at);
-          if (!isNaN(exp.getTime()) && exp.getTime() < Date.now()) {
-            throw new Error('보고서 링크가 만료되었습니다. 관리자에게 문의하세요.');
-          }
-        }
+        if (!data) throw new Error('유효하지 않은 또는 만료된 링크입니다.');
+
         setRequest(data as any);
       } catch (e: any) {
         toast({ title: '보고서 조회 실패', description: e.message, variant: 'destructive' });
@@ -66,7 +43,7 @@ export default function Report() {
       }
     };
     run();
-  }, [token, navigate, toast]);
+  }, [token, toast]);
 
   const renderSmartValue = (value: any) => {
     if (value === null || value === undefined) return <span className="text-gray-500">-</span>;
@@ -151,8 +128,36 @@ export default function Report() {
 
   // 우선순위: final_report > (ai_analysis, market_research)
   const finalReport = request.final_report || null;
-  const ai = finalReport?.gpt_analysis || request.ai_analysis || null;
-  const mr = finalReport?.market_research || request.market_research || null;
+  const aiRaw = finalReport?.gpt_analysis 
+    || (request as any).ai_analysis 
+    || (request as any).gpt_analysis 
+    || (request as any)?.market_research?.gpt?.data 
+    || null;
+  const mrRaw = finalReport?.market_research || (request as any).market_research || null;
+
+  // Sanitize analysis objects to hide admin-only/meta fields
+  const sanitize = (obj: any): any => {
+    if (!obj || typeof obj !== 'object') return obj;
+    const hidden = new Set([
+      'prompt_used','analysis_provider','provider','generated_at','parsing_error','error_message','raw_content','status','error','error_type','status_code','status_text','analysis_language','admin_comments','admin_modifications'
+    ]);
+    const walk = (val: any): any => {
+      if (Array.isArray(val)) return val.map(walk);
+      if (val && typeof val === 'object') {
+        const out: any = {};
+        for (const [k,v] of Object.entries(val)) {
+          if (hidden.has(k)) continue;
+          out[k] = walk(v);
+        }
+        return out;
+      }
+      return val;
+    };
+    return walk(obj);
+  };
+
+  const ai = sanitize(aiRaw);
+  const mr = sanitize(mrRaw);
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-8">
@@ -166,7 +171,7 @@ export default function Report() {
         </Badge>
       </div>
 
-      {/* GPT 분석 */}
+      {/* GPT 분석 (Perplexity-like UI) */}
       {ai && (
         <Card>
           <CardHeader>
@@ -174,7 +179,12 @@ export default function Report() {
             <CardDescription>핵심 섹션별로 정리된 분석 결과입니다.</CardDescription>
           </CardHeader>
           <CardContent>
-            {renderSmartValue(ai)}
+            <MarketResearchDisplay 
+              data={ai}
+              title="GPT 종합 분석"
+              description="GPT 기반 종합 분석 리포트"
+              showLiveBadge={false}
+            />
           </CardContent>
         </Card>
       )}
@@ -187,7 +197,13 @@ export default function Report() {
             <CardDescription>Perplexity AI 기반 최신 시장 분석</CardDescription>
           </CardHeader>
           <CardContent>
-            <MarketResearchDisplay data={mr} citations={mr?.citations || mr?.data?.citations} />
+            <MarketResearchDisplay 
+              data={mr} 
+              citations={mr?.citations || mr?.data?.citations}
+              title="실시간 시장 조사 결과"
+              description="Perplexity AI 기반 최신 시장 분석 리포트"
+              showLiveBadge={true}
+            />
           </CardContent>
         </Card>
       )}
@@ -206,5 +222,3 @@ export default function Report() {
     </div>
   );
 }
-
-

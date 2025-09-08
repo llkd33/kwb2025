@@ -53,6 +53,8 @@ interface MatchingRequest {
 }
 
 export default function Dashboard() {
+  // Documents module is currently disabled in this build
+  const documentsModuleEnabled = false;
   const [currentCompany, setCurrentCompany] = useState<Company | null>(null);
   const [businessDocs, setBusinessDocs] = useState<BusinessRegistration[]>([]);
   const [matchingRequests, setMatchingRequests] = useState<MatchingRequest[]>([]);
@@ -81,7 +83,6 @@ export default function Dashboard() {
         .from('matching_requests')
         .select('id, target_countries, status, created_at, completed_at, report_token')
         .eq('company_id', companyId)
-        .neq('workflow_status', 'deleted')
         .is('is_deleted', null)
         .order('created_at', { ascending: false });
 
@@ -127,6 +128,133 @@ export default function Dashboard() {
     return (
       <div className="container mx-auto py-8">
         <div className="text-center">로딩 중...</div>
+      </div>
+    );
+  }
+
+  // Check if user is not approved
+  if (currentCompany && !currentCompany.is_approved) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/30">
+        {/* Header */}
+        <div className="bg-white/80 backdrop-blur-sm border-b border-slate-200/60">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => navigate('/')}
+                  className="hover:bg-blue-50"
+                >
+                  <Building2 className="h-5 w-5 mr-2" />
+                  홈으로
+                </Button>
+                <div className="border-l border-slate-200 h-8 mx-2"></div>
+                <div>
+                  <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                    마이페이지
+                  </h1>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-gray-600">
+                  {currentCompany.company_name}
+                </span>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleLogout}
+                  className="hover:bg-red-50 hover:text-red-600 hover:border-red-200"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  로그아웃
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Pending Approval Info Banner */}
+        <div className="bg-blue-50/80 border-y border-blue-200/70">
+          <div className="container mx-auto px-4 py-2 text-sm text-blue-800 flex items-center gap-2">
+            <Clock className="h-4 w-4" />
+            <span>가입 승인 대기 중입니다. 보통 영업일 기준 1–2일 소요됩니다.</span>
+          </div>
+        </div>
+
+        {/* Pending Approval Content */}
+        <div className="container mx-auto px-4 py-16">
+          <Card className="max-w-2xl mx-auto border-orange-200 bg-gradient-to-br from-orange-50 to-yellow-50 shadow-xl">
+            <CardHeader className="text-center pb-8">
+              <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-orange-100 flex items-center justify-center">
+                <Clock className="h-10 w-10 text-orange-600" />
+              </div>
+              <CardTitle className="text-3xl font-bold text-orange-900">
+                가입 승인 대기중
+              </CardTitle>
+              <CardDescription className="text-lg text-orange-700 mt-4">
+                관리자가 회원님의 가입 신청서를 검토하고 있습니다.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="bg-white/70 rounded-lg p-6 space-y-4">
+                <div className="flex items-start gap-3">
+                  <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
+                  <div>
+                    <p className="font-medium text-gray-900">회원가입 완료</p>
+                    <p className="text-sm text-gray-600">기본 정보 입력이 완료되었습니다.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
+                  <div>
+                    <p className="font-medium text-gray-900">사업자 등록증 제출</p>
+                    <p className="text-sm text-gray-600">제출하신 서류를 검토 중입니다.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Clock className="h-5 w-5 text-orange-600 mt-0.5" />
+                  <div>
+                    <p className="font-medium text-gray-900">관리자 승인 대기</p>
+                    <p className="text-sm text-gray-600">영업일 기준 1-2일 내 승인이 완료됩니다.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="font-medium text-blue-900 mb-1">승인 후 이용 가능한 서비스</p>
+                    <ul className="text-sm text-blue-700 space-y-1">
+                      <li>• Goldman Sachs급 AI 시장 분석 리포트</li>
+                      <li>• 맞춤형 해외 진출 전략 수립</li>
+                      <li>• 실시간 시장 동향 분석</li>
+                      <li>• 1:1 전문가 컨설팅 (프리미엄)</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-center pt-4">
+                <p className="text-sm text-gray-600 mb-4">
+                  궁금하신 사항이 있으시면 고객센터로 문의해주세요.
+                </p>
+                <div className="flex gap-3 justify-center">
+                  <Button variant="outline" size="sm">
+                    <Mail className="h-4 w-4 mr-2" />
+                    support@knowwhere.com
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    <Phone className="h-4 w-4 mr-2" />
+                    02-1234-5678
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
@@ -193,19 +321,21 @@ export default function Dashboard() {
       <div className="container mx-auto px-4 py-8 space-y-6">
 
       {/* Status Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className={`grid grid-cols-1 ${documentsModuleEnabled ? 'md:grid-cols-4' : 'md:grid-cols-3'} gap-4`}>
         <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-shadow">
           <CardHeader className="text-center pb-3">
             <CardTitle className="text-2xl text-blue-600">{getApprovalStatusBadge()}</CardTitle>
             <CardDescription>계정 승인 상태</CardDescription>
           </CardHeader>
         </Card>
-        <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-shadow">
-          <CardHeader className="text-center pb-3">
-            <CardTitle className="text-2xl text-green-600">{businessDocs.length}</CardTitle>
-            <CardDescription>업로드된 서류</CardDescription>
-          </CardHeader>
-        </Card>
+        {documentsModuleEnabled && (
+          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-shadow">
+            <CardHeader className="text-center pb-3">
+              <CardTitle className="text-2xl text-green-600">{businessDocs.length}</CardTitle>
+              <CardDescription>업로드된 서류</CardDescription>
+            </CardHeader>
+          </Card>
+        )}
         <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-shadow">
           <CardHeader className="text-center pb-3">
             <CardTitle className="text-2xl text-purple-600">{matchingRequests.length}</CardTitle>
@@ -475,8 +605,14 @@ export default function Dashboard() {
                                     if (!confirm('이 리포트를 삭제하시겠습니까? 삭제 후 어드민에서 재발행이 가능합니다.')) return;
                                     try {
                                       const { error } = await supabase
-                                        .from('connection_requests')
-                                        .update({ final_report: null, ai_analysis: null, market_research: null })
+                                        .from('matching_requests')
+                                        .update({ 
+                                          final_report: null, 
+                                          ai_analysis: null, 
+                                          market_research: null, 
+                                          report_token: null,
+                                          report_token_expires_at: null
+                                        })
                                         .eq('id', request.id);
                                       if (error) throw error;
                                       toast({ title: '리포트 삭제 완료', description: `요청 #${request.id}` });

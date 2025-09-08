@@ -77,19 +77,14 @@ export function BusinessDocumentUploader({ companyId, onUploadComplete }: Busine
 
       setUploadProgress(50);
 
-      // Get public URL (though bucket is private, we'll use this for internal reference)
-      const { data: { publicUrl } } = supabase.storage
-        .from('business-documents')
-        .getPublicUrl(filePath);
-
       setUploadProgress(75);
 
-      // Save file info to business_registration table
+      // Save storage path to business_registration table (use storage path, not public URL)
       const { error: dbError } = await supabase
         .from('business_registration')
         .insert({
           company_id: companyId,
-          document_url: publicUrl,
+          document_url: filePath,
           document_name: selectedFile.name,
           file_size: selectedFile.size,
           is_verified: false

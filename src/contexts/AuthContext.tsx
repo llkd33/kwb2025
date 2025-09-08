@@ -31,21 +31,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { toast } = useToast();
 
   useEffect(() => {
+    let mounted = true;
+    
     // Check active sessions and sets the user
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    const initializeAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (mounted) {
+          setSession(session);
+          setUser(session?.user ?? null);
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    initializeAuth();
 
     // Listen for changes on auth state
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (mounted) {
+        // Reduce state updates to prevent flickering
+        if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+          setSession(session);
+          setUser(session?.user ?? null);
+        } else if (event === 'TOKEN_REFRESHED' && session) {
+          // Only update session for token refresh, keep user unchanged
+          setSession(session);
+        }
+      }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
@@ -69,24 +94,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (!company) {
-        toast({
-          title: "Company Profile Not Found",
-          description: "Please complete your company registration first.",
-          variant: "destructive",
-        });
         await supabase.auth.signOut();
-        return;
+        throw new Error('Company profile not found');
       }
+
+      // Store company data immediately in localStorage to prevent refetch
+      localStorage.setItem('currentCompany', JSON.stringify(company));
 
       // Skip approval check for admin users
       if (!company.is_admin && !company.is_approved) {
+        // Allow login but inform the user; actions are gated in UI
         toast({
-          title: "Pending Approval",
-          description: "Your company registration is pending approval. Please wait for admin verification.",
-          variant: "default",
+          title: 'Pending Approval',
+          description: 'Your company is awaiting admin approval. Some features are disabled until approval.',
         });
-        await supabase.auth.signOut();
-        return;
       }
 
       toast({

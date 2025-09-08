@@ -14,8 +14,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Eye, EyeOff, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { PasswordStrengthIndicator } from "@/components/auth/PasswordStrengthIndicator";
 
 export default function Auth() {
+  const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
   const [isLoading, setIsLoading] = useState(false);
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
   const [businessDocument, setBusinessDocument] = useState<File | null>(null);
@@ -28,7 +30,6 @@ export default function Auth() {
     email: "",
     password: "",
     company_name: "",
-    business_number: "",
     ceo_name: "",
     manager_name: "",
     manager_position: "",
@@ -51,12 +52,40 @@ export default function Auth() {
   const location = useLocation();
   const from = location.state?.from?.pathname || "/dashboard";
 
-  // Redirect if already authenticated
+  // Redirect if already authenticated - debounced to prevent flickering
   useEffect(() => {
-    if (session && user) {
-      navigate(from, { replace: true });
-    }
-  }, [session, user, navigate, from]);
+    let cancelled = false;
+    const maybeRedirectIfReady = async () => {
+      if (!(session && user) || isLoading) return;
+
+      // Ensure company profile exists in localStorage; if not, fetch and cache it
+      const storedCompany = localStorage.getItem('currentCompany');
+      if (!storedCompany) {
+        try {
+          const { data: company, error } = await supabase
+            .from('companies')
+            .select('*')
+            .eq('email', user.email as string)
+            .maybeSingle();
+          if (error) throw error;
+          if (company && !cancelled) {
+            localStorage.setItem('currentCompany', JSON.stringify(company));
+          } else {
+            // No company profile; stay on auth without redirect
+            return;
+          }
+        } catch (_) {
+          return;
+        }
+      }
+
+      if (!cancelled) {
+        navigate(from, { replace: true });
+      }
+    };
+    maybeRedirectIfReady();
+    return () => { cancelled = true; };
+  }, [session, user, isLoading, navigate, from]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,47 +93,19 @@ export default function Auth() {
 
     try {
       await signIn(loginForm.email, loginForm.password);
-      
-      // Check if user has admin role
-      const { data: company } = await supabase
-        .from('companies')
-        .select('*')
-        .eq('email', loginForm.email)
-        .single();
 
+      // Get company data from localStorage (already stored in AuthContext)
+      const storedCompany = localStorage.getItem('currentCompany');
+      const company = storedCompany ? JSON.parse(storedCompany) : null;
+
+      // Navigate based on admin status
       if (company?.is_admin) {
-        navigate('/admin');
-        return;
+        navigate('/admin', { replace: true });
+      } else {
+        navigate('/dashboard', { replace: true });
       }
-
-      // Use is_approved field instead of approval_status until migration is applied
-      if (!company.is_approved) {
-        toast({
-          title: t('auth.errors.pending_approval'),
-          description: t('auth.errors.pending_approval_desc'),
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Password is already verified by Supabase Auth
-      // No need to check it again here
-
-      // Store company session (temporary solution)
-      localStorage.setItem('currentCompany', JSON.stringify(company));
-      
-      toast({
-        title: t('auth.errors.login_success'),
-        description: `${company.company_name}${t('auth.errors.welcome')}`,
-      });
-
-      navigate('/dashboard');
     } catch (error: any) {
-      toast({
-        title: t('auth.errors.login_error'),
-        description: error.message,
-        variant: "destructive",
-      });
+      // Errors and toasts handled in AuthContext.signIn
     } finally {
       setIsLoading(false);
     }
@@ -139,32 +140,12 @@ export default function Auth() {
     setIsLoading(true);
 
     try {
-      // First, create Supabase Auth user
-      await signUp(signupForm.email, signupForm.password);
-
-      // Check if email already exists in companies table
-      const { data: existingCompany } = await supabase
-        .from('companies')
-        .select('email')
-        .eq('email', signupForm.email)
-        .single();
-
-      if (existingCompany) {
-        toast({
-          title: t('auth.errors.signup_failed'),
-          description: t('auth.errors.email_exists'),
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Create new company record
-      const { data: newCompany, error } = await supabase
-        .from('companies')
-        .insert({
+      // 1) Create auth user + company without email confirmation via Edge Function
+      const { data: signupResp, error: fnError } = await supabase.functions.invoke('signup-no-confirm', {
+        body: {
           email: signupForm.email,
+          password: signupForm.password,
           company_name: signupForm.company_name,
-          business_number: signupForm.business_number,
           ceo_name: signupForm.ceo_name,
           manager_name: signupForm.manager_name,
           manager_position: signupForm.manager_position,
@@ -180,15 +161,14 @@ export default function Auth() {
           competitive_advantage: signupForm.competitive_advantage,
           company_vision: signupForm.company_vision,
           website: signupForm.website,
-          is_approved: false, // Use is_approved field instead of approval_status
-          is_admin: false
-        })
-        .select()
-        .single();
+        },
+      });
+      if (fnError) throw fnError;
 
-      if (error) {
-        throw error;
-      }
+      const newCompany = signupResp?.company;
+
+      // 2) Sign in the new user (no email confirmation required)
+      await signIn(signupForm.email, signupForm.password);
 
       // Upload business document
       const documentPath = await uploadBusinessDocument(newCompany.id);
@@ -208,7 +188,6 @@ export default function Auth() {
         email: "",
         password: "",
         company_name: "",
-        business_number: "",
         ceo_name: "",
         manager_name: "",
         manager_position: "",
@@ -253,7 +232,7 @@ export default function Auth() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="login" className="w-full">
+          <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="login">{t('auth.login')}</TabsTrigger>
               <TabsTrigger value="signup">{t('auth.signup')}</TabsTrigger>
@@ -269,6 +248,7 @@ export default function Auth() {
                     value={loginForm.email}
                     onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
                     placeholder="company@example.com"
+                    autoComplete="email"
                     required
                   />
                 </div>
@@ -281,6 +261,7 @@ export default function Auth() {
                       value={loginForm.password}
                       onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
                       className="pr-10"
+                      autoComplete="current-password"
                       required
                     />
                     <button
@@ -308,6 +289,7 @@ export default function Auth() {
                       type="email"
                       value={signupForm.email}
                       onChange={(e) => setSignupForm({ ...signupForm, email: e.target.value })}
+                      autoComplete="email"
                       required
                     />
                   </div>
@@ -320,6 +302,7 @@ export default function Auth() {
                         value={signupForm.password}
                         onChange={(e) => setSignupForm({ ...signupForm, password: e.target.value })}
                         className="pr-10"
+                        autoComplete="new-password"
                         required
                       />
                       <button
@@ -330,6 +313,7 @@ export default function Auth() {
                         {showSignupPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
                     </div>
+                    <PasswordStrengthIndicator password={signupForm.password} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="company_name">{t('company.name')} <span className="text-red-500">*</span></Label>
@@ -341,17 +325,7 @@ export default function Auth() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="business_number">사업자등록번호 <span className="text-red-500">*</span></Label>
-                    <Input
-                      id="business_number"
-                      value={signupForm.business_number}
-                      onChange={(e) => setSignupForm({ ...signupForm, business_number: e.target.value })}
-                      placeholder="123-45-67890"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="ceo_name">{t('company.ceo')} <span className="text-red-500">*</span></Label>
+                    <Label htmlFor="ceo_name">대표자 성명 <span className="text-red-500">*</span></Label>
                     <Input
                       id="ceo_name"
                       value={signupForm.ceo_name}
@@ -359,6 +333,7 @@ export default function Auth() {
                       required
                     />
                   </div>
+                  
                   <div className="space-y-2">
                     <Label htmlFor="manager_name">{t('company.manager')} <span className="text-red-500">*</span></Label>
                     <Input
