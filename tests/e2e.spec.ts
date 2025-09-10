@@ -107,43 +107,70 @@ test.describe('Knowwhere Bridge Insights E2E Tests', () => {
   });
 });
 
+// Helper to sign in using env credentials
+async function login(page: any, {
+  base,
+  email,
+  password,
+}: { base: string; email: string; password: string }) {
+  await page.goto(`${base}/auth`);
+  await page.fill('input[type="email"]', email);
+  await page.fill('input[type="password"]', password);
+  await page.click('button[type="submit"]');
+  // Wait until we navigate away from /auth or see a known post-login element
+  await expect(page).not.toHaveURL(/\/auth$/);
+}
+
 test.describe('Feature Tests (requires backend setup)', () => {
+  test.beforeAll(() => {
+    if (!process.env.E2E_BACKEND) {
+      test.skip(true, 'E2E_BACKEND not set; skipping backend-dependent tests');
+    }
+  });
   test('login functionality', async ({ page }) => {
-    await page.goto('http://localhost:8080/auth');
-    
-    // Fill in test credentials
-    await page.fill('input[type="email"]', 'test@company.com');
-    await page.fill('input[type="password"]', 'test123456');
-    
-    // Submit form
+    const base = process.env.E2E_BASE_URL || 'http://localhost:8080';
+    const userEmail = process.env.E2E_USER_EMAIL || process.env.E2E_ADMIN_EMAIL || 'admin@example.com';
+    const userPassword = process.env.E2E_USER_PASSWORD || process.env.E2E_ADMIN_PASSWORD || 'admin123';
+
+    await page.goto(`${base}/auth`);
+    await page.fill('input[type="email"]', userEmail);
+    await page.fill('input[type="password"]', userPassword);
     await page.click('button[type="submit"]');
-    
-    // Should redirect after successful login
-    await expect(page).not.toHaveURL(/.*auth/);
+    // Should navigate away from /auth
+    await expect(page).not.toHaveURL(/\/auth$/);
   });
 
   test('file upload works', async ({ page }) => {
-    // This test requires authentication
-    await page.goto('http://localhost:8080/business-documents');
-    
-    // Check for file input
+    const base = process.env.E2E_BASE_URL || 'http://localhost:8080';
+    const userEmail = process.env.E2E_USER_EMAIL || process.env.E2E_ADMIN_EMAIL || 'admin@example.com';
+    const userPassword = process.env.E2E_USER_PASSWORD || process.env.E2E_ADMIN_PASSWORD || 'admin123';
+
+    // Login first (ProtectedRoute redirects otherwise)
+    await login(page, { base, email: userEmail, password: userPassword });
+
+    await page.goto(`${base}/business-documents`);
     const fileInput = page.locator('input[type="file"]');
     await expect(fileInput).toBeVisible();
   });
 });
 
 test.describe('Admin Panel Tests (requires admin login)', () => {
+  test.beforeAll(() => {
+    if (!process.env.E2E_BACKEND || !process.env.E2E_ADMIN_EMAIL || !process.env.E2E_ADMIN_PASSWORD) {
+      test.skip(true, 'Admin creds not set; skipping admin tests');
+    }
+  });
   test('admin login and access', async ({ page }) => {
-    await page.goto('http://localhost:8080/auth');
-    
-    // Admin credentials
-    await page.fill('input[type="email"]', 'admin@example.com');
-    await page.fill('input[type="password"]', 'admin123');
-    
+    const base = process.env.E2E_BASE_URL || 'http://localhost:8080';
+    const adminEmail = process.env.E2E_ADMIN_EMAIL!;
+    const adminPassword = process.env.E2E_ADMIN_PASSWORD!;
+
+    await page.goto(`${base}/auth`);
+    await page.fill('input[type="email"]', adminEmail);
+    await page.fill('input[type="password"]', adminPassword);
     await page.click('button[type="submit"]');
     
-    // Go to admin page
-    await page.goto('http://localhost:8080/admin');
-    await expect(page).toHaveURL('http://localhost:8080/admin');
+    await page.goto(`${base}/admin`);
+    await expect(page).toHaveURL(`${base}/admin`);
   });
 });

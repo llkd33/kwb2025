@@ -1,6 +1,9 @@
-import { Link, Outlet, useLocation } from "react-router-dom";
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import { LogOut, Home } from "lucide-react";
 
 const nav = [
   { to: "/admin/companies", labelKey: "Companies" },
@@ -16,12 +19,39 @@ const nav = [
 
 export default function AdminLayout() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { t } = useLanguage();
+  const { signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
 
   return (
     <div className="min-h-screen grid grid-cols-1 md:grid-cols-[220px_1fr]">
       <aside className="border-b md:border-b-0 md:border-r bg-muted/40">
-        <div className="p-4 font-semibold text-lg">Admin</div>
+        <div className="p-4 font-semibold text-lg flex justify-between items-center">
+          <span>Admin</span>
+          <div className="flex gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate("/")}
+              title="Home"
+            >
+              <Home className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleSignOut}
+              title="Logout"
+            >
+              <LogOut className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
         <nav className="flex md:flex-col gap-2 p-2">
           {nav.map((item) => (
             <Link

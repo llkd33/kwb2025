@@ -133,7 +133,7 @@ serve(async (req: Request) => {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${openaiApiKey}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'gpt-5',
+          model: 'gpt-4-turbo',
           messages: [ { role: 'system', content: systemPromptBasic }, { role: 'user', content: basicAnalysisPrompt } ],
           max_tokens: 3000,
           temperature: 0.7,
@@ -179,7 +179,7 @@ serve(async (req: Request) => {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${openaiApiKey}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'gpt-5',
+          model: 'gpt-4-turbo',
           messages: [ { role: 'system', content: systemPromptMarket }, { role: 'user', content: marketResearchPrompt } ],
           max_tokens: 2500,
           temperature: 0.6,
