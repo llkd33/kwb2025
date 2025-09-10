@@ -1,5 +1,7 @@
 # Welcome to your Lovable project
 
+> 한국어 사용 가이드는 `USAGE_KR.md`를 참고하세요.
+
 ## Project info
 
 **URL**: https://lovable.dev/projects/e918fdcc-c31a-4a5f-8dda-e7fb7f6d7bc7
